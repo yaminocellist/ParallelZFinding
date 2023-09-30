@@ -6,6 +6,6 @@ On macOS:
 
 g++-11 -std=c++17 -fopenmp Mocktilt_plan2_para_zfinding.cpp
 
-export OMP_NUM_THREADS=10 (input the number of cores of your mac's CPU)
+export OMP_NUM_THREADS=10 (substitute the number of cores of your own Mac)
 
 ./a.out 0
