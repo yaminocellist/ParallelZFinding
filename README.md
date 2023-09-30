@@ -1,3 +1,6 @@
+# zFinding using ROOT::TH1
+This .c script can be easily run in ROOT. The main strategy for optimization is to reduce the number of 'if' statements.
+
 # ParallelZFinding
 On macOS:
 
