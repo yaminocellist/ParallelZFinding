@@ -4,8 +4,13 @@ This .c script can be easily run in ROOT. The main strategy for optimization is 
 # ParallelZFinding
 On macOS:
 
+```bash
 g++-11 -std=c++17 -fopenmp Mocktilt_plan2_para_zfinding.cpp
 
-export OMP_NUM_THREADS=10 (substitute the number of cores of your own Mac)
+export OMP_NUM_THREADS=10
+```
+(substitute the number of cores of your own Mac)  
 
+```bash
 ./a.out 0
+```
