@@ -1,9 +1,9 @@
-#include "../../Repository/Analysis.h"
+#include "./headers/Analysis.h"
 void MBD_Analysis() {}
 
 void load(std::string method = "1")
 {
-    TFile *f = TFile::Open("/Users/yaminocellist/MIT_mentorship/3rd_semester/Meeting6/metrics.root");
+    TFile *f = TFile::Open("./rootData/metrics.root");
     if (!f || f->IsZombie()) {
         std::cerr << "Error opening file" << std::endl;
         return;

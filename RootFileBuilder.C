@@ -5,8 +5,9 @@
     #include <cmath>
 
     /*   retreive data from foundz results text file:   */
-    ifstream myfile("../Meeting5/foundZ_debug2_DCA_biased.txt");
+    // ifstream myfile("../Meeting5/foundZ_debug2_DCA_biased.txt");
     // ifstream myfile("../Meeting5/foundZ_debug2_DCA_-8_8_-010_010_2e-1.txt");
+    ifstream myfile("./zFindingResults/foundZ_DCA_npeaks-8_8_-010_010_1e-1.txt");
     if (!myfile.is_open()) {
 		  cout << "Unable to open text file" << endl;
 		  system("read -n 1 -s -p \"Press any key to continue...\" echo");
@@ -18,7 +19,7 @@
     string line, substr;
     while (getline(myfile, line)) {
         stringstream str(line);
-        // getline(str, substr, ',');
+        getline(str, substr, ',');
         getline(str, substr, ',');
         int e = stoi(substr);
         getline(str, substr, ',');
@@ -35,7 +36,7 @@
     }
 
     /*   Read data from .root file:   */
-    TFile *f = TFile::Open("/Users/yaminocellist/MIT_mentorship/3rd_semester/INTTRecoClusters_sim_ana382_zvtx-20cm_Bfield0T.root");
+    TFile *f = TFile::Open("./rootData/INTTRecoClusters_sim_ana382_zvtx-20cm_Bfield0T.root");
     if (!f || f->IsZombie()) {
         std::cerr << "Error opening file" << std::endl;
         return;
@@ -71,7 +72,7 @@
 
     /*    Create and write a metric .root file:    */
     // Create a new ROOT file
-    TFile *newFile = new TFile("metrics.root", "RECREATE");
+    TFile *newFile = new TFile("./rootData/metrics.root", "RECREATE");
     // Create a tree within the file
     TTree *MetricTree = new TTree("MetricTree", "MetricTree");
     // Define variables to hold data for each branch
