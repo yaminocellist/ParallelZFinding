@@ -41,6 +41,7 @@
         "ratio": "cpp",
         "streambuf": "cpp",
         "variant": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "InttZFinding_debug_ver_3.C": "cpp"
     }
 }

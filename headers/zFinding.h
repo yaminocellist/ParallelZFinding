@@ -68,12 +68,14 @@ double nearest_z_method (const int &evt, const std::vector<myTrackletMember> &t0
 
 
     int binmax = h -> GetMaximumBin(); 
-    double xlabel0 = h -> GetXaxis() -> GetBinCenter(binmax);
-    int entry0 = h -> GetBinContent(binmax);
-    double xlabel_1 = h -> GetXaxis() -> GetBinCenter(binmax - 1); double entry_1 = h -> GetBinContent(binmax - 1);
-    double xlabel1 = h -> GetXaxis() -> GetBinCenter(binmax + 1); double entry1 = h -> GetBinContent(binmax + 1);
-    double ctz = (xlabel0*entry0 + xlabel_1*entry_1 + xlabel1*entry1) / (entry0 + entry1 + entry_1);
-    // double ctz = mean;
+    double xmax = h -> GetXaxis() -> GetBinCenter(binmax);        double maxCnt = h -> GetBinContent(binmax);
+    double xmax_l1 = h -> GetXaxis() -> GetBinCenter(binmax - 1); double max_l1Cnt = h -> GetBinContent(binmax - 1);
+    double xmax_l2 = h -> GetXaxis() -> GetBinCenter(binmax - 2); double max_l2Cnt = h -> GetBinContent(binmax - 2);
+    double xmax_r1 = h -> GetXaxis() -> GetBinCenter(binmax + 1); double max_r1Cnt = h -> GetBinContent(binmax + 1);
+    double xmax_r2 = h -> GetXaxis() -> GetBinCenter(binmax + 2); double max_r2Cnt = h -> GetBinContent(binmax + 2);
+    double ctz = (xmax*maxCnt + xmax_l1*max_l1Cnt + xmax_l2*max_l2Cnt + xmax_r1*max_r1Cnt + xmax_r2*max_r2Cnt) 
+                 / (maxCnt + max_r1Cnt + max_r2Cnt + max_l1Cnt + max_l2Cnt);
+
 // /*
     TCanvas *can2 = new TCanvas("c2","c2",0,50,1800,550);
     h -> Draw();
@@ -91,7 +93,7 @@ double nearest_z_method (const int &evt, const std::vector<myTrackletMember> &t0
     h -> GetYaxis() -> SetLabelSize(.04);
     h -> GetYaxis() -> SetTitleOffset(.62);
     h -> GetYaxis() -> CenterTitle(true);
-    h -> SetTitle(Form("Found Z of Event %d, #bf{Nearest Z Method}", evt));
+    h -> SetTitle(Form("Found Z of Event %d, #bf{Nearest Z Method with 5 weighted mean}", evt));
     h -> SetMinimum(0);
     int max_entry = h -> GetBinContent(h -> FindBin(ctz));
     // TLine *l1 = new TLine(ctz, 0, ctz, max_entry);
@@ -123,15 +125,10 @@ double nearest_z_method (const int &evt, const std::vector<myTrackletMember> &t0
     lg->Clear();
     lg->AddEntry(h.get(), Form("%lu hits, found z = %fcm, true z = %fcm", t0.size() + t1.size(), ctz, trueZ), "f");
     lg->Draw("same");
-
-
-
-
-
     // lg -> Draw("same");
     gPad -> SetGrid(1,1); gPad -> Update();
     // gPad -> SetLogy();
-    can2 -> SaveAs(Form("zFindingPlot/nearest_foundz_%d.png", evt));
+    can2 -> SaveAs(Form("./zFindingPlot/nearest_foundz_5avg_%d.png", evt));
     delete can2;
     // delete h;   h = 0; 
     // delete l1; delete l2; delete lg;

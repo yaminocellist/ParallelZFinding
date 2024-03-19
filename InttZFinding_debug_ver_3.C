@@ -428,7 +428,7 @@ void single_z_finding (TTree *EventTree, Int_t target, std::vector<std::string> 
     std::vector<float> *TruthPV_y = nullptr;
     std::vector<float> *TruthPV_z = nullptr;
     std::vector<float> *TruthPV_Npart = nullptr;
-    int NTruthVtx;
+    int event, NTruthVtx;
     EventTree -> SetBranchAddress("ClusX", &ClusX);
     EventTree -> SetBranchAddress("ClusY", &ClusY);
     EventTree -> SetBranchAddress("ClusZ", &ClusZ);
@@ -437,6 +437,7 @@ void single_z_finding (TTree *EventTree, Int_t target, std::vector<std::string> 
     EventTree -> SetBranchAddress("TruthPV_x", &TruthPV_x);
     EventTree -> SetBranchAddress("TruthPV_y", &TruthPV_y);
     EventTree -> SetBranchAddress("TruthPV_z", &TruthPV_z);
+    EventTree -> SetBranchAddress("event", &event);
     EventTree -> SetBranchAddress("NTruthVtx", &NTruthVtx);
     EventTree -> SetBranchAddress("TruthPV_Npart", &TruthPV_Npart);
 
