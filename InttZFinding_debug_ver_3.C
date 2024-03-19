@@ -429,6 +429,8 @@ void single_z_finding (TTree *EventTree, Int_t target, std::vector<std::string> 
     std::vector<float> *TruthPV_z = nullptr;
     std::vector<float> *TruthPV_Npart = nullptr;
     int event, NTruthVtx;
+    float centrality_mbd;
+    EventTree -> SetBranchAddress("event", &event);
     EventTree -> SetBranchAddress("ClusX", &ClusX);
     EventTree -> SetBranchAddress("ClusY", &ClusY);
     EventTree -> SetBranchAddress("ClusZ", &ClusZ);
@@ -437,25 +439,18 @@ void single_z_finding (TTree *EventTree, Int_t target, std::vector<std::string> 
     EventTree -> SetBranchAddress("TruthPV_x", &TruthPV_x);
     EventTree -> SetBranchAddress("TruthPV_y", &TruthPV_y);
     EventTree -> SetBranchAddress("TruthPV_z", &TruthPV_z);
-    EventTree -> SetBranchAddress("event", &event);
     EventTree -> SetBranchAddress("NTruthVtx", &NTruthVtx);
     EventTree -> SetBranchAddress("TruthPV_Npart", &TruthPV_Npart);
+    EventTree -> SetBranchAddress("centrality_mbd", &centrality_mbd);
 
-    std::vector<double> xLocal, yLocal, zLocal, rLocal;
-    std::vector<double> phi, phi_0, phi_1;
-    std::vector<int> hitLayer;
-    std::vector<double> Eta, Phi, dEta, dPhi;
     std::vector<myTrackletMember> tracklet_layer_0, tracklet_layer_1;
     double found_z;
 
     for (int i = 0; i < EventTree -> GetEntries(); ++i) {
         EventTree -> GetEntry(i);
-        // std::cout << target << "," << i << std::endl;
-        if (target == i && NTruthVtx == 1 && TruthPV_Npart->at(0) > 500) {
+        if (target == i && NTruthVtx == 1 && TruthPV_Npart->at(0) > 500
+            && centrality_mbd <= 70 && TruthPV_z->at(0) >= -25. && TruthPV_z->at(0) <= -15.) {
             for (int j = 0; j < ClusX->size(); j++) {
-                // xLocal.push_back(ClusX->at(j)); yLocal.push_back(ClusY->at(j)); zLocal.push_back(ClusZ->at(j));
-                // rLocal.push_back(std::sqrt(std::pow(ClusX->at(j), 2) + std::pow(ClusY->at(j), 2)));
-                // phi.push_back(std::atan2(ClusY->at(j), ClusX->at(j)));
                 if (ClusLayer->at(j) == 3 || ClusLayer->at(j) == 4) {
                     for (int k = 0; k <= 32; k++) {
                         tracklet_layer_0.push_back({ClusX->at(j), ClusY->at(j), ClusZ->at(j) + k*0.05, std::sqrt(std::pow(ClusX->at(j), 2) + std::pow(ClusY->at(j), 2)), INFINITY, std::atan2(ClusY->at(j), ClusX->at(j)), 0});
@@ -467,37 +462,37 @@ void single_z_finding (TTree *EventTree, Int_t target, std::vector<std::string> 
                 }
             }
             if (method[1] == "e") {
-                found_z = nearest_z_with_error(i, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
+                found_z = nearest_z_with_error(event, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
             } else if (method[1] == "zscan") {
                 if (TruthPV_Npart->at(0) < 2000) {
-                    found_z = zScan(i, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
+                    found_z = zScan(event, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
                 } else {
-                    found_z = zScan(i, tracklet_layer_0, tracklet_layer_1, -0.0001, 0.0001, lower_bound, upper_bound, TruthPV_z->at(0));
+                    found_z = zScan(event, tracklet_layer_0, tracklet_layer_1, -0.0001, 0.0001, lower_bound, upper_bound, TruthPV_z->at(0));
                 }
             }
             else if (method[1] == "zscanE") {
                 if (TruthPV_Npart->at(0) < 2000) {
-                    found_z = zScan_with_error(i, tracklet_layer_0, tracklet_layer_1, -0.01, 0.01, lower_bound, upper_bound, TruthPV_z->at(0));
+                    found_z = zScan_with_error(event, tracklet_layer_0, tracklet_layer_1, -0.01, 0.01, lower_bound, upper_bound, TruthPV_z->at(0));
                 } else {
-                    found_z = zScan_with_error(i, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
+                    found_z = zScan_with_error(event, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
                 }
             }
             else if (method[1] == "zscanN") {
                 if (TruthPV_Npart->at(0) < 2000) {
-                    found_z = zScan_norm(i, tracklet_layer_0, tracklet_layer_1, -0.01, 0.01, lower_bound, upper_bound, TruthPV_z->at(0));
+                    found_z = zScan_norm(event, tracklet_layer_0, tracklet_layer_1, -0.01, 0.01, lower_bound, upper_bound, TruthPV_z->at(0));
                 } else {
-                    found_z = zScan_norm(i, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
+                    found_z = zScan_norm(event, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
                 }
             }
-            else if (method[1] == "DCAG") {
+            else if (method[1] == "DCAfit") {
                 if (TruthPV_Npart->at(0) < 2000) {
-                    found_z = DCA_npeaks(i, tracklet_layer_0, tracklet_layer_1, -0.01, 0.01, lower_bound, upper_bound, TruthPV_z->at(0));
+                    found_z = DCA_npeaks(event, tracklet_layer_0, tracklet_layer_1, -0.01, 0.01, lower_bound, upper_bound, TruthPV_z->at(0));
                 } else {
-                    found_z = DCA_npeaks(i, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
+                    found_z = DCA_npeaks(event, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
                 }
             }
             else {
-                found_z = nearest_z_method(i, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
+                found_z = nearest_z_method(event, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
             }
             break;
         }
@@ -522,9 +517,9 @@ void all_z_finding (TTree *EventTree, Int_t target, std::vector<std::string> met
     std::vector<float> *TruthPV_x = nullptr;
     std::vector<float> *TruthPV_y = nullptr;
     std::vector<float> *TruthPV_z = nullptr;
-    std::vector<int> *TruthPV_Npart = nullptr;
+    std::vector<int>   *TruthPV_Npart = nullptr;
     int event, NTruthVtx;
-    float centrality_mbd;
+    float centrality_bimp, centrality_impactparam, centrality_mbdquantity, centrality_mbd;
     EventTree -> SetBranchAddress("event", &event);
     EventTree -> SetBranchAddress("ClusX", &ClusX);
     EventTree -> SetBranchAddress("ClusY", &ClusY);
@@ -536,6 +531,9 @@ void all_z_finding (TTree *EventTree, Int_t target, std::vector<std::string> met
     EventTree -> SetBranchAddress("TruthPV_z", &TruthPV_z);
     EventTree -> SetBranchAddress("NTruthVtx", &NTruthVtx);
     EventTree -> SetBranchAddress("TruthPV_Npart", &TruthPV_Npart);
+    EventTree -> SetBranchAddress("centrality_bimp", &centrality_bimp);
+    EventTree -> SetBranchAddress("centrality_impactparam", &centrality_impactparam);
+    EventTree -> SetBranchAddress("centrality_mbdquantity", &centrality_mbdquantity);
     EventTree -> SetBranchAddress("centrality_mbd", &centrality_mbd);
 
     // std::vector<double> xLocal, yLocal, zLocal, rLocal;
@@ -550,7 +548,6 @@ void all_z_finding (TTree *EventTree, Int_t target, std::vector<std::string> met
         // Suggested fiducial cuts: centrality 0 - 70% and vtx_z (reconstructed) -25cm to -15cm
         if (i >= target && NTruthVtx == 1 && TruthPV_Npart->at(0) > 500
             && centrality_mbd <= 70 && TruthPV_z->at(0) >= -25. && TruthPV_z->at(0) <= -15.) {
-                // std::cout << i << std::endl;
             for (int j = 0; j < ClusX->size(); j++) {
                 if (ClusLayer->at(j) == 3 || ClusLayer->at(j) == 4) {
                     for (int k = -16; k <= 16; k++) {
@@ -563,33 +560,37 @@ void all_z_finding (TTree *EventTree, Int_t target, std::vector<std::string> met
                 }
             }
             if (method[1] == "e") {
-                found_z = nearest_z_with_error(i, tracklet_layer_0, tracklet_layer_1, -0.01, 0.01, lower_bound, upper_bound, TruthPV_z->at(0));
+                found_z = nearest_z_with_error(event, tracklet_layer_0, tracklet_layer_1, -0.01, 0.01, lower_bound, upper_bound, TruthPV_z->at(0));
             } else if (method[1] == "zscan") {
                 if (TruthPV_Npart->at(0) < 2000) {
-                    found_z = zScan(i, tracklet_layer_0, tracklet_layer_1, -0.01, 0.01, lower_bound, upper_bound, TruthPV_z->at(0));
+                    found_z = zScan(event, tracklet_layer_0, tracklet_layer_1, -0.01, 0.01, lower_bound, upper_bound, TruthPV_z->at(0));
                 } else {
-                    found_z = zScan(i, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
+                    found_z = zScan(event, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
                 }
             }
             else if (method[1] == "zscanE") {
                 if (TruthPV_Npart->at(0) < 2000) {
-                    found_z = zScan_with_error(i, tracklet_layer_0, tracklet_layer_1, -0.01, 0.01, lower_bound, upper_bound, TruthPV_z->at(0));
+                    found_z = zScan_with_error(event, tracklet_layer_0, tracklet_layer_1, -0.01, 0.01, lower_bound, upper_bound, TruthPV_z->at(0));
                 } else {
-                    found_z = zScan_with_error(i, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
+                    found_z = zScan_with_error(event, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
                 }
             }
             else if (method[1] == "zscanN") {
                 if (TruthPV_Npart->at(0) < 2000) {
-                    found_z = zScan_norm(i, tracklet_layer_0, tracklet_layer_1, -0.01, 0.01, lower_bound, upper_bound, TruthPV_z->at(0));
+                    found_z = zScan_norm(event, tracklet_layer_0, tracklet_layer_1, -0.01, 0.01, lower_bound, upper_bound, TruthPV_z->at(0));
                 } else {
-                    found_z = zScan_norm(i, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
+                    found_z = zScan_norm(event, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
                 }
             }
+            else if (method[1] == "DCAfit") {
+                found_z = DCA_npeaks(event, tracklet_layer_0, tracklet_layer_1, -0.01, 0.01, lower_bound, upper_bound, TruthPV_z->at(0));
+            }
             else {
-                found_z = nearest_z_method(i, tracklet_layer_0, tracklet_layer_1, -0.01, 0.01, lower_bound, upper_bound, TruthPV_z->at(0));
+                found_z = nearest_z_method(event, tracklet_layer_0, tracklet_layer_1, -0.01, 0.01, lower_bound, upper_bound, TruthPV_z->at(0));
             }
             
-            outputFile << event << "," << i << "," << TruthPV_Npart->at(0) << "," << found_z << "," << TruthPV_z->at(0) << std::endl;
+            outputFile << event << "," << i << "," << TruthPV_Npart->at(0) << "," << found_z << "," << TruthPV_x->at(0) << "," << TruthPV_y->at(0) << "," << TruthPV_z->at(0) << "," 
+                       << centrality_bimp << "," << centrality_impactparam << "," << centrality_mbdquantity << "," << centrality_mbd << std::endl;
             // xLocal.clear(); yLocal.clear(); zLocal.clear();
             // rLocal.clear();
             // phi.clear();    hitLayer.clear();
@@ -606,7 +607,10 @@ void InttZFinding_debug_ver_3 (std::string method = "single", double lower_bound
     // std::string filePath = "foundZ_debug2_DCA_doubled.txt";
     // std::string filePath = "foundZ_debug2_DCA_-16_16_-015_015.txt";
     // std::string filePath = "foundZ_debug2_DCA_-8_8_-010_010_2e-3.txt";
-    std::string filePath = "foundZ_debug2_DCA_-8_8_-010_010_2e-1.txt";
+    // std::string filePath = "foundZ_debug2_DCA_-8_8_-010_010_2e-1.txt";
+    // std::string filePath = "foundZ_debug2_DCA_-8_8_000_010_2e-1.txt";
+    // std::string filePath = "foundZ_debug2_DCA_-8_8_-010_000_1e-1.txt";
+    std::string filePath = "foundZ_allInfo_DCA_-8_8_-010_010_2e-1.txt";
 
     // Open the ROOT file
     TFile *f = TFile::Open("/Users/yaminocellist/MIT_mentorship/3rd_semester/INTTRecoClusters_sim_ana382_zvtx-20cm_Bfield0T.root");
