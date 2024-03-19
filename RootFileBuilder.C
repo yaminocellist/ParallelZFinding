@@ -36,7 +36,7 @@
     }
 
     /*   Read data from .root file:   */
-    TFile *f = TFile::Open("./rootData/INTTRecoClusters_sim_ana382_zvtx-20cm_Bfield0T.root");
+    TFile *f = TFile::Open("../External/INTTRecoClusters_sim_ana382_zvtx-20cm_Bfield0T.root");
     if (!f || f->IsZombie()) {
         std::cerr << "Error opening file" << std::endl;
         return;
