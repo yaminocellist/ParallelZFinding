@@ -128,7 +128,7 @@ double nearest_z_method (const int &evt, const std::vector<myTrackletMember> &t0
     // lg -> Draw("same");
     gPad -> SetGrid(1,1); gPad -> Update();
     // gPad -> SetLogy();
-    can2 -> SaveAs(Form("./zFindingPlot/nearest_foundz_5avg_%d.png", evt));
+    can2 -> SaveAs(Form("./zFindingPlots/nearest_foundz_5avg_%d.png", evt));
     delete can2;
     // delete h;   h = 0; 
     // delete l1; delete l2; delete lg;

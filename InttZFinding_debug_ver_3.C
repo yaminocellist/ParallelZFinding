@@ -189,8 +189,8 @@
 *............................................................................*
 */
 
-#include "../../Repository/zFinding.h"
-#include "../../Repository/Analysis.h"
+#include "./headers/zFinding.h"
+#include "./headers/Analysis.h"
 
 void zExpandingAnalysis (TTree *EventTree, Int_t target, std::vector<std::string> method) {
     std::vector<float> *ClusX = nullptr;
@@ -507,6 +507,15 @@ void all_z_finding (TTree *EventTree, Int_t target, std::vector<std::string> met
 		system("read -n 1 -s -p \"Press any key to continue...\" echo");
 		exit(1);
 	}
+
+    std::ifstream checkFile(filePath, std::ios::ate); // Open for reading at end of file
+    if (!checkFile.is_open()) {
+        std::cerr << "Failed to open file for reading.\n";
+        system("read -n 1 -s -p \"Press any key to continue...\" echo");
+        exit(1);
+    }
+    bool isEmpty = (checkFile.tellg() == 0);
+    if(isEmpty) outputFile << "MBD: 0-10. Phi cut: " << lower_bound << " ~ " << upper_bound << ", DCA cut: " << DCA_cut << ", bin width: " << scanstep << std::endl;
     
     // Set up variables to hold the data
     std::vector<float> *ClusX = nullptr;
@@ -547,14 +556,14 @@ void all_z_finding (TTree *EventTree, Int_t target, std::vector<std::string> met
         EventTree -> GetEntry(i);
         // Suggested fiducial cuts: centrality 0 - 70% and vtx_z (reconstructed) -25cm to -15cm
         if (i >= target && NTruthVtx == 1 && TruthPV_Npart->at(0) > 500
-            && centrality_mbd <= 70 && TruthPV_z->at(0) >= -25. && TruthPV_z->at(0) <= -15.) {
+            && centrality_mbd <= 10 && TruthPV_z->at(0) >= -25. && TruthPV_z->at(0) <= -15.) {
             for (int j = 0; j < ClusX->size(); j++) {
                 if (ClusLayer->at(j) == 3 || ClusLayer->at(j) == 4) {
-                    for (int k = -16; k <= 16; k++) {
+                    for (int k = 0; k <= 32; k++) {
                         tracklet_layer_0.push_back({ClusX->at(j), ClusY->at(j), ClusZ->at(j) + k*0.05, std::sqrt(std::pow(ClusX->at(j), 2) + std::pow(ClusY->at(j), 2)), INFINITY, std::atan2(ClusY->at(j), ClusX->at(j)), 0, 0});
                     }
                 } else {
-                    for (int k = -16; k <= 16; k++) {
+                    for (int k = 0; k <= 32; k++) {
                         tracklet_layer_1.push_back({ClusX->at(j), ClusY->at(j), ClusZ->at(j) + k*0.05, std::sqrt(std::pow(ClusX->at(j), 2) + std::pow(ClusY->at(j), 2)), INFINITY, std::atan2(ClusY->at(j), ClusX->at(j)), 1, 0});
                     }
                 }
@@ -610,10 +619,11 @@ void InttZFinding_debug_ver_3 (std::string method = "single", double lower_bound
     // std::string filePath = "foundZ_debug2_DCA_-8_8_-010_010_2e-1.txt";
     // std::string filePath = "foundZ_debug2_DCA_-8_8_000_010_2e-1.txt";
     // std::string filePath = "foundZ_debug2_DCA_-8_8_-010_000_1e-1.txt";
-    std::string filePath = "foundZ_allInfo_DCA_-8_8_-010_010_2e-1.txt";
+    // std::string filePath = "foundZ_allInfo_DCA_-8_8_-010_010_2e-1.txt";
+    std::string filePath = "./zFindingResults/foundZ_allInfo_DCA_0_16_-001_001_2e-1.txt";
 
     // Open the ROOT file
-    TFile *f = TFile::Open("/Users/yaminocellist/MIT_mentorship/3rd_semester/INTTRecoClusters_sim_ana382_zvtx-20cm_Bfield0T.root");
+    TFile *f = TFile::Open("../External/INTTRecoClusters_sim_ana382_zvtx-20cm_Bfield0T.root");
     if (!f || f->IsZombie()) {
         std::cerr << "Error opening file" << std::endl;
         return;
