@@ -42,6 +42,7 @@
         "streambuf": "cpp",
         "variant": "cpp",
         "algorithm": "cpp",
-        "InttZFinding_debug_ver_3.C": "cpp"
+        "InttZFinding_debug_ver_3.C": "cpp",
+        "istream": "cpp"
     }
 }
