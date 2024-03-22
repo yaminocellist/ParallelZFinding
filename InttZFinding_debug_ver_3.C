@@ -508,7 +508,7 @@ void all_z_finding (TTree *EventTree, Int_t target, std::vector<std::string> met
 		exit(1);
 	}
 
-    std::ifstream checkFile(filePath, std::ios::ate); // Open for reading at end of file
+    std::ifstream checkFile(filePath, std::ios::ate); // Check if the text file is empty;
     if (!checkFile.is_open()) {
         std::cerr << "Failed to open file for reading.\n";
         system("read -n 1 -s -p \"Press any key to continue...\" echo");
@@ -598,15 +598,13 @@ void all_z_finding (TTree *EventTree, Int_t target, std::vector<std::string> met
                 found_z = nearest_z_method(event, tracklet_layer_0, tracklet_layer_1, -0.01, 0.01, lower_bound, upper_bound, TruthPV_z->at(0));
             }
             
-            outputFile << event << "," << i << "," << TruthPV_Npart->at(0) << "," << found_z << "," << TruthPV_x->at(0) << "," << TruthPV_y->at(0) << "," << TruthPV_z->at(0) << "," 
+            outputFile << event << "," << i << "," << TruthPV_Npart->at(0) << "," << std::fixed << std::setprecision(6) << found_z << std::defaultfloat << "," << TruthPV_x->at(0) << "," << TruthPV_y->at(0) << "," << TruthPV_z->at(0) << "," 
                        << centrality_bimp << "," << centrality_impactparam << "," << centrality_mbdquantity << "," << centrality_mbd << std::endl;
-            // xLocal.clear(); yLocal.clear(); zLocal.clear();
-            // rLocal.clear();
-            // phi.clear();    hitLayer.clear();
+
             tracklet_layer_0.clear();   tracklet_layer_1.clear();
         }
     }
-    foundZAnalysis(filePath, method[1], method[2]);
+    // foundZAnalysis(filePath, method[1], method[2]);
 }
 
 void InttZFinding_debug_ver_3 (std::string method = "single", double lower_bound = -0.1, double upper_bound = 0.1, Int_t target = 0) {
@@ -620,7 +618,8 @@ void InttZFinding_debug_ver_3 (std::string method = "single", double lower_bound
     // std::string filePath = "foundZ_debug2_DCA_-8_8_000_010_2e-1.txt";
     // std::string filePath = "foundZ_debug2_DCA_-8_8_-010_000_1e-1.txt";
     // std::string filePath = "foundZ_allInfo_DCA_-8_8_-010_010_2e-1.txt";
-    std::string filePath = "./zFindingResults/foundZ_allInfo_DCA_0_16_-001_001_2e-1.txt";
+    // std::string filePath = "./zFindingResults/foundZ_allInfo_DCA_0_16_-001_001_2e-1.txt";
+    std::string filePath = "./zFindingResults/foundZ_MBD0_10_DCA_0_16_-001_001_2e-1.txt";
 
     // Open the ROOT file
     TFile *f = TFile::Open("../External/INTTRecoClusters_sim_ana382_zvtx-20cm_Bfield0T.root");

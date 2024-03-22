@@ -68,10 +68,9 @@ double nearest_z_method (const int &evt, const std::vector<myTrackletMember> &t0
 
 
     int binmax = h -> GetMaximumBin(); 
-    double xlabel0 = h -> GetXaxis() -> GetBinCenter(binmax);
-    int entry0 = h -> GetBinContent(binmax);
+    double xlabel0 = h -> GetXaxis() -> GetBinCenter(binmax);      double entry0 = h -> GetBinContent(binmax);
     double xlabel_1 = h -> GetXaxis() -> GetBinCenter(binmax - 1); double entry_1 = h -> GetBinContent(binmax - 1);
-    double xlabel1 = h -> GetXaxis() -> GetBinCenter(binmax + 1); double entry1 = h -> GetBinContent(binmax + 1);
+    double xlabel1 = h -> GetXaxis() -> GetBinCenter(binmax + 1);  double entry1 = h -> GetBinContent(binmax + 1);
     double ctz = (xlabel0*entry0 + xlabel_1*entry_1 + xlabel1*entry1) / (entry0 + entry1 + entry_1);
     // double ctz = mean;
 // /*
@@ -124,14 +123,10 @@ double nearest_z_method (const int &evt, const std::vector<myTrackletMember> &t0
     lg->AddEntry(h.get(), Form("%lu hits, found z = %fcm, true z = %fcm", t0.size() + t1.size(), ctz, trueZ), "f");
     lg->Draw("same");
 
-
-
-
-
     // lg -> Draw("same");
     gPad -> SetGrid(1,1); gPad -> Update();
     // gPad -> SetLogy();
-    can2 -> SaveAs(Form("zFindingPlot/nearest_foundz_%d.png", evt));
+    can2 -> SaveAs(Form("./zFindingPlots/nearest_foundz_doublebins_%d.png", evt));
     delete can2;
     // delete h;   h = 0; 
     // delete l1; delete l2; delete lg;
