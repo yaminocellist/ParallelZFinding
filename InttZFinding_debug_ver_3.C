@@ -270,7 +270,7 @@ void trueEtaPhiAnalysis (TTree *EventTree, Int_t target, std::vector<std::string
     if (method[1] == "single") {
     for (int i = 0; i < EventTree -> GetEntries(); ++i) {
         EventTree -> GetEntry(i);
-        if (i >= target && NTruthVtx == 1 && TruthPV_Npart->at(0) > 500
+        if (i == target && NTruthVtx == 1 && TruthPV_Npart->at(0) > 500
             && centrality_mbd <= 70 && TruthPV_z->at(0) >= -25. && TruthPV_z->at(0) <= -15.) {
             std::cout << ClusX->size() << "," << UniqueAncG4P_TrackID->size() << std::endl;
             for (int j = 0; j < ClusX->size(); j++) {
@@ -308,7 +308,6 @@ void trueEtaPhiAnalysis (TTree *EventTree, Int_t target, std::vector<std::string
         TH1D *h_deta = new TH1D("", "", 80, -4 - .05, 4 + .05);
         TH1D *h_dphi = new TH1D("", "", 140, -7 - .05, 7 + .05);
         for (int i = 0; i < EventTree -> GetEntries(); ++i) {
-            std::cout << i << std::endl;
             EventTree -> GetEntry(i);
             if (i >= target && NTruthVtx == 1 && TruthPV_Npart->at(0) > 500
                 && centrality_mbd <= 10 && TruthPV_z->at(0) >= -25. && TruthPV_z->at(0) <= -15.) {
