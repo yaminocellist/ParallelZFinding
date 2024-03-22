@@ -300,7 +300,7 @@ void trueEtaPhiAnalysis (TTree *EventTree, Int_t target, std::vector<std::string
                 break;
             } else {
                 EtaCheck(event, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
-                // break;
+                break;
             }
         }
     }
