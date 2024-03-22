@@ -22,7 +22,7 @@ Double_t fpeaks(Double_t *x, Double_t *par) {
    return result;
 }
 
-double nearest_z_method (const int &evt, const std::vector<myTrackletMember> &t0, const std::vector<myTrackletMember> &t1,
+double nearest_z_method (const int &evt, const std::vector<myTrackletMemberExtended> &t0, const std::vector<myTrackletMemberExtended> &t1,
                          const double &eta_cut_low, const double &eta_cut_high,
                          const double &phi_cut_low, const double &phi_cut_high, const double &trueZ) {
     // TH1D *h = new TH1D("", "", bins, zmin - scanstep/2, zmax + scanstep/2);
@@ -135,7 +135,7 @@ double nearest_z_method (const int &evt, const std::vector<myTrackletMember> &t0
 }
 
 //  DCA (Distance of Closest Approach) integrating npeaks.C tutorial:
-double DCA_npeaks (const int &evt, const std::vector<myTrackletMember> &t0, const std::vector<myTrackletMember> &t1,
+double DCA_npeaks (const int &evt, const std::vector<myTrackletMemberExtended> &t0, const std::vector<myTrackletMemberExtended> &t1,
                          const double &eta_cut_low, const double &eta_cut_high,
                          const double &phi_cut_low, const double &phi_cut_high, const double &trueZ) {
     // auto h = std::make_unique<TH1D>("", "", bins, zmin - scanstep/2, zmax + scanstep/2);
@@ -253,7 +253,7 @@ double DCA_npeaks (const int &evt, const std::vector<myTrackletMember> &t0, cons
     return ctz;
 }
 
-double nearest_z_with_error (const int &evt, std::vector<myTrackletMember> t0, std::vector<myTrackletMember> t1,
+double nearest_z_with_error (const int &evt, std::vector<myTrackletMemberExtended> t0, std::vector<myTrackletMemberExtended> t1,
                              const double &eta_cut_low, const double &eta_cut_high,
                              const double &phi_cut_low, const double &phi_cut_high, const double &trueZ) {
     TH1D *h_weighted = new TH1D("", "", bins, zmin - scanstep/2, zmax + scanstep/2);
@@ -377,7 +377,7 @@ double nearest_z_with_error (const int &evt, std::vector<myTrackletMember> t0, s
 
 }
 
-double zScan (const int &evt, std::vector<myTrackletMember> t0, std::vector<myTrackletMember> t1,
+double zScan (const int &evt, std::vector<myTrackletMemberExtended> t0, std::vector<myTrackletMemberExtended> t1,
                         const double &eta_cut_low, const double &eta_cut_high,
                         const double &phi_cut_low, const double &phi_cut_high, const double &trueZ) {
     
@@ -463,7 +463,7 @@ double zScan (const int &evt, std::vector<myTrackletMember> t0, std::vector<myTr
     return ctz;
 }
 
-double zScan_with_error (const int &evt, std::vector<myTrackletMember> t0, std::vector<myTrackletMember> t1,
+double zScan_with_error (const int &evt, std::vector<myTrackletMemberExtended> t0, std::vector<myTrackletMemberExtended> t1,
                         const double &eta_cut_low, const double &eta_cut_high,
                         const double &phi_cut_low, const double &phi_cut_high, const double &trueZ) {
     double a = 0;
@@ -702,7 +702,7 @@ void dEtaPhiCheck_with_TrueZ (const int &evt, const std::vector<double> &xL, con
     // can1 -> SaveAs(Form("histoZScan/dEtaPhiAll_%d.png", evt));
 }
 
-double zScan_norm (const int &evt, std::vector<myTrackletMember> t0, std::vector<myTrackletMember> t1,
+double zScan_norm (const int &evt, std::vector<myTrackletMemberExtended> t0, std::vector<myTrackletMemberExtended> t1,
                         const double &eta_cut_low, const double &eta_cut_high,
                         const double &phi_cut_low, const double &phi_cut_high, const double &trueZ) {
     

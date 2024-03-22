@@ -11,7 +11,6 @@ void lite()
     // ifstream myfile("../Meeting5/foundZ_debug2_DCA_-8_8_-010_010_2e-1.txt");
     // ifstream myfile("./zFindingResults/foundZ_DCA_npeaks-8_8_-010_010_1e-1.txt");
     
-    
     if (!myfile.is_open()) {
 		  cout << "Unable to open text file" << endl;
 		  system("read -n 1 -s -p \"Press any key to continue...\" echo");

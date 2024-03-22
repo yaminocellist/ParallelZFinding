@@ -40,7 +40,11 @@ struct myPoint3D {
 struct myTrackletMember {
     Double_t x, y, z, r;
     Double_t eta, phi;
-    Int_t layer, trackID;
+    Int_t layer;
+};
+
+struct myTrackletMemberExtended : myTrackletMember {
+    Int_t trackID;
 };
 
 std::pair<double, double> nearestZ (const myPoint3D &p1, const myPoint3D &p2) {

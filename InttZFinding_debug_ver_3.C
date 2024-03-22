@@ -221,11 +221,11 @@ void zExpandingAnalysis (TTree *EventTree, Int_t target, std::vector<std::string
             for (int j = 0; j < ClusX->size(); j++) {
                 if (ClusLayer->at(j) == 3 || ClusLayer->at(j) == 4) {
                     for (int k = -16; k <= 16; k++) {
-                        tracklet_layer_0.push_back({ClusX->at(j), ClusY->at(j), ClusZ->at(j) + k*0.05, std::sqrt(std::pow(ClusX->at(j), 2) + std::pow(ClusY->at(j), 2)), INFINITY, std::atan2(ClusY->at(j), ClusX->at(j)), 0, 0});
+                        tracklet_layer_0.push_back({ClusX->at(j), ClusY->at(j), ClusZ->at(j) + k*0.05, std::sqrt(std::pow(ClusX->at(j), 2) + std::pow(ClusY->at(j), 2)), INFINITY, std::atan2(ClusY->at(j), ClusX->at(j)), 0});
                     }
                 } else {
                     for (int k = -16; k <= 16; k++) {
-                        tracklet_layer_1.push_back({ClusX->at(j), ClusY->at(j), ClusZ->at(j) + k*0.05, std::sqrt(std::pow(ClusX->at(j), 2) + std::pow(ClusY->at(j), 2)), INFINITY, std::atan2(ClusY->at(j), ClusX->at(j)), 1, 0});
+                        tracklet_layer_1.push_back({ClusX->at(j), ClusY->at(j), ClusZ->at(j) + k*0.05, std::sqrt(std::pow(ClusX->at(j), 2) + std::pow(ClusY->at(j), 2)), INFINITY, std::atan2(ClusY->at(j), ClusX->at(j)), 1});
                     }
                 }
             }
@@ -237,7 +237,7 @@ void zExpandingAnalysis (TTree *EventTree, Int_t target, std::vector<std::string
             
 }
 
-void etaPhiAnalysis (TTree *EventTree, Int_t target, std::vector<std::string> method, double lower_bound, double upper_bound) {
+void trueEtaPhiAnalysis (TTree *EventTree, Int_t target, std::vector<std::string> method, double lower_bound, double upper_bound) {
     // Set up variables to hold the data
     std::vector<float> *ClusX = nullptr;
     std::vector<float> *ClusY = nullptr;
@@ -249,7 +249,9 @@ void etaPhiAnalysis (TTree *EventTree, Int_t target, std::vector<std::string> me
     std::vector<float> *TruthPV_y = nullptr;
     std::vector<float> *TruthPV_z = nullptr;
     std::vector<float> *TruthPV_Npart = nullptr;
-    int NTruthVtx;
+    int event, NTruthVtx;
+    float centrality_mbd;
+    EventTree -> SetBranchAddress("event", &event);
     EventTree -> SetBranchAddress("ClusX", &ClusX);
     EventTree -> SetBranchAddress("ClusY", &ClusY);
     EventTree -> SetBranchAddress("ClusZ", &ClusZ);
@@ -261,16 +263,17 @@ void etaPhiAnalysis (TTree *EventTree, Int_t target, std::vector<std::string> me
     EventTree -> SetBranchAddress("TruthPV_z", &TruthPV_z);
     EventTree -> SetBranchAddress("NTruthVtx", &NTruthVtx);
     EventTree -> SetBranchAddress("TruthPV_Npart", &TruthPV_Npart);
+    EventTree -> SetBranchAddress("centrality_mbd", &centrality_mbd);
 
     std::vector<myTrackletMember> tracklet_layer_0, tracklet_layer_1;
 
     if (method[1] == "single") {
     for (int i = 0; i < EventTree -> GetEntries(); ++i) {
         EventTree -> GetEntry(i);
-        if (target == i && NTruthVtx == 1 && TruthPV_Npart->at(0) > 500) {
+        if (i >= target && NTruthVtx == 1 && TruthPV_Npart->at(0) > 500
+            && centrality_mbd <= 70 && TruthPV_z->at(0) >= -25. && TruthPV_z->at(0) <= -15.) {
             std::cout << ClusX->size() << "," << UniqueAncG4P_TrackID->size() << std::endl;
             for (int j = 0; j < ClusX->size(); j++) {
-                
                 double z = ClusZ->at(j) - TruthPV_z->at(0);
                 double r = std::sqrt(std::pow(ClusX->at(j), 2) + std::pow(ClusY->at(j), 2));
                 double theta = std::atan2(r, z);
@@ -281,20 +284,23 @@ void etaPhiAnalysis (TTree *EventTree, Int_t target, std::vector<std::string> me
                     eta = std::log(std::tan((M_PI - theta)/2));
                 }
                 if (ClusLayer->at(j) == 3 || ClusLayer->at(j) == 4) {
-                    tracklet_layer_0.push_back({ClusX->at(j), ClusY->at(j), ClusZ->at(j), r, eta, std::atan2(ClusY->at(j), ClusX->at(j)), 0, UniqueAncG4P_TrackID->at(j)});
+                    tracklet_layer_0.push_back({ClusX->at(j), ClusY->at(j), ClusZ->at(j), r, eta, std::atan2(ClusY->at(j), ClusX->at(j)), 0});
                 } else {
-                    tracklet_layer_1.push_back({ClusX->at(j), ClusY->at(j), ClusZ->at(j), r, eta, std::atan2(ClusY->at(j), ClusX->at(j)), 1, UniqueAncG4P_TrackID->at(j)});
+                    tracklet_layer_1.push_back({ClusX->at(j), ClusY->at(j), ClusZ->at(j), r, eta, std::atan2(ClusY->at(j), ClusX->at(j)), 1});
                 }
             }
             if (method[2] == "phi") {
-                PhiCheck(i, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
+                PhiCheck(event, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
                 break;
             } else if (method[2] == "dphi") {
-                dPhiCheck(i, tracklet_layer_0, tracklet_layer_1);
+                dPhiCheck(event, tracklet_layer_0, tracklet_layer_1);
+                break;
+            } else if (method[2] == "deta"){
+                dEtaCheck(event, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
                 break;
             } else {
-                dEtaCheck(i, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
-                break;
+                EtaCheck(event, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
+                // break;
             }
         }
     }
@@ -302,8 +308,10 @@ void etaPhiAnalysis (TTree *EventTree, Int_t target, std::vector<std::string> me
         TH1D *h_deta = new TH1D("", "", 80, -4 - .05, 4 + .05);
         TH1D *h_dphi = new TH1D("", "", 140, -7 - .05, 7 + .05);
         for (int i = 0; i < EventTree -> GetEntries(); ++i) {
+            std::cout << i << std::endl;
             EventTree -> GetEntry(i);
-            if (NTruthVtx == 1 && TruthPV_Npart->at(0) > 500) {
+            if (i >= target && NTruthVtx == 1 && TruthPV_Npart->at(0) > 500
+                && centrality_mbd <= 10 && TruthPV_z->at(0) >= -25. && TruthPV_z->at(0) <= -15.) {
                 for (int j = 0; j < ClusX->size(); j++) {
                     double z = ClusZ->at(j) - TruthPV_z->at(0);
                     double r = std::sqrt(std::pow(ClusX->at(j), 2) + std::pow(ClusY->at(j), 2));
@@ -348,7 +356,7 @@ void etaPhiAnalysis (TTree *EventTree, Int_t target, std::vector<std::string> me
         h_dphi -> GetYaxis() -> CenterTitle(true);
         h_dphi -> SetTitle("dPhi data of all Event");
         gPad -> SetLogy();
-        can1 -> SaveAs("zFindingPlot/dPhi_all.png");
+        can1 -> SaveAs("zFindingPlots/dPhi_all.png");
         } else {
             h_deta -> Draw();
         h_deta -> SetFillColor(kYellow - 7);
@@ -367,7 +375,7 @@ void etaPhiAnalysis (TTree *EventTree, Int_t target, std::vector<std::string> me
         h_deta -> GetYaxis() -> CenterTitle(true);
         h_deta -> SetTitle("dEta data of all Event");
         gPad -> SetLogy();
-        can1 -> SaveAs("zFindingPlot/dEta_all.png");
+        can1 -> SaveAs("zFindingPlots/dEta_all.png");
         }
     }
     else if (method[2] == "dEtaPhi") {
@@ -413,7 +421,7 @@ void etaPhiAnalysis (TTree *EventTree, Int_t target, std::vector<std::string> me
         l2 -> SetLineColor(kRed - 7);
         l2 -> SetLineWidth(2);
         l2 -> Draw("same");
-        can1 -> SaveAs("zFindingPlot/dEtaPhiAll.png");
+        can1 -> SaveAs("zFindingPlots/dEtaPhiAll.png");
     }
 }
 
@@ -443,7 +451,7 @@ void single_z_finding (TTree *EventTree, Int_t target, std::vector<std::string> 
     EventTree -> SetBranchAddress("TruthPV_Npart", &TruthPV_Npart);
     EventTree -> SetBranchAddress("centrality_mbd", &centrality_mbd);
 
-    std::vector<myTrackletMember> tracklet_layer_0, tracklet_layer_1;
+    std::vector<myTrackletMemberExtended> tracklet_layer_0, tracklet_layer_1;
     double found_z;
 
     for (int i = 0; i < EventTree -> GetEntries(); ++i) {
@@ -549,7 +557,7 @@ void all_z_finding (TTree *EventTree, Int_t target, std::vector<std::string> met
     // std::vector<double> phi, phi_0, phi_1;
     // std::vector<int> hitLayer;
     // std::vector<double> Eta, Phi, dEta, dPhi;
-    std::vector<myTrackletMember> tracklet_layer_0, tracklet_layer_1;
+    std::vector<myTrackletMemberExtended> tracklet_layer_0, tracklet_layer_1;
     double found_z;
 
     for (int i = 0; i < EventTree -> GetEntries(); ++i) {
@@ -654,7 +662,7 @@ void InttZFinding_debug_ver_3 (std::string method = "single", double lower_bound
         zExpandingAnalysis(EventTree, target, substrings);
     }
     else {
-        etaPhiAnalysis(EventTree, target, substrings, lower_bound, upper_bound);
+        trueEtaPhiAnalysis(EventTree, target, substrings, lower_bound, upper_bound);
     }
 
 }

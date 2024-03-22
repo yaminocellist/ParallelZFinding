@@ -42,7 +42,7 @@ void drawHistogram (const int &evt, TH1D *h, TH1D *h2) {
 void dEtaCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<myTrackletMember> t1,
                 const double &eta_cut_low, const double &eta_cut_high,
                 const double &phi_cut_low, const double &phi_cut_high, const double &trueZ) {
-    TH1D *h_dEta = new TH1D("", "", 80, -4 - .05, 4 + .05);
+    TH1D *h_dEta = new TH1D("", "", 160, -4 - .025, 4 + .025);
 
     for (int i = 0; i < t0.size(); i++) {
         for (int j = 0; j < t1.size(); j++) {
@@ -66,9 +66,18 @@ void dEtaCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<my
     h_dEta -> GetYaxis() -> SetLabelSize(.04);
     h_dEta -> GetYaxis() -> SetTitleOffset(.62);
     h_dEta -> GetYaxis() -> CenterTitle(true);
+    h_dEta -> GetXaxis() -> SetRangeUser(-0.9, 1.1); // Setting x range;
+    static TLine *l1 = new TLine();
+    l1 -> SetLineColor(kRed);
+    l1 -> SetLineStyle(0);
+    l1 -> SetLineWidth(2);
+    l1 -> SetX1(0.1);   l1 -> SetY1(0);
+    l1 -> SetX2(0.1);   l1 -> SetY2(h_dEta->GetMaximum());
+    l1 -> Draw("same");
+
     h_dEta -> SetTitle(Form("dEta data of Event %d", evt));
-    gPad -> SetLogy();
-    can1 -> SaveAs(Form("zFindingPlot/dEta_single_%d.png", evt));
+    // gPad -> SetLogy();
+    can1 -> SaveAs(Form("zFindingPlots/dEta_single_%d.png", evt));
 }
 
 void dPhiCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<myTrackletMember> t1) {
@@ -98,10 +107,10 @@ void dPhiCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<my
     h_dphi -> GetYaxis() -> SetLabelSize(.04);
     h_dphi -> GetYaxis() -> SetTitleOffset(.62);
     h_dphi -> GetYaxis() -> CenterTitle(true);
-    h_dphi -> GetXaxis() -> SetRangeUser(-0.05, 0.05); // Setting x range;
+    h_dphi -> GetXaxis() -> SetRangeUser(-0.1, 0.1); // Setting x range;
     h_dphi -> SetTitle(Form("dPhi data of Event %d", evt));
     gPad -> SetLogy();
-    can1 -> SaveAs(Form("zFindingPlot/dPhi_single_%d.png", evt));
+    can1 -> SaveAs(Form("zFindingPlots/dPhi_single_%d.png", evt));
 }
 
 void DCCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<myTrackletMember> t1) {
@@ -183,7 +192,57 @@ void PhiCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<myT
     h_phi -> GetYaxis() -> CenterTitle(true);
     h_phi -> SetTitle(Form("Phi data of Event %d", evt));
     gPad -> SetLogy();
-    can1 -> SaveAs(Form("zFindingPlot/Phi_single_%d.png", evt));
+    can1 -> SaveAs(Form("zFindingPlots/Phi_single_%d.png", evt));
+}
+
+double EtaCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<myTrackletMember> t1,
+                const double &eta_cut_low, const double &eta_cut_high,
+                const double &phi_cut_low, const double &phi_cut_high, const double &trueZ) {
+    TH1D *h_eta = new TH1D("", "", 80, -4 - .05, 4 + .05);
+
+    for (int i = 0; i < t0.size(); i++) {
+        h_eta -> Fill(t0[i].eta);
+    }
+    for (int i = 0; i < t1.size(); i++) {
+        h_eta -> Fill(t1[i].eta);
+    }
+
+    double firstNonZeroBinEdge = -4.05; // Start with the minimum possible value
+    double lastNonZeroBinEdge = 4.05; // Start with the maximum possible value
+    bool foundFirstNonZeroBin = false;
+
+    for (int bin = 1; bin <= h_eta->GetNbinsX(); bin++) { // Bins are numbered from 1 to N
+        if (h_eta->GetBinContent(bin) > 0) {
+            if (!foundFirstNonZeroBin) {
+                firstNonZeroBinEdge = h_eta->GetBinLowEdge(bin);
+                foundFirstNonZeroBin = true;
+            }
+            // For the last non-zero bin, keep updating this value until the last iteration with non-zero content
+            lastNonZeroBinEdge = h_eta->GetBinLowEdge(bin) + h_eta->GetBinWidth(bin);
+        }
+    }
+
+
+    TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,550);
+    h_eta -> Draw();
+    h_eta -> SetFillColor(kYellow - 7);
+    h_eta -> SetLineWidth(1);
+    h_eta -> SetFillStyle(1001);
+    h_eta -> GetXaxis() -> SetTitle("Eta value");
+    h_eta -> GetXaxis() -> SetTitleSize(.05);
+    h_eta -> GetXaxis() -> SetLabelSize(.04);
+    h_eta -> GetXaxis() -> CenterTitle(true);
+    h_eta -> GetXaxis() -> SetNdivisions(31, 5, 0);
+    h_eta -> GetYaxis() -> SetTitle("# of Counts");
+    h_eta -> GetYaxis() -> SetTitleSize(.05);
+    h_eta -> GetYaxis() -> SetLabelSize(.04);
+    h_eta -> GetYaxis() -> SetTitleOffset(.62);
+    h_eta -> GetYaxis() -> CenterTitle(true);
+    h_eta -> SetTitle(Form("All η data of Event %d", evt));
+    gPad -> SetLogy();
+    can1 -> SaveAs(Form("zFindingPlots/Eta_single_%d.png", evt));
+
+    return lastNonZeroBinEdge - firstNonZeroBinEdge;
 }
 
 void foundZAnalysisLite (string filePath, string select = "zscan", string dim = "2D") {
