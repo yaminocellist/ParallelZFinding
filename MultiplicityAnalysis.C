@@ -45,14 +45,12 @@ void trueSingle (Int_t target) {
     EventTree -> SetBranchAddress("centrality_mbd", &centrality_mbd);
 
     std::vector<myTrackletMember> tracklet_layer_0, tracklet_layer_1;
-    std::cout << target << std::endl;
     for (int i = 0; i < EventTree -> GetEntries(); ++i) {
         EventTree -> GetEntry(i);
         if (i == target && NTruthVtx == 1 && TruthPV_Npart->at(0) > 500
             && centrality_mbd <= 70 && TruthPV_z->at(0) >= -25. && TruthPV_z->at(0) <= -15.) {
             std::cout << ClusX->size() << "," << UniqueAncG4P_TrackID->size() << std::endl;
             for (int j = 0; j < ClusX->size(); j++) {
-                // std::cout << "Hi" << j << std::endl;
                 double z = ClusZ->at(j) - TruthPV_z->at(0);
                 double r = std::sqrt(std::pow(ClusX->at(j), 2) + std::pow(ClusY->at(j), 2));
                 double theta = std::atan2(r, z);
@@ -71,7 +69,13 @@ void trueSingle (Int_t target) {
             break;
         }
     }
-    //  First, calculate the dη:
+    //  1st, calculate the dη:
     double dEta = EtaCheck(target, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, -0.01, 0.01, TruthPV_z->at(0));
     std::cout << dEta << std::endl;
+
+    //  2nd, calculate the dN_ch ('ch' means charged particle):
+        //  Use DC (distance closest) to distinguish signal/background;
+        //  the same value as doing z-finding;
+    // std::cout << tracklet_layer_0.size() << "," << tracklet_layer_1.size() << std::endl;
+    
 }

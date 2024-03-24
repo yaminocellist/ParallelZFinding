@@ -222,7 +222,7 @@ double EtaCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<m
         }
     }
 
-
+    /*
     TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,550);
     h_eta -> Draw();
     h_eta -> SetFillColor(kYellow - 7);
@@ -238,10 +238,10 @@ double EtaCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<m
     h_eta -> GetYaxis() -> SetLabelSize(.04);
     h_eta -> GetYaxis() -> SetTitleOffset(.62);
     h_eta -> GetYaxis() -> CenterTitle(true);
-    h_eta -> SetTitle(Form("All η data of Event %d", evt));
+    h_eta -> SetTitle(Form("All #eta data of Event %d", evt));
     gPad -> SetLogy();
     can1 -> SaveAs(Form("zFindingPlots/Eta_single_%d.png", evt));
-
+    */
     return lastNonZeroBinEdge - firstNonZeroBinEdge;
 }
 
