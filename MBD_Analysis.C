@@ -136,11 +136,14 @@ void load(std::string method = "1")
         for (Long64_t i = 0; i < MetricTree->GetEntries(); ++i) {
             MetricTree->GetEntry(i);
             // std::cout << Event << std::endl;
-            if (foundZ_vtx - trueZfromSource > 0) {
-                g2->SetPoint(g2->GetN(), trueXfromSource*10, trueYfromSource*10);
-            } else {
-                g3->SetPoint(g2->GetN(), trueXfromSource*10, trueYfromSource*10);
+            if (centralityMbd >= MBD_lower && centralityMbd <= MBD_upper && trueZfromSource >= -25. && trueZfromSource <= -15.) {
+                if (foundZ_vtx - trueZfromSource > 0) {
+                    g2->SetPoint(g2->GetN(), trueXfromSource*10, trueYfromSource*10);
+                } else {
+                    g3->SetPoint(g2->GetN(), trueXfromSource*10, trueYfromSource*10);
+                }
             }
+            
         }
 
         globalCanvas->cd(1);
@@ -214,7 +217,7 @@ void load(std::string method = "1")
         TGraph *g3 = new TGraph();
         for (Long64_t i = 0; i < MetricTree->GetEntries(); ++i) {
             MetricTree->GetEntry(i);
-            if (trueZfromSource >= -22.5 && trueZfromSource <= -21.5) {
+            if (centralityMbd >= MBD_lower && centralityMbd <= MBD_upper && trueZfromSource >= -22.5 && trueZfromSource <= -21.5) {
                 if (foundZ_vtx - trueZfromSource > 0) {
                     g2->SetPoint(g2->GetN(), trueXfromSource*10, trueYfromSource*10);
                 } else {
