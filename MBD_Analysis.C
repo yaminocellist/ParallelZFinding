@@ -144,17 +144,144 @@ void load(std::string method = "1")
         }
 
         globalCanvas->cd(1);
-        gPad->SetMargin(0.1, 0.1, 0.1, 0.1); 
+        gPad->SetMargin(0.1, 0.1, 0.1, 0.1);
+        gPad->SetGrid(1, 1);
         if (g2->GetN() > 0) { // Check if there are points to draw
-            g2->Draw("AP"); // Specify the drawing options as needed
-            globalCanvas->Update(); // Make sure to update the canvas to reflect the drawn graph
+            g2->Draw("AP"); 
+            g2->GetXaxis()->SetLimits(-0.5, 0.5); // X axis limits
+            g2->SetMinimum(-0.5); // Y axis minimum
+            g2->SetMaximum(0.5);  // Y axis maximum
+            g2 -> SetMarkerStyle(29);
+            g2 -> SetMarkerSize(0.9);
+            g2 -> SetMarkerColor(kBlue - 7);
+            g2 -> SetLineWidth(3);
+            g2 -> SetLineColor(kWhite);
+            gStyle -> SetTitleW(0.7);  //per cent of the pad width
+            gStyle -> SetTitleH(0.08); //per cent of the pad height
+            g2 -> SetTitle("For resolution > 0");
+            g2 -> GetXaxis() -> SetTitle("True X Vertex [mm]");
+            g2 -> GetXaxis() -> SetTitleSize(0.05);
+            g2 -> GetXaxis() -> SetLabelSize(0.025);
+            g2 -> GetXaxis() -> CenterTitle(true);
+            g2 -> GetYaxis() -> SetTitle("True Y Vertex [mm]");
+            g2 -> GetYaxis() -> SetTitleSize(0.05);
+            g2 -> GetYaxis() -> SetLabelSize(0.025);
+            g2 -> GetYaxis() -> CenterTitle(true);
+            g2 -> GetYaxis() -> SetTitleOffset(0.8); 
+            g2 -> GetXaxis() -> SetTitleOffset(0.8); 
         } else {
-            std::cerr << "No points in the graph to display." << std::endl;
+            std::cerr << "No points to display." << std::endl;
         }
         globalCanvas->cd(2); // Change to the second pad
-        gPad->SetMargin(0.1, 0.1, 0.1, 0.1); 
+        gPad->SetMargin(0.1, 0.1, 0.1, 0.1);
+        gPad->SetGrid(1, 1);
         if (g3->GetN() > 0) {
             g3->Draw("AP"); // Draw the graph with axes and points
+            g3->GetXaxis()->SetLimits(-0.5, 0.5); // X axis limits
+            g3->SetMinimum(-0.5); // Y axis minimum 
+            g3->SetMaximum(0.5);  // Y axis maximum
+            g3->GetXaxis()->SetLimits(-0.5, 0.5); // X axis limits
+            g3->SetMinimum(-0.5); // Y axis minimum
+            g3->SetMaximum(0.5);  // Y axis maximum
+            g3 -> SetMarkerStyle(29);
+            g3 -> SetMarkerSize(0.9);
+            g3 -> SetMarkerColor(kRed - 7);
+            g3 -> SetLineWidth(3);
+            g3 -> SetLineColor(kWhite);
+            gStyle -> SetTitleW(0.7);  //per cent of the pad width
+            gStyle -> SetTitleH(0.08); //per cent of the pad height
+            g3 -> SetTitle("For resolution < 0");
+            g3 -> GetXaxis() -> SetTitle("True X Vertex [mm]");
+            g3 -> GetXaxis() -> SetTitleSize(0.05);
+            g3 -> GetXaxis() -> SetLabelSize(0.025);
+            g3 -> GetXaxis() -> CenterTitle(true);
+            g3 -> GetYaxis() -> SetTitle("True Y Vertex [mm]");
+            g3 -> GetYaxis() -> SetTitleSize(0.05);
+            g3 -> GetYaxis() -> SetLabelSize(0.025);
+            g3 -> GetYaxis() -> CenterTitle(true);
+            g3 -> GetYaxis() -> SetTitleOffset(0.8); 
+            g3 -> GetXaxis() -> SetTitleOffset(0.8); 
+        } else {
+            std::cerr << "No points in the second graph to display." << std::endl;
+        }
+
+        globalCanvas->Update();
+    }
+    else if (method == "sliceXY") {
+        globalCanvas->Clear();
+        globalCanvas->Divide(2, 1); // Divide the canvas into 2 pads: 2 columns, 1 row
+        TGraph *g2 = new TGraph();
+        TGraph *g3 = new TGraph();
+        for (Long64_t i = 0; i < MetricTree->GetEntries(); ++i) {
+            MetricTree->GetEntry(i);
+            if (trueZfromSource >= -22.5 && trueZfromSource <= -21.5) {
+                if (foundZ_vtx - trueZfromSource > 0) {
+                    g2->SetPoint(g2->GetN(), trueXfromSource*10, trueYfromSource*10);
+                } else {
+                    g3->SetPoint(g2->GetN(), trueXfromSource*10, trueYfromSource*10);
+                }
+            }
+            
+        }
+
+        globalCanvas->cd(1);
+        gPad->SetMargin(0.1, 0.1, 0.1, 0.1);
+        gPad->SetGrid(1, 1);
+        if (g2->GetN() > 0) { // Check if there are points to draw
+            g2->Draw("AP"); 
+            g2->GetXaxis()->SetLimits(-0.5, 0.5); // X axis limits
+            g2->SetMinimum(-0.5); // Y axis minimum
+            g2->SetMaximum(0.5);  // Y axis maximum
+            g2 -> SetMarkerStyle(29);
+            g2 -> SetMarkerSize(0.9);
+            g2 -> SetMarkerColor(kBlue - 7);
+            g2 -> SetLineWidth(3);
+            g2 -> SetLineColor(kWhite);
+            gStyle -> SetTitleW(0.7);  //per cent of the pad width
+            gStyle -> SetTitleH(0.08); //per cent of the pad height
+            g2 -> SetTitle("For resolution > 0");
+            g2 -> GetXaxis() -> SetTitle("True X Vertex [mm]");
+            g2 -> GetXaxis() -> SetTitleSize(0.05);
+            g2 -> GetXaxis() -> SetLabelSize(0.025);
+            g2 -> GetXaxis() -> CenterTitle(true);
+            g2 -> GetYaxis() -> SetTitle("True Y Vertex [mm]");
+            g2 -> GetYaxis() -> SetTitleSize(0.05);
+            g2 -> GetYaxis() -> SetLabelSize(0.025);
+            g2 -> GetYaxis() -> CenterTitle(true);
+            g2 -> GetYaxis() -> SetTitleOffset(0.8); 
+            g2 -> GetXaxis() -> SetTitleOffset(0.8); 
+        } else {
+            std::cerr << "No points to display." << std::endl;
+        }
+        globalCanvas->cd(2); // Change to the second pad
+        gPad->SetMargin(0.1, 0.1, 0.1, 0.1);
+        gPad->SetGrid(1, 1);
+        if (g3->GetN() > 0) {
+            g3->Draw("AP"); // Draw the graph with axes and points
+            g3->GetXaxis()->SetLimits(-0.5, 0.5); // X axis limits
+            g3->SetMinimum(-0.5); // Y axis minimum 
+            g3->SetMaximum(0.5);  // Y axis maximum
+            g3->GetXaxis()->SetLimits(-0.5, 0.5); // X axis limits
+            g3->SetMinimum(-0.5); // Y axis minimum
+            g3->SetMaximum(0.5);  // Y axis maximum
+            g3 -> SetMarkerStyle(29);
+            g3 -> SetMarkerSize(0.9);
+            g3 -> SetMarkerColor(kRed - 7);
+            g3 -> SetLineWidth(3);
+            g3 -> SetLineColor(kWhite);
+            gStyle -> SetTitleW(0.7);  //per cent of the pad width
+            gStyle -> SetTitleH(0.08); //per cent of the pad height
+            g3 -> SetTitle("For resolution < 0");
+            g3 -> GetXaxis() -> SetTitle("True X Vertex [mm]");
+            g3 -> GetXaxis() -> SetTitleSize(0.05);
+            g3 -> GetXaxis() -> SetLabelSize(0.025);
+            g3 -> GetXaxis() -> CenterTitle(true);
+            g3 -> GetYaxis() -> SetTitle("True Y Vertex [mm]");
+            g3 -> GetYaxis() -> SetTitleSize(0.05);
+            g3 -> GetYaxis() -> SetLabelSize(0.025);
+            g3 -> GetYaxis() -> CenterTitle(true);
+            g3 -> GetYaxis() -> SetTitleOffset(0.8); 
+            g3 -> GetXaxis() -> SetTitleOffset(0.8); 
         } else {
             std::cerr << "No points in the second graph to display." << std::endl;
         }

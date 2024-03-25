@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "MBD_Analysis.C": "cpp",
-        "RootFileBuilder.C": "cpp"
+        "RootFileBuilder.C": "cpp",
+        "InttZFinding_debug_ver_3.C": "cpp"
     }
 }
