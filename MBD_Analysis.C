@@ -29,11 +29,13 @@ void load(std::string method = "1")
     }
 
     Int_t Event, Npart, NpartFromSource;
-    Float_t foundZ_vtx, trueZfromSource;
+    Float_t foundZ_vtx, trueXfromSource, trueYfromSource, trueZfromSource;
     Float_t centralityBimp, centralityImpactparam, centralityMbdquantity, centralityMbd;
     MetricTree -> SetBranchAddress("Event", &Event);
     MetricTree -> SetBranchAddress("foundZ_vtx", &foundZ_vtx);
     MetricTree -> SetBranchAddress("Npart", &Npart);
+    MetricTree -> SetBranchAddress("trueXfromSource", &trueXfromSource);
+    MetricTree -> SetBranchAddress("trueYfromSource", &trueYfromSource);
     MetricTree -> SetBranchAddress("trueZfromSource", &trueZfromSource);
     MetricTree -> SetBranchAddress("NpartFromSource", &NpartFromSource);
     MetricTree -> SetBranchAddress("centralityBimp", &centralityBimp);
@@ -84,7 +86,7 @@ void load(std::string method = "1")
         legend->Draw("same");
         globalCanvas->Update();
     }
-    else if (method == "partial") {
+    else if (method == "slice") {
         // double ymin = g1->GetHistogram()->GetMinimum();
         // double ymax = g1->GetHistogram()->GetMaximum();
         TGraph *g2 = new TGraph();
@@ -124,6 +126,28 @@ void load(std::string method = "1")
         legend->AddEntry(g1,Form("Centrality %2.0f-%2.0f", MBD_lower, MBD_upper),"f");
         legend->SetTextSize(0.04);
         legend->Draw("same");
+        globalCanvas->Update();
+    }
+    else if (method == "allXY") {
+        globalCanvas->Clear();
+        globalCanvas->Divide(2, 1); // Divide the canvas into 2 pads: 2 columns, 1 row
+        TGraph *g2 = new TGraph();
+        for (Long64_t i = 0; i < MetricTree->GetEntries(); ++i) {
+            MetricTree->GetEntry(i);
+            // std::cout << Event << std::endl;
+            if (foundZ_vtx - trueZfromSource > 0) {
+                g2->SetPoint(g2->GetN(), trueXfromSource*10, trueYfromSource*10);
+            }   
+        }
+        globalCanvas->Clear();
+        globalCanvas->cd();
+
+        if (g2->GetN() > 0) { // Check if there are points to draw
+            g2->Draw("AP"); // Specify the drawing options as needed
+            globalCanvas->Update(); // Make sure to update the canvas to reflect the drawn graph
+        } else {
+            std::cerr << "No points in the graph to display." << std::endl;
+        }
         globalCanvas->Update();
     }
     else {
