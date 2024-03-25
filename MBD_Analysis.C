@@ -15,7 +15,7 @@ void load(std::string method = "1")
         return;
     }
     
-    TCanvas* globalCanvas = nullptr;
+    TCanvas* globalCanvas = new TCanvas("globalCanvas", "Canvas with 2 Square Pads", 1200, 600); // Width, Height
     
     TH1F* h1 = nullptr;
     if (globalCanvas == nullptr) {
@@ -132,22 +132,33 @@ void load(std::string method = "1")
         globalCanvas->Clear();
         globalCanvas->Divide(2, 1); // Divide the canvas into 2 pads: 2 columns, 1 row
         TGraph *g2 = new TGraph();
+        TGraph *g3 = new TGraph();
         for (Long64_t i = 0; i < MetricTree->GetEntries(); ++i) {
             MetricTree->GetEntry(i);
             // std::cout << Event << std::endl;
             if (foundZ_vtx - trueZfromSource > 0) {
                 g2->SetPoint(g2->GetN(), trueXfromSource*10, trueYfromSource*10);
-            }   
+            } else {
+                g3->SetPoint(g2->GetN(), trueXfromSource*10, trueYfromSource*10);
+            }
         }
-        globalCanvas->Clear();
-        globalCanvas->cd();
 
+        globalCanvas->cd(1);
+        gPad->SetMargin(0.1, 0.1, 0.1, 0.1); 
         if (g2->GetN() > 0) { // Check if there are points to draw
             g2->Draw("AP"); // Specify the drawing options as needed
             globalCanvas->Update(); // Make sure to update the canvas to reflect the drawn graph
         } else {
             std::cerr << "No points in the graph to display." << std::endl;
         }
+        globalCanvas->cd(2); // Change to the second pad
+        gPad->SetMargin(0.1, 0.1, 0.1, 0.1); 
+        if (g3->GetN() > 0) {
+            g3->Draw("AP"); // Draw the graph with axes and points
+        } else {
+            std::cerr << "No points in the second graph to display." << std::endl;
+        }
+
         globalCanvas->Update();
     }
     else {
