@@ -137,7 +137,7 @@ void load(std::string method = "1")
             MetricTree->GetEntry(i);
             // std::cout << Event << std::endl;
             if (centralityMbd >= MBD_lower && centralityMbd <= MBD_upper && trueZfromSource >= -25. && trueZfromSource <= -15.) {
-                if (foundZ_vtx - trueZfromSource > 0) {
+                if (foundZ_vtx - trueZfromSource > -0.8) {
                     g2->SetPoint(g2->GetN(), trueXfromSource*10, trueYfromSource*10);
                 } else {
                     g3->SetPoint(g2->GetN(), trueXfromSource*10, trueYfromSource*10);
@@ -172,6 +172,11 @@ void load(std::string method = "1")
             g2 -> GetYaxis() -> CenterTitle(true);
             g2 -> GetYaxis() -> SetTitleOffset(0.8); 
             g2 -> GetXaxis() -> SetTitleOffset(0.8); 
+            TLegend *legend = new TLegend(0.15,0.82,0.5,0.9);
+            // legend->SetHeader("Legend","C"); // option "C" allows to center the header
+            legend->AddEntry(g1,Form("Centrality %2.0f-%2.0f", MBD_lower, MBD_upper),"p");
+            legend->SetTextSize(0.03);
+            legend->Draw("same");
         } else {
             std::cerr << "No points to display." << std::endl;
         }
@@ -204,11 +209,16 @@ void load(std::string method = "1")
             g3 -> GetYaxis() -> CenterTitle(true);
             g3 -> GetYaxis() -> SetTitleOffset(0.8); 
             g3 -> GetXaxis() -> SetTitleOffset(0.8); 
+            TLegend *legend = new TLegend(0.15,0.82,0.5,0.9);
+            // legend->SetHeader("Legend","C"); // option "C" allows to center the header
+            legend->AddEntry(g1,Form("Centrality %2.0f-%2.0f", MBD_lower, MBD_upper),"p");
+            legend->SetTextSize(0.03);
+            legend->Draw("same");
         } else {
             std::cerr << "No points in the second graph to display." << std::endl;
         }
 
-        globalCanvas->Update();
+        globalCanvas->Update(); // Final update to the canvas
     }
     else if (method == "sliceXY") {
         globalCanvas->Clear();
@@ -252,7 +262,12 @@ void load(std::string method = "1")
             g2 -> GetYaxis() -> SetLabelSize(0.025);
             g2 -> GetYaxis() -> CenterTitle(true);
             g2 -> GetYaxis() -> SetTitleOffset(0.8); 
-            g2 -> GetXaxis() -> SetTitleOffset(0.8); 
+            g2 -> GetXaxis() -> SetTitleOffset(0.8);
+            TLegend *legend = new TLegend(0.15,0.82,0.75,0.9);
+            // legend->SetHeader("Legend","C"); // option "C" allows to center the header
+            legend->AddEntry(g1,Form("Centrality %2.0f-%2.0f, sliced at -22 cm", MBD_lower, MBD_upper),"p");
+            legend->SetTextSize(0.03);
+            legend->Draw("same");
         } else {
             std::cerr << "No points to display." << std::endl;
         }
@@ -284,7 +299,12 @@ void load(std::string method = "1")
             g3 -> GetYaxis() -> SetLabelSize(0.025);
             g3 -> GetYaxis() -> CenterTitle(true);
             g3 -> GetYaxis() -> SetTitleOffset(0.8); 
-            g3 -> GetXaxis() -> SetTitleOffset(0.8); 
+            g3 -> GetXaxis() -> SetTitleOffset(0.8);
+            TLegend *legend = new TLegend(0.15,0.82,0.75,0.9);
+            // legend->SetHeader("Legend","C"); // option "C" allows to center the header
+            legend->AddEntry(g1,Form("Centrality %2.0f-%2.0f, sliced at -22 cm", MBD_lower, MBD_upper),"p");
+            legend->SetTextSize(0.03);
+            legend->Draw("same");
         } else {
             std::cerr << "No points in the second graph to display." << std::endl;
         }

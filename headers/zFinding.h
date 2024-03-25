@@ -1,8 +1,6 @@
 #include <iomanip>
 #include "globalDefinitions.h"
 
-
-
 // #define __PEAKS_C_FIT_AREAS__ 1 /* fit peaks' areas */
 
 Int_t npeaks = 10;
