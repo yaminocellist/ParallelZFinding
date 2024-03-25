@@ -3,6 +3,7 @@
 #include <vector>
 #include <cmath>
 #include "./headers/Analysis.h"
+#include "./headers/zFinding.h"
 void MultiplicityAnalysis () {}
 
 void trueSingle (Int_t target) {
@@ -77,5 +78,76 @@ void trueSingle (Int_t target) {
         //  Use DC (distance closest) to distinguish signal/background;
         //  the same value as doing z-finding;
     // std::cout << tracklet_layer_0.size() << "," << tracklet_layer_1.size() << std::endl;
+    TH1D *HSignal     = new TH1D("HSignal","HSignal; Delta_Eta; Hits",400,-2,2);
+    TH1D *HBackground = new TH1D("HBackground","HBackground;Delta_Eta; Hits",400,-2,2);
+    for (int i = 0; i < tracklet_layer_0.size(); i++) {
+        for (int j = 0; j < tracklet_layer_1.size(); j++) {
+            myPoint3D P1 = {tracklet_layer_0[i].x, tracklet_layer_0[i].y, tracklet_layer_0[i].z};
+            myPoint3D P2 = {tracklet_layer_1[j].x, tracklet_layer_1[j].y, tracklet_layer_1[j].z};
+            double DC = nearestZ(P1, P2).second;
+            double d_phi = tracklet_layer_0[i].phi - tracklet_layer_1[j].phi;
+            if (DC <= DCA_cut) {
+                HSignal -> Fill(d_phi);
+            } else {
+                HBackground -> Fill(d_phi);
+            }
+        }
+    }
+    double N1 = HBackground -> Integral(HBackground->FindFixBin(-2), HBackground->FindFixBin(-0.1), "") + 
+                HBackground -> Integral(HBackground->FindFixBin(0.1), HBackground->FindFixBin(2), "");
+    double N2 = HSignal -> Integral(HSignal->FindFixBin(-2), HSignal->FindFixBin(-0.1), "") + 
+                HSignal -> Integral(HSignal->FindFixBin(0.1), HSignal->FindFixBin(2), "");
+    double N  = N2/N1;
     
+    TCanvas *c1 = new TCanvas("c1", "Analysis Results", 10, 10, 900, 600);
+    c1 -> Divide(1, 2); // This divides the canvas into two parts
+    c1 -> cd(1);
+    HSignal -> Sumw2();
+    HSignal -> Draw("HIST SAME");
+    HSignal -> Draw("e1psame");
+    HSignal -> SetFillColor(kRed-10);
+    HSignal -> SetFillStyle(1001);
+    // HSignal -> SetTitle(Form("HSignal & Normalized Background for %5.0f Events", events));
+    // HSignal -> GetXaxis() -> SetRange(HSignal -> FindFixBin(-0.5),HSignal -> FindFixBin(0.5));
+    HSignal -> SetFillColor(kCyan - 7);
+    HSignal -> SetMarkerSize(0.55);
+    HSignal -> SetFillStyle(1001);
+    // gPad -> SetLogy(1);
+
+    TH1D* HNormalized = (TH1D*) HBackground->Clone("Normalized HBackground");
+    HNormalized -> Add(HBackground, N-1);
+    HNormalized -> Sumw2();
+    // HNormalized -> Draw("HIST SAME");
+    // HNormalized -> Draw("e1psame");
+
+    HNormalized -> SetFillColor(kRed-7);
+    HNormalized -> SetFillStyle(1001);
+    //HNormalized -> GetXaxis() -> SetRange(HNormalized -> FindFixBin(-0.5),HNormalized -> FindFixBin(0.5));
+    // HNormalized -> SetTitle(Form("Normalized HBackground Between 0.1 and 0.2 for %5.0f Events", events));
+    c1 -> cd(2);
+    TH1D* hDiff = (TH1D*) HSignal->Clone("Subtracted Signal");
+    hDiff -> Add(HNormalized, -1);
+    hDiff -> Sumw2();
+    hDiff -> Draw("HIST SAME");
+    hDiff -> Draw("e1psame");
+
+    hDiff -> SetFillColor(kYellow - 7);
+    hDiff -> SetFillStyle(1001);
+    //hDiff -> GetXaxis() -> SetRange(hDiff -> FindFixBin(-0.5),hDiff -> FindFixBin(0.5));
+    double peak = hDiff -> Integral(hDiff->FindFixBin(-0.1), hDiff->FindFixBin(0.1), "");
+    // double Ratio = peak/events;
+   
+    
+    // hDiff -> SetTitle(Form("Subtracted Signal for %5.0f Events", events));
+
+    gStyle->SetEndErrorSize(6);
+    gStyle->SetErrorX(0.5);
+    
+    gStyle -> SetTitleFont(100,"t");
+    gStyle -> SetTitleSize(0.065,"t");
+
+    //gPad -> SetLogy(1);
+    TLine *l = new TLine(-2,0,2,0);
+	l ->Draw("same"); 
+    l -> SetLineColor(kGreen);
 }
