@@ -15,7 +15,7 @@ void load(std::string method = "1")
         return;
     }
     
-    TCanvas* globalCanvas = nullptr;
+    TCanvas* globalCanvas = new TCanvas("globalCanvas", "Canvas with 2 Square Pads", 1200, 600); // Width, Height
     
     TH1F* h1 = nullptr;
     if (globalCanvas == nullptr) {
@@ -29,11 +29,13 @@ void load(std::string method = "1")
     }
 
     Int_t Event, Npart, NpartFromSource;
-    Float_t foundZ_vtx, trueZfromSource;
+    Float_t foundZ_vtx, trueXfromSource, trueYfromSource, trueZfromSource;
     Float_t centralityBimp, centralityImpactparam, centralityMbdquantity, centralityMbd;
     MetricTree -> SetBranchAddress("Event", &Event);
     MetricTree -> SetBranchAddress("foundZ_vtx", &foundZ_vtx);
     MetricTree -> SetBranchAddress("Npart", &Npart);
+    MetricTree -> SetBranchAddress("trueXfromSource", &trueXfromSource);
+    MetricTree -> SetBranchAddress("trueYfromSource", &trueYfromSource);
     MetricTree -> SetBranchAddress("trueZfromSource", &trueZfromSource);
     MetricTree -> SetBranchAddress("NpartFromSource", &NpartFromSource);
     MetricTree -> SetBranchAddress("centralityBimp", &centralityBimp);
@@ -84,7 +86,7 @@ void load(std::string method = "1")
         legend->Draw("same");
         globalCanvas->Update();
     }
-    else if (method == "partial") {
+    else if (method == "slice") {
         // double ymin = g1->GetHistogram()->GetMinimum();
         // double ymax = g1->GetHistogram()->GetMaximum();
         TGraph *g2 = new TGraph();
@@ -126,6 +128,189 @@ void load(std::string method = "1")
         legend->Draw("same");
         globalCanvas->Update();
     }
+    else if (method == "allXY") {
+        globalCanvas->Clear();
+        globalCanvas->Divide(2, 1); // Divide the canvas into 2 pads: 2 columns, 1 row
+        TGraph *g2 = new TGraph();
+        TGraph *g3 = new TGraph();
+        for (Long64_t i = 0; i < MetricTree->GetEntries(); ++i) {
+            MetricTree->GetEntry(i);
+            // std::cout << Event << std::endl;
+            if (centralityMbd >= MBD_lower && centralityMbd <= MBD_upper && trueZfromSource >= -25. && trueZfromSource <= -15.) {
+                if (foundZ_vtx - trueZfromSource > -0.8) {
+                    g2->SetPoint(g2->GetN(), trueXfromSource*10, trueYfromSource*10);
+                } else {
+                    g3->SetPoint(g2->GetN(), trueXfromSource*10, trueYfromSource*10);
+                }
+            }
+            
+        }
+
+        globalCanvas->cd(1);
+        gPad->SetMargin(0.1, 0.1, 0.1, 0.1);
+        gPad->SetGrid(1, 1);
+        if (g2->GetN() > 0) { // Check if there are points to draw
+            g2->Draw("AP"); 
+            g2->GetXaxis()->SetLimits(-0.5, 0.5); // X axis limits
+            g2->SetMinimum(-0.5); // Y axis minimum
+            g2->SetMaximum(0.5);  // Y axis maximum
+            g2 -> SetMarkerStyle(29);
+            g2 -> SetMarkerSize(0.9);
+            g2 -> SetMarkerColor(kBlue - 7);
+            g2 -> SetLineWidth(3);
+            g2 -> SetLineColor(kWhite);
+            gStyle -> SetTitleW(0.7);  //per cent of the pad width
+            gStyle -> SetTitleH(0.08); //per cent of the pad height
+            g2 -> SetTitle("For resolution > 0");
+            g2 -> GetXaxis() -> SetTitle("True X Vertex [mm]");
+            g2 -> GetXaxis() -> SetTitleSize(0.05);
+            g2 -> GetXaxis() -> SetLabelSize(0.025);
+            g2 -> GetXaxis() -> CenterTitle(true);
+            g2 -> GetYaxis() -> SetTitle("True Y Vertex [mm]");
+            g2 -> GetYaxis() -> SetTitleSize(0.05);
+            g2 -> GetYaxis() -> SetLabelSize(0.025);
+            g2 -> GetYaxis() -> CenterTitle(true);
+            g2 -> GetYaxis() -> SetTitleOffset(0.8); 
+            g2 -> GetXaxis() -> SetTitleOffset(0.8); 
+            TLegend *legend = new TLegend(0.15,0.82,0.5,0.9);
+            // legend->SetHeader("Legend","C"); // option "C" allows to center the header
+            legend->AddEntry(g1,Form("Centrality %2.0f-%2.0f", MBD_lower, MBD_upper),"p");
+            legend->SetTextSize(0.03);
+            legend->Draw("same");
+        } else {
+            std::cerr << "No points to display." << std::endl;
+        }
+        globalCanvas->cd(2); // Change to the second pad
+        gPad->SetMargin(0.1, 0.1, 0.1, 0.1);
+        gPad->SetGrid(1, 1);
+        if (g3->GetN() > 0) {
+            g3->Draw("AP"); // Draw the graph with axes and points
+            g3->GetXaxis()->SetLimits(-0.5, 0.5); // X axis limits
+            g3->SetMinimum(-0.5); // Y axis minimum 
+            g3->SetMaximum(0.5);  // Y axis maximum
+            g3->GetXaxis()->SetLimits(-0.5, 0.5); // X axis limits
+            g3->SetMinimum(-0.5); // Y axis minimum
+            g3->SetMaximum(0.5);  // Y axis maximum
+            g3 -> SetMarkerStyle(29);
+            g3 -> SetMarkerSize(0.9);
+            g3 -> SetMarkerColor(kRed - 7);
+            g3 -> SetLineWidth(3);
+            g3 -> SetLineColor(kWhite);
+            gStyle -> SetTitleW(0.7);  //per cent of the pad width
+            gStyle -> SetTitleH(0.08); //per cent of the pad height
+            g3 -> SetTitle("For resolution < 0");
+            g3 -> GetXaxis() -> SetTitle("True X Vertex [mm]");
+            g3 -> GetXaxis() -> SetTitleSize(0.05);
+            g3 -> GetXaxis() -> SetLabelSize(0.025);
+            g3 -> GetXaxis() -> CenterTitle(true);
+            g3 -> GetYaxis() -> SetTitle("True Y Vertex [mm]");
+            g3 -> GetYaxis() -> SetTitleSize(0.05);
+            g3 -> GetYaxis() -> SetLabelSize(0.025);
+            g3 -> GetYaxis() -> CenterTitle(true);
+            g3 -> GetYaxis() -> SetTitleOffset(0.8); 
+            g3 -> GetXaxis() -> SetTitleOffset(0.8); 
+            TLegend *legend = new TLegend(0.15,0.82,0.5,0.9);
+            // legend->SetHeader("Legend","C"); // option "C" allows to center the header
+            legend->AddEntry(g1,Form("Centrality %2.0f-%2.0f", MBD_lower, MBD_upper),"p");
+            legend->SetTextSize(0.03);
+            legend->Draw("same");
+        } else {
+            std::cerr << "No points in the second graph to display." << std::endl;
+        }
+
+        globalCanvas->Update(); // Final update to the canvas
+    }
+    else if (method == "sliceXY") {
+        globalCanvas->Clear();
+        globalCanvas->Divide(2, 1); // Divide the canvas into 2 pads: 2 columns, 1 row
+        TGraph *g2 = new TGraph();
+        TGraph *g3 = new TGraph();
+        for (Long64_t i = 0; i < MetricTree->GetEntries(); ++i) {
+            MetricTree->GetEntry(i);
+            if (centralityMbd >= MBD_lower && centralityMbd <= MBD_upper && trueZfromSource >= -22.5 && trueZfromSource <= -21.5) {
+                if (foundZ_vtx - trueZfromSource > 0) {
+                    g2->SetPoint(g2->GetN(), trueXfromSource*10, trueYfromSource*10);
+                } else {
+                    g3->SetPoint(g2->GetN(), trueXfromSource*10, trueYfromSource*10);
+                }
+            }
+            
+        }
+
+        globalCanvas->cd(1);
+        gPad->SetMargin(0.1, 0.1, 0.1, 0.1);
+        gPad->SetGrid(1, 1);
+        if (g2->GetN() > 0) { // Check if there are points to draw
+            g2->Draw("AP"); 
+            g2->GetXaxis()->SetLimits(-0.5, 0.5); // X axis limits
+            g2->SetMinimum(-0.5); // Y axis minimum
+            g2->SetMaximum(0.5);  // Y axis maximum
+            g2 -> SetMarkerStyle(29);
+            g2 -> SetMarkerSize(0.9);
+            g2 -> SetMarkerColor(kBlue - 7);
+            g2 -> SetLineWidth(3);
+            g2 -> SetLineColor(kWhite);
+            gStyle -> SetTitleW(0.7);  //per cent of the pad width
+            gStyle -> SetTitleH(0.08); //per cent of the pad height
+            g2 -> SetTitle("For resolution > 0");
+            g2 -> GetXaxis() -> SetTitle("True X Vertex [mm]");
+            g2 -> GetXaxis() -> SetTitleSize(0.05);
+            g2 -> GetXaxis() -> SetLabelSize(0.025);
+            g2 -> GetXaxis() -> CenterTitle(true);
+            g2 -> GetYaxis() -> SetTitle("True Y Vertex [mm]");
+            g2 -> GetYaxis() -> SetTitleSize(0.05);
+            g2 -> GetYaxis() -> SetLabelSize(0.025);
+            g2 -> GetYaxis() -> CenterTitle(true);
+            g2 -> GetYaxis() -> SetTitleOffset(0.8); 
+            g2 -> GetXaxis() -> SetTitleOffset(0.8);
+            TLegend *legend = new TLegend(0.15,0.82,0.75,0.9);
+            // legend->SetHeader("Legend","C"); // option "C" allows to center the header
+            legend->AddEntry(g1,Form("Centrality %2.0f-%2.0f, sliced at -22 cm", MBD_lower, MBD_upper),"p");
+            legend->SetTextSize(0.03);
+            legend->Draw("same");
+        } else {
+            std::cerr << "No points to display." << std::endl;
+        }
+        globalCanvas->cd(2); // Change to the second pad
+        gPad->SetMargin(0.1, 0.1, 0.1, 0.1);
+        gPad->SetGrid(1, 1);
+        if (g3->GetN() > 0) {
+            g3->Draw("AP"); // Draw the graph with axes and points
+            g3->GetXaxis()->SetLimits(-0.5, 0.5); // X axis limits
+            g3->SetMinimum(-0.5); // Y axis minimum 
+            g3->SetMaximum(0.5);  // Y axis maximum
+            g3->GetXaxis()->SetLimits(-0.5, 0.5); // X axis limits
+            g3->SetMinimum(-0.5); // Y axis minimum
+            g3->SetMaximum(0.5);  // Y axis maximum
+            g3 -> SetMarkerStyle(29);
+            g3 -> SetMarkerSize(0.9);
+            g3 -> SetMarkerColor(kRed - 7);
+            g3 -> SetLineWidth(3);
+            g3 -> SetLineColor(kWhite);
+            gStyle -> SetTitleW(0.7);  //per cent of the pad width
+            gStyle -> SetTitleH(0.08); //per cent of the pad height
+            g3 -> SetTitle("For resolution < 0");
+            g3 -> GetXaxis() -> SetTitle("True X Vertex [mm]");
+            g3 -> GetXaxis() -> SetTitleSize(0.05);
+            g3 -> GetXaxis() -> SetLabelSize(0.025);
+            g3 -> GetXaxis() -> CenterTitle(true);
+            g3 -> GetYaxis() -> SetTitle("True Y Vertex [mm]");
+            g3 -> GetYaxis() -> SetTitleSize(0.05);
+            g3 -> GetYaxis() -> SetLabelSize(0.025);
+            g3 -> GetYaxis() -> CenterTitle(true);
+            g3 -> GetYaxis() -> SetTitleOffset(0.8); 
+            g3 -> GetXaxis() -> SetTitleOffset(0.8);
+            TLegend *legend = new TLegend(0.15,0.82,0.75,0.9);
+            // legend->SetHeader("Legend","C"); // option "C" allows to center the header
+            legend->AddEntry(g1,Form("Centrality %2.0f-%2.0f, sliced at -22 cm", MBD_lower, MBD_upper),"p");
+            legend->SetTextSize(0.03);
+            legend->Draw("same");
+        } else {
+            std::cerr << "No points in the second graph to display." << std::endl;
+        }
+
+        globalCanvas->Update();
+    }
     else {
         globalCanvas->Clear();
         globalCanvas->cd();
@@ -158,7 +343,7 @@ void load(std::string method = "1")
         // g1 -> GetXaxis() -> SetLimits(0, 6000); // Setting x range;
         g1 -> Draw("AP SAME");
         gPad->SetGrid(5, 2); gPad->Update();
-
+        g1 -> SetTitle("Weighted Average with 3 bins");
         TLegend *legend = new TLegend(0.35,0.8,0.65,0.9);
         legend->AddEntry(g1,Form("Centrality %2.0f-%2.0f", MBD_lower, MBD_upper),"f");
         legend->SetTextSize(0.04);
