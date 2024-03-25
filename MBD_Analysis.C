@@ -56,7 +56,7 @@ void load(std::string method = "1")
         // double ymin = g1->GetHistogram()->GetMinimum();
         // double ymax = g1->GetHistogram()->GetMaximum();
         int nbins = 1000;
-        h1 = new TH1F("ProjectionY", "Histogram of vtx_z_resolution vs vtx_z 1D projection;Found_z - True_z [mm];Entries", nbins, -60, +60);
+        h1 = new TH1F("ProjectionY", "vtx_z_resolution vs vtx_z 1D projection for bin number doubled;Found_z - True_z [mm];Entries", nbins, -60, +60);
         int npoints = g1->GetN();
         double x, y;
         for (int i = 0; i < npoints; i++) {
@@ -137,7 +137,7 @@ void load(std::string method = "1")
             MetricTree->GetEntry(i);
             // std::cout << Event << std::endl;
             if (centralityMbd >= MBD_lower && centralityMbd <= MBD_upper && trueZfromSource >= -25. && trueZfromSource <= -15.) {
-                if (foundZ_vtx - trueZfromSource > -0.8) {
+                if (foundZ_vtx - trueZfromSource > 0) {
                     g2->SetPoint(g2->GetN(), trueXfromSource*10, trueYfromSource*10);
                 } else {
                     g3->SetPoint(g2->GetN(), trueXfromSource*10, trueYfromSource*10);
@@ -343,7 +343,7 @@ void load(std::string method = "1")
         // g1 -> GetXaxis() -> SetLimits(0, 6000); // Setting x range;
         g1 -> Draw("AP SAME");
         gPad->SetGrid(5, 2); gPad->Update();
-        g1 -> SetTitle("Weighted Average with 3 bins");
+        g1 -> SetTitle("Bin number doubled");
         TLegend *legend = new TLegend(0.35,0.8,0.65,0.9);
         legend->AddEntry(g1,Form("Centrality %2.0f-%2.0f", MBD_lower, MBD_upper),"f");
         legend->SetTextSize(0.04);
