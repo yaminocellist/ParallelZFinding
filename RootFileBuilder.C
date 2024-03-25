@@ -7,9 +7,9 @@ void RootFileBuilder() {}
 void lite()
 {
     /*   retreive data from foundz results text file:   */
-    // ifstream myfile("./zFindingResults/foundZ_debug2_DCA_biased.txt");
+    ifstream myfile("./zFindingResults/foundZ_debug2_DCA_biased.txt");
     // ifstream myfile("../Meeting5/foundZ_debug2_DCA_-8_8_-010_010_2e-1.txt");
-    ifstream myfile("./zFindingResults/foundZ_DCA_npeaks-8_8_-010_010_1e-1.txt");
+    // ifstream myfile("./zFindingResults/foundZ_DCA_npeaks-8_8_-010_010_1e-1.txt");
     
     if (!myfile.is_open()) {
 		  cout << "Unable to open text file" << endl;
@@ -22,7 +22,7 @@ void lite()
     string line, substr;
     while (getline(myfile, line)) {
         stringstream str(line);
-        getline(str, substr, ',');
+        // getline(str, substr, ',');
         getline(str, substr, ',');
         int e = stoi(substr);
         getline(str, substr, ',');
@@ -136,9 +136,6 @@ void lite()
 void full()
 {
     /*   retreive data from foundz results text file:   */
-    // ifstream myfile("../Meeting5/foundZ_debug2_DCA_biased.txt");
-    // ifstream myfile("../Meeting5/foundZ_debug2_DCA_-8_8_-010_010_2e-1.txt");
-    // ifstream myfile("./zFindingResults/foundZ_DCA_npeaks-8_8_-010_010_1e-1.txt");
     ifstream myfile("./zFindingResults/foundZ_allInfo_DCA_0_16_-001_001_2e-1.txt");
     
     if (!myfile.is_open()) {
