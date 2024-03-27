@@ -140,7 +140,8 @@ double DCA_npeaks (const int &evt, const std::vector<myTrackletMemberExtended> &
                          const double &phi_cut_low, const double &phi_cut_high, const double &trueZ) {
     // auto h = std::make_unique<TH1D>("", "", bins, zmin - scanstep/2, zmax + scanstep/2);
     TH1D *h = new TH1D("", "", bins, zmin - scanstep/2, zmax + scanstep/2);
-    // Disable the storage of the sum of squares of weights; Save both memory and run time;
+    // Disable the storage of the sum of squares of weights; 
+    // Save both memory and run time;
     h->Sumw2(kFALSE);   
     for (int i = 0; i < t0.size(); i++) {
         for (int j = 0; j < t1.size(); j++) {
@@ -159,14 +160,18 @@ double DCA_npeaks (const int &evt, const std::vector<myTrackletMemberExtended> &
 
     TSpectrum *s = new TSpectrum();
     TH1 *bg = s -> Background(h, 40, "nosmoothing"); 
+    bg -> SetLineColor(kRed);
+    TCanvas *c = new TCanvas("c", "c", 0,50,2000,1000);
     h->Add(bg, -1.);
     Int_t nfound = s->Search(h, 7., "", 0.001);
     Double_t *xpeaks;
     xpeaks = s->GetPositionX();
     double ctz = xpeaks[0];
+    if (gPad) gPad->SetGrid(1, 1);
+    h -> DrawCopy("");
+    bg -> Draw("SAME");
+    c -> Update();
     // std::cout << std::fixed << std::setprecision(8) << ctz << std::endl;
-
-    
 
 
     /*
@@ -247,9 +252,9 @@ double DCA_npeaks (const int &evt, const std::vector<myTrackletMemberExtended> &
 
     gPad -> SetGrid(1,1); gPad -> Update();
     // gPad -> SetLogy();
-    c -> SaveAs(Form("zFindingPlot/DCA_npeaks_%d.png", evt));
+    c -> SaveAs(Form("zFindingPlots/DCA_npeaks_%d.png", evt));
     // delete c;
-*/
+// */
     return ctz;
 }
 
