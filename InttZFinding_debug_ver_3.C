@@ -493,6 +493,7 @@ void single_z_finding (TTree *EventTree, Int_t target, std::vector<std::string> 
             }
             else {
                 found_z = nearest_z_method(event, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
+                // std::cout << ClusX->size() << "," << TruthPV_Npart->at(0) << std::endl;
             }
             break;
         }

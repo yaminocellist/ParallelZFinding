@@ -71,7 +71,6 @@ void lite()
     EventTree -> SetBranchAddress("TruthPV_y", &TruthPV_y);
     EventTree -> SetBranchAddress("TruthPV_z", &TruthPV_z);
     EventTree -> SetBranchAddress("ClusLadderPhiId", &ClusLadderPhiId);
-    int k = 0;
 
     /*    Create and write a metric .root file:    */
     // Create a new ROOT file
@@ -137,7 +136,6 @@ void full()
 {
     /*   retreive data from foundz results text file:   */
     ifstream myfile("./zFindingResults/foundZ_allInfo_DCA_0_16_-001_001_2e-1.txt");
-    
     if (!myfile.is_open()) {
 		  cout << "Unable to open text file" << endl;
 		  system("read -n 1 -s -p \"Press any key to continue...\" echo");
@@ -197,7 +195,6 @@ void full()
     EventTree -> SetBranchAddress("TruthPV_y", &TruthPV_y);
     EventTree -> SetBranchAddress("TruthPV_z", &TruthPV_z);
     EventTree -> SetBranchAddress("ClusLadderPhiId", &ClusLadderPhiId);
-    int k = 0;
 
     /*    Create and write a metric .root file:    */
     // Create a new ROOT file
