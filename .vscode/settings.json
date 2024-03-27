@@ -1,8 +1,8 @@
 {
     "files.associations": {
+        "Mocktilt_xy_finding.C": "cpp",
         "MBD_Analysis.C": "cpp",
-        "RootFileBuilder.C": "cpp",
         "InttZFinding_debug_ver_3.C": "cpp",
-        "ostream": "cpp"
+        "RootFileBuilder.C": "cpp"
     }
 }
