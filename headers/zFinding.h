@@ -168,10 +168,43 @@ double DCA_npeaks (const int &evt, const std::vector<myTrackletMemberExtended> &
     xpeaks = s->GetPositionX();
     double ctz = xpeaks[0];
     if (gPad) gPad->SetGrid(1, 1);
-    h -> DrawCopy("");
+    // h -> DrawCopy("");
     bg -> Draw("SAME");
     c -> Update();
     // std::cout << std::fixed << std::setprecision(8) << ctz << std::endl;
+    h -> Draw("same");
+    h -> SetFillColor(kYellow - 7);
+    h -> SetLineWidth(1);
+    h -> SetFillStyle(1001);
+    h -> SetTitle(Form("Found Z of Event %d, #bf{DCA with multiple peaks fit}", evt));
+    static TLine *l1 = new TLine();
+    l1 -> SetLineColor(kRed);
+    l1 -> SetLineStyle(2);
+    l1 -> SetLineWidth(4);
+    static TLine *l2 = new TLine();
+    l2 -> SetLineColor(kBlue);
+    l2 -> SetLineStyle(1);
+    l2 -> SetLineWidth(4);
+    static TLegend *lg = new TLegend(0.12, 0.85, 0.46, 0.9);
+    lg -> AddEntry(h, Form("%lu hits, found z = %fcm, true z = %fcm", t0.size() + t1.size(), ctz, trueZ), "f");
+    lg -> SetTextSize(.02);
+    int max_entry = h -> GetBinContent(h -> FindBin(ctz));
+    // Update line positions and redraw
+    l1->SetX1(ctz); l1->SetX2(ctz);
+    l1->SetY1(0);   l1->SetY2(max_entry);
+    l1->Draw("same");
+    l2->SetX1(trueZ); l2->SetX2(trueZ);
+    l2->SetY1(0);     l2->SetY2(max_entry);
+    l2->Draw("same");
+
+    // Clear and update the legend for the current event
+    lg->Clear();
+    lg->AddEntry(h, Form("%lu hits, found z = %fcm, true z = %fcm", t0.size() + t1.size(), ctz, trueZ), "f");
+    lg->Draw("same");
+    gPad -> SetGrid(1,1); gPad -> Update();
+    c -> SaveAs(Form("zFindingPlots/DCA_npeaks_%d.png", evt));
+    delete c;   delete h;   delete bg;
+    h = 0;  bg = 0;
 
 
     /*
