@@ -2,15 +2,14 @@
 #include <TTree.h>
 #include <vector>
 #include <cmath>
-
-void INTT_xyFinding () {
-    // Rretrieving foundZ data:
-    ifstream myfile("./zFindingResults/foundZ_allInfo_DCA_0_16_-001_001_2e-1.txt");
+void single_xyFinding (TTree *EventTree, Int_t target, std::vector<std::string> method, const std::string &filePath) {
+    std::ifstream myfile(filePath);
     if (!myfile.is_open()) {
 		  cout << "Unable to open text file" << endl;
 		  system("read -n 1 -s -p \"Press any key to continue...\" echo");
 		  exit(1);
  	}
+    
     vector<double> foundz, truez;
     vector<double> totalsize;
     vector<int>    evt, idx;
@@ -32,18 +31,6 @@ void INTT_xyFinding () {
         totalsize.push_back(Nparticles);
     }
 
-    /*   Read data from original .root file:   */
-    TFile *f = TFile::Open("../External/INTTRecoClusters_sim_ana382_zvtx-20cm_Bfield0T.root");
-    if (!f || f->IsZombie()) {
-        std::cerr << "Error opening file" << std::endl;
-        return;
-    }
-    TTree *EventTree;
-    f->GetObject("EventTree", EventTree);
-    if (!EventTree) {
-        std::cerr << "Tree not found" << std::endl;
-        return;
-    }
     // Set up event variables to inherit the data
     std::vector<float> *ClusX = nullptr;
     std::vector<float> *ClusY = nullptr;
@@ -80,7 +67,8 @@ void INTT_xyFinding () {
                 // std::cout << i << "," << idx[j] << std::endl;
                 i++;    EventTree->GetEntry(i);
             }
-            for (int k = 0; k < ClusX->size(); k++) {
+            if (i == target) {
+                for (int k = 0; k < ClusX->size(); k++) {
                 if (ClusLayer->at(k) == 3 || ClusLayer->at(k) == 4) {
                     for (int l = 0; l <= 32; l++) {
                         tracklet_layer_0.push_back({ClusX->at(k), ClusY->at(k), ClusZ->at(k) + l*0.05, std::sqrt(std::pow(ClusX->at(k), 2) + std::pow(ClusY->at(k), 2)), INFINITY, std::atan2(ClusY->at(k), ClusX->at(k)), 0});
@@ -94,8 +82,30 @@ void INTT_xyFinding () {
             std::cout << evt[j] << "," << event << "," << idx[j] << "," << i << "," 
                       << foundz[j] << "," << TruthPV_z->at(0) << "," << tracklet_layer_0[0].layer << "," << tracklet_layer_1[0].layer
                       << std::endl;
+            }
+
+
+            
 
             j++;
         }
+    }
+}
+
+void INTT_xyFinding (std::string method = "single", Int_t target = 0) {
+    // foundZ data:
+    std::string filePath = "./zFindingResults/foundZ_allInfo_DCA_0_16_-001_001_2e-1.txt"；
+
+    /*   Data from original .root file:   */
+    TFile *f = TFile::Open("../External/INTTRecoClusters_sim_ana382_zvtx-20cm_Bfield0T.root");
+    if (!f || f->IsZombie()) {
+        std::cerr << "Error opening file" << std::endl;
+        return;
+    }
+    TTree *EventTree;
+    f->GetObject("EventTree", EventTree);
+    if (!EventTree) {
+        std::cerr << "Tree not found" << std::endl;
+        return;
     }
 }
