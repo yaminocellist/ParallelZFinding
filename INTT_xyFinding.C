@@ -1,8 +1,5 @@
-#include <TFile.h>
-#include <TTree.h>
-#include <vector>
-#include <cmath>
 #include "./headers/Analysis.h"
+#include "./headers/xyFinding.h"
 
 void single_xyFinding (TTree *EventTree, Int_t target, std::vector<std::string> method, const std::string &filePath) {
     std::ifstream myfile(filePath);
@@ -61,6 +58,7 @@ void single_xyFinding (TTree *EventTree, Int_t target, std::vector<std::string> 
 
     Long64_t j = 0;
     std::vector<myTrackletMember> tracklet_layer_0, tracklet_layer_1;
+    double r, currentZ, dZ, theta, eta, phi;   // intermediate variables;
     for (Long64_t i = 0; i < EventTree->GetEntries(); ++i) {
         EventTree->GetEntry(i);
         if (NTruthVtx == 1 && TruthPV_Npart->at(0) > 500 && j < evt.size()) {
@@ -69,20 +67,35 @@ void single_xyFinding (TTree *EventTree, Int_t target, std::vector<std::string> 
             }
             if (i == target) {
                 for (int k = 0; k < ClusX->size(); k++) {
-                    if (ClusLayer->at(k) == 3 || ClusLayer->at(k) == 4) {
-                        for (int l = 0; l <= 32; l++) {
-                            tracklet_layer_0.push_back({ClusX->at(k), ClusY->at(k), ClusZ->at(k) + l*0.05, std::sqrt(std::pow(ClusX->at(k), 2) + std::pow(ClusY->at(k), 2)), INFINITY, std::atan2(ClusY->at(k), ClusX->at(k)), 0});
-                        }
-                    } else {
-                        for (int l = 0; l <= 32; l++) {
-                            tracklet_layer_1.push_back({ClusX->at(k), ClusY->at(k), ClusZ->at(k) + l*0.05, std::sqrt(std::pow(ClusX->at(k), 2) + std::pow(ClusY->at(k), 2)), INFINITY, std::atan2(ClusY->at(k), ClusX->at(k)), 1});
+                    // r   = std::sqrt(std::pow(ClusX->at(k), 2) + std::pow(ClusY->at(k), 2));
+                    r   = std::sqrt(std::pow(ClusX->at(k) - TruthPV_x->at(0), 2) + std::pow(ClusY->at(k) - TruthPV_y->at(0), 2));
+                    phi = std::atan2(ClusY->at(k), ClusX->at(k));
+                    for (int l = 0; l <= 3; l++) {
+                        currentZ         = ClusZ->at(k) + l*0.05;
+                        // dZ               = currentZ - foundz[j];
+                        dZ               = currentZ - TruthPV_z->at(0);
+                        theta            = std::atan2(r, dZ);
+                        if (dZ >= 0) {
+                            eta = -log(tan(theta/2));
+                        } else {
+                            eta = log(tan((M_PI - theta)/2));
+                        }         
+                        if (ClusLayer->at(k) == 3 || ClusLayer->at(k) == 4) {
+                            tracklet_layer_0.push_back({ClusX->at(k), ClusY->at(k), currentZ, r,
+                                                        eta, phi, 
+                                                        0});
+                        } else {
+                            tracklet_layer_1.push_back({ClusX->at(k), ClusY->at(k), currentZ, r,
+                                                        eta, phi, 
+                                                        1});
                         }
                     }
                 }
                 std::cout << evt[j] << "," << event << "," << idx[j] << "," << i << "," 
-                          << foundz[j] << "," << TruthPV_z->at(0) << "," << tracklet_layer_0[0].layer << "," << tracklet_layer_1[0].layer
+                          << foundz[j] << "," << TruthPV_z->at(0) << "," << tracklet_layer_0[0].eta << "," << tracklet_layer_1[0].eta
                           << std::endl;
-
+                double hi = angularDistance(evt[j], tracklet_layer_0, tracklet_layer_1);
+                tracklet_layer_0.clear();   tracklet_layer_1.clear();
                 break;
             }
 

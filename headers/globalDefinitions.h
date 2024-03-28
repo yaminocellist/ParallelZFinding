@@ -6,6 +6,9 @@
 #include <memory>
 #include <TH1.h>
 #include <TH2F.h>
+#include <TFile.h>
+#include <TTree.h>
+#include <cmath>
 /*********************************************************************
  *                      GLOBAL VARIABLES;
  * ******************************************************************/
