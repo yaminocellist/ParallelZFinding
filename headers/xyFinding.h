@@ -29,7 +29,7 @@ double angularDistance (const int & evt, const vector<myTrackletMember> &t0, con
     std::cout << t0.size() << "," << t1.size() << std::endl;
     for (int i = 0; i < t0.size(); i++) {
         for (int j = 0; j < t1.size(); j++) {
-            double angular_distance = sqrt(pow(t0[i].eta - t1[j].eta, 2) + pow(t0[i].phi - t1[j].phi, 2));
+            double angular_distance = std::sqrt((t0[i].eta - t1[j].eta)*(t0[i].eta - t1[j].eta) + (t0[i].phi - t1[j].phi)*(t0[i].phi - t1[j].phi));
             h -> Fill(angular_distance);
         }
     }
@@ -67,7 +67,7 @@ double angularDistance (const int & evt, const vector<myTrackletMember> &t0, con
     h -> GetYaxis()->SetRangeUser(0, 1000);
     gPad -> SetGrid(1,1); gPad -> Update();
     // gPad -> SetLogx();
-    can2 -> SaveAs(Form("./xyFindingPlots/angular_distance_%d.png", evt));
+    can2 -> SaveAs(Form("../External/xyFindingPlots/angular_distance_%d.png", evt));
     delete can2;
     h -> Reset("ICESM");    delete h;   h = 0;
     
@@ -75,13 +75,14 @@ double angularDistance (const int & evt, const vector<myTrackletMember> &t0, con
     return rst;
 }
 
-std::pair<double, double> findXY (const int & evt, const vector<myTrackletMember> &t0, const vector<myTrackletMember> &t1, const double &angular_distance_cut, const double &found_z) {
-    TH2D *h_intersection = new TH2D("", "", 900, -4.5, 4.5, 900, -4.5, 4.5);
+std::pair<double, double> findXY (const int & evt, const vector<myTrackletMember> &t0, const vector<myTrackletMember> &t1, const double &angular_distance_cut_squared, const double &found_z) {
+    TH2D *h_intersection = new TH2D("", "", 1800, -4.5, 4.5, 1800, -4.5, 4.5);
     h_intersection -> Sumw2(kFALSE);
     for (int i = 0; i < t0.size(); i++) {
         for (int j = 0; j < t1.size(); j++) {
-            double a_d = sqrt(pow(t0[i].eta - t1[j].eta, 2) + pow(t0[i].phi - t1[j].phi, 2));
-            if (a_d <= angular_distance_cut) {
+            double a_d_squared = (t0[i].eta - t1[j].eta)*(t0[i].eta - t1[j].eta) + 
+                                 (t0[i].phi - t1[j].phi)*(t0[i].phi - t1[j].phi);
+            if (a_d_squared <= angular_distance_cut_squared) {
                 double t = (found_z - t0[i].z) / (t1[j].z - t0[i].z);
                 double x_at_found_z = t0[i].x + t * (t1[j].x - t0[i].x);
                 double y_at_found_z = t0[i].y + t * (t1[j].y - t0[i].y);
@@ -94,16 +95,19 @@ std::pair<double, double> findXY (const int & evt, const vector<myTrackletMember
     TH1D *h_proj_y = h_intersection -> ProjectionY("h_proj_y");
     double median_x = gMedian(h_proj_x);
     double median_y = gMedian(h_proj_y);
-    TCanvas *canvas = new TCanvas("canvas", "Classifier output", 800, 600);
+    TCanvas *canvas = new TCanvas("c", "c", 0,50,1000,1000);
+    gPad->SetMargin(0.1, 0.1, 0.1, 0.1);
+    gPad->SetGrid(1, 1);
+
     h_intersection -> Draw("colz");
-    // h_intersection -> GetYaxis() -> SetRangeUser(-0.1, 0.1);
-    // h_intersection -> GetXaxis() -> SetRangeUser(-0.1, 0.1);
+    h_intersection -> GetYaxis() -> SetRangeUser(-3., 3.);
+    h_intersection -> GetXaxis() -> SetRangeUser(-3., 3.);
     h_intersection -> GetXaxis() -> SetTitle("X (cm)");
     h_intersection -> GetYaxis() -> SetTitle("Y (cm)");
     h_intersection -> GetYaxis() -> SetTitleOffset(1);
     h_intersection -> GetXaxis() -> SetTitleSize(0.05);
     h_intersection -> GetYaxis() -> SetTitleSize(0.05); 
-    h_intersection -> SetTitle(Form("#splitline{Data from event #%d}{      Angular Separation cut at %1.3f}", evt, angular_distance_cut));
+    h_intersection -> SetTitle(Form("#splitline{Data from event #%d}{      Angular Separation cut at %1.3f}", evt, sqrt(angular_distance_cut_squared)));
     gStyle -> SetTitleSize(0.032, "t");
     h_intersection -> GetXaxis() -> CenterTitle(true);
     h_intersection -> GetYaxis() -> CenterTitle(true);
@@ -111,16 +115,17 @@ std::pair<double, double> findXY (const int & evt, const vector<myTrackletMember
     TMarker *markerS = new TMarker(0, 0, 21); // 8 is the default marker style for TH2D
     markerS->SetMarkerColor(colorS);
     h_intersection -> SetMarkerColor(colorS);
-    TLegend *lg = new TLegend(0.12, 0.8, 0.7, 0.9);
+    TLegend *lg = new TLegend(0.12, 0.85, 0.7, 0.9);
     lg -> AddEntry(markerS, Form("Found x and y vertex at: %1.5f, %1.5f (cm)", median_x, median_y), "P");
-    gStyle -> SetLegendTextSize(.03);
+    gStyle -> SetLegendTextSize(.02);
     lg -> Draw("same");
-    canvas -> SaveAs(Form("xyFindingPlots/event_%d.png", evt));
-    // delete canvas;
-    // h_intersection -> Reset("ICESM");
-    // h_proj_y -> Reset("ICESM");
-    // h_proj_x -> Reset("ICESM");
-    // delete h_intersection;  delete h_proj_x;    delete h_proj_y;
-    // h_intersection = 0; h_proj_x = 0;   h_proj_y = 0;
+    canvas -> SaveAs(Form("../External/xyFindingPlots/event_%d.png", evt));
+    delete canvas;
+    h_intersection -> Reset("ICESM");
+    h_proj_y -> Reset("ICESM");
+    h_proj_x -> Reset("ICESM");
+    delete h_intersection;  delete h_proj_x;    delete h_proj_y;
+    h_intersection = 0; h_proj_x = 0;   h_proj_y = 0;
+    std::cout << median_x << "," << median_y << std::endl;
     return std::make_pair(median_x, median_y);
 }
