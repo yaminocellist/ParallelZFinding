@@ -126,7 +126,7 @@ double nearest_z_method (const int &evt, const std::vector<myTrackletMemberExten
     // lg -> Draw("same");
     gPad -> SetGrid(1,1); gPad -> Update();
     // gPad -> SetLogy();
-    can2 -> SaveAs(Form("./zFindingPlots/nearest_foundz_doublebins_%d.png", evt));
+    can2 -> SaveAs(Form("../External/zFindingPlots/nearest_foundz_doublebins_%d.png", evt));
     delete can2;
     // delete h;   h = 0; 
     // delete l1; delete l2; delete lg;
@@ -202,7 +202,7 @@ double DCA_npeaks (const int &evt, const std::vector<myTrackletMemberExtended> &
     lg->AddEntry(h, Form("%lu hits, found z = %fcm, true z = %fcm", t0.size() + t1.size(), ctz, trueZ), "f");
     lg->Draw("same");
     gPad -> SetGrid(1,1); gPad -> Update();
-    c -> SaveAs(Form("zFindingPlots/DCA_npeaks_%d.png", evt));
+    c -> SaveAs(Form("../External/zFindingPlots/DCA_npeaks_%d.png", evt));
     delete c;   delete h;   delete bg;
     h = 0;  bg = 0;
 
@@ -285,7 +285,7 @@ double DCA_npeaks (const int &evt, const std::vector<myTrackletMemberExtended> &
 
     gPad -> SetGrid(1,1); gPad -> Update();
     // gPad -> SetLogy();
-    c -> SaveAs(Form("zFindingPlots/DCA_npeaks_%d.png", evt));
+    c -> SaveAs(Form("../External/zFindingPlots/DCA_npeaks_%d.png", evt));
     // delete c;
 // */
     return ctz;
@@ -408,7 +408,7 @@ double nearest_z_with_error (const int &evt, std::vector<myTrackletMemberExtende
     lg -> Draw("same");
     gPad -> SetGrid(1,1); gPad -> Update();
     // gPad -> SetLogy();
-    can -> SaveAs(Form("zFindingPlot/nearest_z_with_error_%d.png", evt));
+    can -> SaveAs(Form("../External/zFindingPlot/nearest_z_with_error_%d.png", evt));
     // delete can;
     // delete h_weighted;   h_weighted = 0; 
     return ctz;
@@ -495,7 +495,7 @@ double zScan (const int &evt, std::vector<myTrackletMemberExtended> t0, std::vec
     lg -> Draw("same");
     gPad -> SetGrid(1,1); gPad -> Update();
     // gPad -> SetLogy();
-    can -> SaveAs(Form("zFindingPlot/zscan_foundz_%d.png", evt));
+    can -> SaveAs(Form("../External/zFindingPlot/zscan_foundz_%d.png", evt));
     // delete can;
     // delete h;   h = 0; 
     return ctz;
@@ -624,7 +624,7 @@ double zScan_with_error (const int &evt, std::vector<myTrackletMemberExtended> t
     lg -> Draw("same");
     gPad -> SetGrid(1,1); gPad -> Update();
     // gPad -> SetLogy();
-    can -> SaveAs(Form("zFindingPlot/zScan_with_error_%d.png", evt));
+    can -> SaveAs(Form("../External/zFindingPlot/zScan_with_error_%d.png", evt));
     // delete can;
     // delete h_weighted;   h_weighted = 0; 
     return ctz;
@@ -833,7 +833,7 @@ double zScan_norm (const int &evt, std::vector<myTrackletMemberExtended> t0, std
     lg -> Draw("same");
     gPad -> SetGrid(1,1); gPad -> Update();
     // gPad -> SetLogy();
-    can -> SaveAs(Form("zFindingPlot/zscan_normalized_%d.png", evt));
+    can -> SaveAs(Form("../External/zFindingPlot/zscan_normalized_%d.png", evt));
     // delete can;
     // delete hDiff;   hDiff = 0; 
     delete h_bg;    delete h_sig;   delete HNormalized;

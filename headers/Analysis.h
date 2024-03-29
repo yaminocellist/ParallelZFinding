@@ -77,7 +77,7 @@ void dEtaCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<my
 
     h_dEta -> SetTitle(Form("dEta data of Event %d", evt));
     // gPad -> SetLogy();
-    can1 -> SaveAs(Form("zFindingPlots/dEta_single_%d.png", evt));
+    can1 -> SaveAs(Form("../External/zFindingPlots/dEta_single_%d.png", evt));
 }
 
 void dPhiCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<myTrackletMember> t1) {
@@ -110,7 +110,7 @@ void dPhiCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<my
     h_dphi -> GetXaxis() -> SetRangeUser(-0.1, 0.1); // Setting x range;
     h_dphi -> SetTitle(Form("dPhi data of Event %d", evt));
     gPad -> SetLogy();
-    can1 -> SaveAs(Form("zFindingPlots/dPhi_single_%d.png", evt));
+    can1 -> SaveAs(Form("../External/zFindingPlots/dPhi_single_%d.png", evt));
 }
 
 void DCCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<myTrackletMember> t1) {
@@ -159,7 +159,7 @@ void DCCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<myTr
     // h_CD -> GetXaxis() -> SetRangeUser(0, 0.1); // Setting x range;
     h_CD -> SetTitle(Form("Closest Distances of Event %d", evt));
     gPad -> SetLogy();  gPad -> SetLogx();
-    can1 -> SaveAs(Form("zFindingPlot/cd_single_%d.png", evt));
+    can1 -> SaveAs(Form("../External/zFindingPlot/cd_single_%d.png", evt));
 }
 
 void PhiCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<myTrackletMember> t1,
@@ -192,7 +192,7 @@ void PhiCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<myT
     h_phi -> GetYaxis() -> CenterTitle(true);
     h_phi -> SetTitle(Form("Phi data of Event %d", evt));
     gPad -> SetLogy();
-    can1 -> SaveAs(Form("zFindingPlots/Phi_single_%d.png", evt));
+    can1 -> SaveAs(Form("../External/zFindingPlots/Phi_single_%d.png", evt));
 }
 
 double EtaCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<myTrackletMember> t1,
@@ -240,7 +240,7 @@ double EtaCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<m
     h_eta -> GetYaxis() -> CenterTitle(true);
     h_eta -> SetTitle(Form("All #eta data of Event %d", evt));
     gPad -> SetLogy();
-    can1 -> SaveAs(Form("zFindingPlots/Eta_single_%d.png", evt));
+    can1 -> SaveAs(Form("../External/zFindingPlots/Eta_single_%d.png", evt));
     */
     return lastNonZeroBinEdge - firstNonZeroBinEdge;
 }

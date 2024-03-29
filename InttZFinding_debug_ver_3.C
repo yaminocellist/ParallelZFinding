@@ -355,7 +355,7 @@ void trueEtaPhiAnalysis (TTree *EventTree, Int_t target, std::vector<std::string
         h_dphi -> GetYaxis() -> CenterTitle(true);
         h_dphi -> SetTitle("dPhi data of all Event");
         gPad -> SetLogy();
-        can1 -> SaveAs("zFindingPlots/dPhi_all.png");
+        can1 -> SaveAs("../External/zFindingPlots/dPhi_all.png");
         } else {
             h_deta -> Draw();
         h_deta -> SetFillColor(kYellow - 7);
@@ -374,7 +374,7 @@ void trueEtaPhiAnalysis (TTree *EventTree, Int_t target, std::vector<std::string
         h_deta -> GetYaxis() -> CenterTitle(true);
         h_deta -> SetTitle("dEta data of all Event");
         gPad -> SetLogy();
-        can1 -> SaveAs("zFindingPlots/dEta_all.png");
+        can1 -> SaveAs("../External/zFindingPlots/dEta_all.png");
         }
     }
     else if (method[2] == "dEtaPhi") {
@@ -420,7 +420,7 @@ void trueEtaPhiAnalysis (TTree *EventTree, Int_t target, std::vector<std::string
         l2 -> SetLineColor(kRed - 7);
         l2 -> SetLineWidth(2);
         l2 -> Draw("same");
-        can1 -> SaveAs("zFindingPlots/dEtaPhiAll.png");
+        can1 -> SaveAs("../External/zFindingPlots/dEtaPhiAll.png");
     }
 }
 
