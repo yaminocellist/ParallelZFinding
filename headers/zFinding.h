@@ -141,7 +141,7 @@ double DCA_npeaks (const int &evt, const std::vector<myTrackletMember> &t0, cons
     // auto h = std::make_unique<TH1D>("", "", bins, zmin - scanstep/2, zmax + scanstep/2);
     TH1D *h = new TH1D("", "", bins, zmin - scanstep/2, zmax + scanstep/2);
     // Disable the storage of the sum of squares of weights; Save both memory and run time;
-    h->Sumw2(kFALSE);   
+    h->Sumw2(kFALSE);
     for (int i = 0; i < t0.size(); i++) {
         for (int j = 0; j < t1.size(); j++) {
             double dPhi = t0[i].phi - t1[j].phi;

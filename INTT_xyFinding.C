@@ -70,7 +70,7 @@ void single_xyFinding (TTree *EventTree, Int_t target, std::vector<std::string> 
                     // r   = std::sqrt(std::pow(ClusX->at(k), 2) + std::pow(ClusY->at(k), 2));
                     r   = std::sqrt(std::pow(ClusX->at(k) - TruthPV_x->at(0), 2) + std::pow(ClusY->at(k) - TruthPV_y->at(0), 2));
                     phi = std::atan2(ClusY->at(k), ClusX->at(k));
-                    for (int l = 0; l <= 3; l++) {
+                    for (int l = 0; l <= 32; l++) {
                         currentZ         = ClusZ->at(k) + l*0.05;
                         // dZ               = currentZ - foundz[j];
                         dZ               = currentZ - TruthPV_z->at(0);
@@ -94,7 +94,8 @@ void single_xyFinding (TTree *EventTree, Int_t target, std::vector<std::string> 
                 std::cout << evt[j] << "," << event << "," << idx[j] << "," << i << "," 
                           << foundz[j] << "," << TruthPV_z->at(0) << "," << tracklet_layer_0[0].eta << "," << tracklet_layer_1[0].eta
                           << std::endl;
-                double hi = angularDistance(evt[j], tracklet_layer_0, tracklet_layer_1);
+                // double adCut = angularDistance(evt[j], tracklet_layer_0, tracklet_layer_1);
+                std::pair<double, double> found_xy = findXY(evt[j], tracklet_layer_0, tracklet_layer_1, 0.1, foundz[j]);
                 tracklet_layer_0.clear();   tracklet_layer_1.clear();
                 break;
             }
