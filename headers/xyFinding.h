@@ -26,16 +26,16 @@ double angularDistance (const int & evt, const vector<myTrackletMember> &t0, con
     unequal_bins[n3] = 8.1;  // set the last bin edge
     TH1F *h = new TH1F(Form("histo_%d", evt), Form("Angular Distance Histogram of Event %d", evt), n3, unequal_bins);
     // TH1F *h = new TH1F("", "", 200, 0., 8.);
-    std::cout << t0.size() << "," << t1.size() << std::endl;
+    // std::cout << t0.size() << "," << t1.size() << std::endl;
     for (int i = 0; i < t0.size(); i++) {
         for (int j = 0; j < t1.size(); j++) {
             double angular_distance = std::sqrt((t0[i].eta - t1[j].eta)*(t0[i].eta - t1[j].eta) + (t0[i].phi - t1[j].phi)*(t0[i].phi - t1[j].phi));
             h -> Fill(angular_distance);
         }
     }
-    std::cout << "Hi" << std::endl;
+    // std::cout << "Hi" << std::endl;
     int bin1 = h->FindBin(0.01);  // find the bin number corresponding to 0.0
-    int bin2 = h->FindBin(0.1);  // find the bin number corresponding to 0.1
+    int bin2 = h->FindBin(0.02);  // find the bin number corresponding to 0.02
     double minContent = h->GetBinContent(bin1);
     int minBin = bin1;  
     for (int i = bin1 + 1; i <= bin2; ++i) {
@@ -71,7 +71,7 @@ double angularDistance (const int & evt, const vector<myTrackletMember> &t0, con
     delete can2;
     h -> Reset("ICESM");    delete h;   h = 0;
     
-    std::cout << rst << std::endl;
+    // std::cout << rst << std::endl;
     return rst;
 }
 

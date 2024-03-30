@@ -6,6 +6,10 @@
 #include <memory>
 #include <TH1.h>
 #include <TH2F.h>
+#include <TCanvas.h>
+#include <TGraph.h>
+#include <TPolyMarker.h>
+#include <TAxis.h>
 /*********************************************************************
  *                      GLOBAL VARIABLES;
  * ******************************************************************/

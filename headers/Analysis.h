@@ -737,3 +737,60 @@ void foundZAnalysis (string filePath, string select = "zscan", string dim = "2D"
         gPad -> SetLogy();
     }
 }
+
+void foundXYAnalysis (TTree *EventTree, string savePath, string select = "zscan", string dim = "2D") {
+    ifstream myfile(savePath);
+    if (!myfile.is_open()){
+		  cout << "Unable to open linelabel" << endl;
+		  system("read -n 1 -s -p \"Press any key to continue...\" echo");
+		  exit(1);
+ 	}
+
+    int evt, Nparticles;
+    string line, substr;
+    double found_x, found_y, found_z, true_x, true_y, true_z;
+    std::vector<double> foundx, foundy, foundz, dX, dY, dZ;
+    std::vector<double> truex, truey, truez, totalsize;
+    getline(myfile, line);
+
+    while (getline(myfile, line)) {
+        stringstream str(line);
+        getline(str, substr, ',');  evt        = stoi(substr);
+        getline(str, substr, ',');  // index;
+        getline(str, substr, ',');  Nparticles = stoi(substr);
+        getline(str, substr, ',');  found_x    = stod(substr)*1e1;
+        getline(str, substr, ',');  found_y    = stod(substr)*1e1;
+        getline(str, substr, ',');  found_z    = stod(substr)*1e1;
+        getline(str, substr, ',');  true_x     = stod(substr)*1e1;
+        getline(str, substr, ',');  true_y     = stod(substr)*1e1;
+        getline(str, substr, ',');  true_z     = stod(substr)*1e1;
+        
+        foundx.push_back(found_x);      foundy.push_back(found_y);      foundz.push_back(found_z);
+        truex.push_back(true_x);        truey.push_back(true_y);        truez.push_back(true_z);
+        dX.push_back(found_x - true_x); dY.push_back(found_y - true_y); dZ.push_back(found_z - true_z);
+        totalsize.push_back(Nparticles);
+    }
+    
+    if (select == "dX") {
+        TCanvas* canvas = new TCanvas("canvas", "Scatter Plot", 800, 600);
+        TGraph* graph = new TGraph(foundz.size(), &foundz[0], &dX[0]);
+        graph->SetTitle("Scatter Plot");
+        graph->GetXaxis()->SetTitle("foundz");
+        graph->GetYaxis()->SetTitle("dX");
+        graph->GetXaxis()->SetRangeUser(-260, -140);
+        graph->SetMarkerStyle(20);
+        graph->SetMarkerSize(1);
+        graph->Draw("AP");
+    }
+    else if (select == "dY") {
+        TCanvas* canvas = new TCanvas("canvas", "Scatter Plot", 800, 600);
+        TGraph* graph = new TGraph(foundz.size(), &foundz[0], &dY[0]);
+        graph->SetTitle("Scatter Plot");
+        graph->GetXaxis()->SetTitle("foundz");
+        graph->GetYaxis()->SetTitle("dX");
+        graph->GetXaxis()->SetRangeUser(-260, -140);
+        graph->SetMarkerStyle(20);
+        graph->SetMarkerSize(1);
+        graph->Draw("AP");
+    }
+}
