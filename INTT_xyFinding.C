@@ -122,7 +122,7 @@ void single_xyFinding (TTree *EventTree, Int_t target, std::vector<std::string> 
                           << foundz[j] << "," << TruthPV_z->at(0) << "," << TruthPV_x->at(0) << "," << TruthPV_y->at(0)
                           << std::endl;
                 double adCut = angularDistance(evt[j], t0_for_ad, t1_for_ad);
-                std::pair<double, double> found_xy = findXY(evt[j], tracklet_layer_0, tracklet_layer_1, adCut*adCut, foundz[j]);
+                std::pair<double, double> found_xy = findXY(evt[j], tracklet_layer_0, tracklet_layer_1, adCut*adCut, TruthPV_z->at(0));
                 t0_for_ad.clear(); t1_for_ad.clear(); tracklet_layer_0.clear(); tracklet_layer_1.clear();
                 break;
             }

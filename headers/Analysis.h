@@ -113,8 +113,8 @@ void dEtaCheckAll (TH1D* const h_dEta) {
 }
 
 void dPhiCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<myTrackletMember> t1) {
+    // TH1D *h_dphi = new TH1D("", "", 1601, -4 - .0025, 4 + .0025);
     TH1D *h_dphi = new TH1D("", "", 1601, -4 - .0025, 4 + .0025);
-
     for (int i = 0; i < t0.size(); i++) {
         for (int j = 0; j < t1.size(); j++) {
                 h_dphi -> Fill(t0[i].phi - t1[j].phi);
@@ -138,7 +138,7 @@ void dPhiCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<my
     h_dphi -> GetYaxis() -> SetLabelSize(.03);
     h_dphi -> GetYaxis() -> SetTitleOffset(.8);
     h_dphi -> GetYaxis() -> CenterTitle(true);
-    h_dphi -> GetXaxis() -> SetRangeUser(-3., 3.); // Setting x range;
+    // h_dphi -> GetXaxis() -> SetRangeUser(-3., 3.); // Setting x range;
     h_dphi -> SetTitle(Form("dPhi data of Event %d, centered at %0.4f", evt, maxBinCenter));
     // gPad -> SetLogy();
     can1 -> SaveAs(Form("../External/xyFindingPlots/dPhi_single_%d.png", evt));
