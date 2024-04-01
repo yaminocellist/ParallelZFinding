@@ -272,10 +272,9 @@ void trueEtaPhiAnalysis (TTree *EventTree, Int_t target, std::vector<std::string
         EventTree -> GetEntry(i);
         if (i == target && NTruthVtx == 1 && TruthPV_Npart->at(0) > 500
             && centrality_mbd <= 70 && TruthPV_z->at(0) >= -25. && TruthPV_z->at(0) <= -15.) {
-            std::cout << ClusX->size() << "," << UniqueAncG4P_TrackID->size() << std::endl;
             for (int j = 0; j < ClusX->size(); j++) {
                 double z = ClusZ->at(j) - TruthPV_z->at(0);
-                double r = std::sqrt(std::pow(ClusX->at(j), 2) + std::pow(ClusY->at(j), 2));
+                double r = std::sqrt(std::pow(ClusX->at(j) - TruthPV_x->at(0), 2) + std::pow(ClusY->at(j) - TruthPV_y->at(0), 2));
                 double theta = std::atan2(r, z);
                 double eta;
                 if (z >= 0) {
@@ -289,6 +288,7 @@ void trueEtaPhiAnalysis (TTree *EventTree, Int_t target, std::vector<std::string
                     tracklet_layer_1.push_back({ClusX->at(j), ClusY->at(j), ClusZ->at(j), r, eta, std::atan2(ClusY->at(j), ClusX->at(j)), 1});
                 }
             }
+            std::cout << tracklet_layer_0.size() << "," << tracklet_layer_1.size() << std::endl;
             if (method[2] == "phi") {
                 PhiCheck(event, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
                 break;
@@ -296,7 +296,7 @@ void trueEtaPhiAnalysis (TTree *EventTree, Int_t target, std::vector<std::string
                 dPhiCheck(event, tracklet_layer_0, tracklet_layer_1);
                 break;
             } else if (method[2] == "deta"){
-                dEtaCheck(event, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));
+                dEtaCheck(event, tracklet_layer_0, tracklet_layer_1);
                 break;
             } else {
                 EtaCheck(event, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_bound, upper_bound, TruthPV_z->at(0));

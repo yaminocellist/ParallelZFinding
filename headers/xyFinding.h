@@ -10,8 +10,8 @@ double gMedian(const TH1D * h1) {
 }
 
 double angularDistance (const int & evt, const vector<myTrackletMember> &t0, const vector<myTrackletMember> &t1) {
-    const int n1 = 100;          // number of bins in [0, 0.1]
-    const int n2 = 10;         // number of bins in [0.1, 1.1], [1.1, 2.1], ...
+    const int n1 = 100;         // number of bins in [0, 0.1]
+    const int n2 = 10;          // number of bins in [0.1, 1.1], [1.1, 2.1], ...
     const int n3 = 8 * n2 + n1; // total number of bins
     float unequal_bins[n3 + 1]; // array of bin edges
     // Set bin edges
