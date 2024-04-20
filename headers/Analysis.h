@@ -114,10 +114,23 @@ void dEtaCheckAll (TH1D* const h_dEta) {
 
 void dPhiCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<myTrackletMember> t1) {
     // TH1D *h_dphi = new TH1D("", "", 1601, -4 - .0025, 4 + .0025);
-    TH1D *h_dphi = new TH1D("", "", 1601, -4 - .0025, 4 + .0025);
+    int N = 1000;  // Choose an odd number of bins
+    double range_min = -M_PI;
+    double range_max = M_PI;
+    double bin_width = (range_max - range_min) / N;
+    TH1D *h_dphi = new TH1D("", "", N, range_min, range_max);
     for (int i = 0; i < t0.size(); i++) {
         for (int j = 0; j < t1.size(); j++) {
+            if (t0[i].phi - t1[j].phi > M_PI) {
+                h_dphi -> Fill(t0[i].phi - t1[j].phi - 2*M_PI);
+            }
+            else if (t0[i].phi - t1[j].phi < -M_PI) {
+                h_dphi -> Fill(t0[i].phi - t1[j].phi + 2*M_PI);
+            }
+            else {
                 h_dphi -> Fill(t0[i].phi - t1[j].phi);
+            }
+                // h_dphi -> Fill(t0[i].phi - t1[j].phi);
         }
     }
     int maxBin = h_dphi->GetMaximumBin();
@@ -140,7 +153,37 @@ void dPhiCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<my
     h_dphi -> GetYaxis() -> CenterTitle(true);
     // h_dphi -> GetXaxis() -> SetRangeUser(-3., 3.); // Setting x range;
     h_dphi -> SetTitle(Form("dPhi data of Event %d, centered at %0.4f", evt, maxBinCenter));
-    // gPad -> SetLogy();
+    gPad -> SetLogy();
+    double pi = TMath::Pi();
+    int bin_min = 1;  // The first bin
+    int bin_max = h_dphi->GetNbinsX();  // The last bin
+
+// Calculate bin positions for each label
+int bin_pi = bin_max;
+int bin_0 = bin_min + (bin_max - bin_min)/2;
+int binPi_2 = bin_min + 3*(bin_max - bin_min)/4;
+// int bin_pi_2 = bin_min + (bin_max - bin_min)/2;
+int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
+
+
+
+// Set the labels at the calculated positions
+h_dphi->GetXaxis()->SetBinLabel(bin_0, "0");
+h_dphi->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
+h_dphi->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
+// h_dphi->GetXaxis()->SetBinLabel(bin_3pi_4, "#frac{3#pi}{4}");
+h_dphi->GetXaxis()->SetBinLabel(bin_pi, "#pi");
+h_dphi->GetXaxis()->SetBinLabel(bin_min, "-#pi");
+// h_dphi->GetXaxis()->SetBinLabel(bin_max - 3*(bin_max - bin_min)/4, "-#frac{3#pi}{4}");
+// h_dphi->GetXaxis()->SetBinLabel(bin_max - (bin_max - bin_min)/2, "-#frac{#pi}{2}");
+// h_dphi->GetXaxis()->SetBinLabel(bin_max - (bin_max - bin_min)/4, "-#frac{#pi}{4}");
+
+// Ensure the custom labels are displayed by setting the number of divisions
+h_dphi->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
+
+// Update histogram to refresh the axis
+h_dphi->Draw("HIST");
+h_dphi->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
     can1 -> SaveAs(Form("../External/xyFindingPlots/dPhi_single_%d.png", evt));
 }
 
@@ -163,7 +206,7 @@ void dPhiCheckAll (TH1D* const h_dphi) {
     h_dphi -> GetYaxis() -> SetLabelSize(.03);
     h_dphi -> GetYaxis() -> SetTitleOffset(.8);
     h_dphi -> GetYaxis() -> CenterTitle(true);
-    h_dphi -> GetXaxis() -> SetRangeUser(-3., 3.); // Setting x range;
+    h_dphi -> GetXaxis() -> SetRangeUser(-M_PI, M_PI); // Setting x range;
     h_dphi -> SetTitle(Form("dPhi data of all event, centered at %0.4f", maxBinCenter));
     // gPad -> SetLogy();
     can1 -> SaveAs("../External/xyFindingPlots/dPhi_all.png");
@@ -1081,15 +1124,17 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
                 }
                 for (int i = 0; i < tracklet_layer_0.size(); i++) {
                     for (int j = 0; j < tracklet_layer_1.size(); j++) {
-                        // dEta.push_back(tracklet_layer_0[i].eta - tracklet_layer_1[j].eta);
-                        // dPhi.push_back(tracklet_layer_0[i].phi - tracklet_layer_1[j].phi);
-                        // double dEta = tracklet_layer_0[i].eta - tracklet_layer_1[j].eta;
                         double dPhi = tracklet_layer_0[i].phi - tracklet_layer_1[j].phi;
-                        // double dR   = std::sqrt(dEta*dEta + dPhi*dPhi);
-                        // h_dEta    -> Fill(dEta);
-                        h_dPhi    -> Fill(dPhi);
-                        // h_eta_phi -> Fill(dEta, dPhi);
-                        // h_ad      -> Fill(dR);
+                        if (dPhi > M_PI) {
+                            h_dPhi -> Fill(dPhi - 2*M_PI);
+                        }
+                        else if (dPhi < -M_PI) {
+                            h_dPhi -> Fill(dPhi + 2*M_PI);
+                        }
+                        else {
+                            h_dPhi -> Fill(dPhi);
+                        }
+                        // h_dPhi    -> Fill(dPhi);
                     }
                 }
                 tracklet_layer_0.clear();   tracklet_layer_1.clear();
