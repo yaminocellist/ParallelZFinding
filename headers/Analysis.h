@@ -997,7 +997,8 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
     EventTree -> SetBranchAddress("centrality_mbd", &centrality_mbd);
 
     std::vector<myTrackletMember> tracklet_layer_0, tracklet_layer_1;
-    double r, currentZ, dz, theta, eta, phi;   // intermediate variables;
+    double r, currentZ, theta, eta, phi;   // intermediate variables;
+    double dx, dy, dz, dPhi;
     if (method[1] == "single") {
         for (int i = 0; i < idx.size(); i++) {
             if (idx[i] == target) {
@@ -1039,6 +1040,11 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
         TH1D *h_dEta = new TH1D("", "", 1601, -4 - .0025, 4 + .0025);
         TH1D *h_dPhi = new TH1D("", "", 1601, -4 - .0025, 4 + .0025);
         TH2D *h_eta_phi = new TH2D("", "", 80, -4 - .05, 4 + .05, 70, -3.5 - .05, 3.5 + .05);
+        int N = 1000;
+        double range_min = -M_PI;
+        double range_max = M_PI;
+        double bin_width = (range_max - range_min) / N;
+        TH2D *h_dPhi_Z = new TH2D("", "", N, range_min, range_max, 120, -25 - 0.5, -15. + 0.5);
         const int n1 = 100;         // number of bins in [0, 0.1]
         const int n2 = 10;          // number of bins in [0.1, 1.1], [1.1, 2.1], ...
         const int n3 = 8 * n2 + n1; // total number of bins
@@ -1054,7 +1060,7 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
         }
         unequal_bins[n3] = 8.1;  // set the last bin edge
         TH1D *h_ad = new TH1D("", "Angular Distance Histogram of all Events", n3, unequal_bins);
-        //
+
         if (method[2] == "deta") {
             for (int i = 0; i < idx.size(); i++) {
                 EventTree->GetEntry(idx[i]);
@@ -1100,13 +1106,14 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
         else if (method[2] == "dphi") {
             for (int i = 0; i < idx.size(); i++) {
                 EventTree->GetEntry(idx[i]);
-                std::cout << idx[i] << std::endl;
+                // std::cout << idx[i] << "," << event << "," << evt[i] << std::endl;
+                if (event != evt[i])    break;
                 for (int k = 0; k < ClusX->size(); k++) {
-                    r   = std::sqrt((ClusX->at(k) - foundx[i])*(ClusX->at(k) - foundx[i]) + (ClusY->at(k) - foundy[i])*(ClusY->at(k) - foundy[i]));
-                    phi = std::atan2(ClusY->at(k) - foundy[i], ClusX->at(k) - foundx[i]);
-                    currentZ         = ClusZ->at(k);
-                    dz               = currentZ - foundz[i];
-                    theta            = std::atan2(r, dz);
+                    r        = std::sqrt((ClusX->at(k) - foundx[i])*(ClusX->at(k) - foundx[i]) + (ClusY->at(k) - foundy[i])*(ClusY->at(k) - foundy[i]));
+                    phi      = std::atan2(ClusY->at(k) - foundy[i], ClusX->at(k) - foundx[i]);
+                    currentZ = ClusZ->at(k);
+                    dz       = currentZ - foundz[i];
+                    theta    = std::atan2(r, dz);
                     if (dz >= 0) {
                         eta = -log(tan(theta/2));
                     } else {
@@ -1182,6 +1189,59 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
                 tracklet_layer_0.clear();   tracklet_layer_1.clear();
             }
             dRCheckAll(h_ad);
+        }
+        else if (method[2] == "dphiZ") {
+            for (int i = 0; i < idx.size(); i++) {
+                EventTree->GetEntry(idx[i]);
+                // std::cout << idx[i] << "," << event << "," << evt[i] << std::endl;
+                // if (event != evt[i])    break;
+                double fx = foundx[i];
+                double fy = foundy[i];
+                double fz = foundz[i];
+                for (int k = 0; k < ClusX->size(); k++) {
+                    dx       = ClusX->at(k) - fx;
+                    dy       = ClusY->at(k) - fy;
+                    r        = std::sqrt(dx * dx + dy * dy);
+                    phi      = std::atan2(dy, dx);
+                    // r        = std::sqrt((ClusX->at(k) - fx)*(ClusX->at(k) - fx) + (ClusY->at(k) - fy)*(ClusY->at(k) - fy));
+                    // phi      = std::atan2(ClusY->at(k) - foundy[i], ClusX->at(k) - foundx[i]);
+                    currentZ = ClusZ->at(k);
+                    dz       = currentZ - fz;
+                    theta    = std::atan2(r, dz);
+                    if (dz >= 0) {
+                        eta = -log(tan(theta/2));
+                    } else {
+                        eta = log(tan((M_PI - theta)/2));
+                    }         
+                    if (ClusLayer->at(k) == 3 || ClusLayer->at(k) == 4) {
+                        tracklet_layer_0.push_back({ClusX->at(k), ClusY->at(k), currentZ, r,
+                                                    eta, phi, 
+                                                    0});
+                    } else {
+                        tracklet_layer_1.push_back({ClusX->at(k), ClusY->at(k), currentZ, r,
+                                                    eta, phi, 
+                                                    1});
+                    }
+                }
+                for (int i = 0; i < tracklet_layer_0.size(); i++) {
+                    for (int j = 0; j < tracklet_layer_1.size(); j++) {
+                        dPhi = tracklet_layer_0[i].phi - tracklet_layer_1[j].phi;
+                        if (dPhi > M_PI) {
+                            h_dPhi_Z -> Fill(dPhi - 2*M_PI, fz);
+                        }
+                        else if (dPhi < -M_PI) {
+                            h_dPhi_Z -> Fill(dPhi + 2*M_PI, fz);
+                        }
+                        else {
+                            h_dPhi_Z -> Fill(dPhi, fz);
+                        }
+                        // h_dPhi    -> Fill(dPhi);
+                    }
+                }
+                tracklet_layer_0.clear();   tracklet_layer_1.clear();
+            }
+            // dPhiCheckAll(h_dPhi_Z);
+            h_dPhi_Z -> Draw("lego2");
         }
     }
 
