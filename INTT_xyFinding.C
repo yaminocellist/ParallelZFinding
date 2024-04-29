@@ -312,6 +312,9 @@ void INTT_xyFinding (std::string method = "single", Int_t target = 0) {
     } else if (substrings[0] == "etaPhiAnal") {
         foundEtaPhiAnalysis(EventTree, saveFile, target, substrings);
     }
+    else if (substrings[0] == "dPhiInZ") {
+        dPhiInZVtx(EventTree, saveFile, target, substrings);
+    }
     else {
         // etaPhiAnalysis(EventTree, target, substrings, lower_bound, upper_bound);
     }

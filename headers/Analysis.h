@@ -1244,6 +1244,38 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
             h_dPhi_Z -> Draw("lego2");
         }
     }
+}
 
-    
+void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<std::string> method) {
+    ifstream myfile(savePath);
+    if (!myfile.is_open()){
+		  cout << "Unable to open linelabel" << endl;
+		  system("read -n 1 -s -p \"Press any key to continue...\" echo");
+		  exit(1);
+ 	}
+    int Nparticles;
+    string line, substr;
+    double found_x, found_y, found_z, true_x, true_y, true_z;
+    vector<int> evt, idx;
+    std::vector<double> foundx, foundy, foundz, dX, dY, dZ;
+    std::vector<double> truex, truey, truez, totalsize;
+    while (getline(myfile, line)) {
+        stringstream str(line);
+        getline(str, substr, ',');  int e      = stoi(substr);
+        getline(str, substr, ',');  int index  = stoi(substr);
+        getline(str, substr, ',');  Nparticles = stoi(substr);
+        getline(str, substr, ',');  found_x    = stod(substr);
+        getline(str, substr, ',');  found_y    = stod(substr);
+        getline(str, substr, ',');  found_z    = stod(substr);
+        getline(str, substr, ',');  true_x     = stod(substr);
+        getline(str, substr, ',');  true_y     = stod(substr);
+        getline(str, substr, ',');  true_z     = stod(substr);
+        
+        evt.push_back(e);   idx.push_back(index);
+        foundx.push_back(found_x);      foundy.push_back(found_y);      foundz.push_back(found_z);
+        truex.push_back(true_x);        truey.push_back(true_y);        truez.push_back(true_z);
+        dX.push_back(found_x - true_x); dY.push_back(found_y - true_y); dZ.push_back(found_z - true_z);
+        totalsize.push_back(Nparticles);
+    }
+    std::cout << "Hi" << std::endl;
 }
