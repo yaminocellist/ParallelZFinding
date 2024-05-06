@@ -1,4 +1,6 @@
 #include "globalDefinitions.h"
+#include <ROOT/RDataFrame.hxx>
+
 
 void drawHistogram (const int &evt, TH1D *h, TH1D *h2) {
     TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,550);
@@ -187,7 +189,9 @@ h_dphi->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
     can1 -> SaveAs(Form("../External/xyFindingPlots/dPhi_single_%d.png", evt));
 }
 
-void dPhiCheckAll (TH1D* const h_dphi) {
+void dPhiCheckAll (TH1D* const h_dphi, std::vector<std::string> method) {
+    int upperRange = stoi(method[2]);
+    int lowerRange = stoi(method[1]);
     int maxBin = h_dphi->GetMaximumBin();
     double maxBinCenter = h_dphi->GetBinCenter(maxBin);
     TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,1200);
@@ -207,9 +211,10 @@ void dPhiCheckAll (TH1D* const h_dphi) {
     h_dphi -> GetYaxis() -> SetTitleOffset(.8);
     h_dphi -> GetYaxis() -> CenterTitle(true);
     h_dphi -> GetXaxis() -> SetRangeUser(-M_PI, M_PI); // Setting x range;
-    h_dphi -> SetTitle(Form("dPhi data of all event, centered at %0.4f", maxBinCenter));
+    h_dphi -> GetYaxis() -> SetRangeUser(500e3, 3300e3);
+    h_dphi -> SetTitle(Form("dPhi data of all events whose found z vtx is ~ [-%d, -%d] cm, centered at %0.4f", lowerRange, upperRange, maxBinCenter));
     // gPad -> SetLogy();
-    can1 -> SaveAs("../External/xyFindingPlots/dPhi_all.png");
+    can1 -> SaveAs(Form("../External/xyFindingPlots/dPhi_all_%d_%d.png", lowerRange, upperRange));
 }
 
 void dRCheckAll (TH1D* const h) {
@@ -1038,13 +1043,15 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
         }
     } else if (method[1] == "all") {
         TH1D *h_dEta = new TH1D("", "", 1601, -4 - .0025, 4 + .0025);
-        TH1D *h_dPhi = new TH1D("", "", 1601, -4 - .0025, 4 + .0025);
         TH2D *h_eta_phi = new TH2D("", "", 80, -4 - .05, 4 + .05, 70, -3.5 - .05, 3.5 + .05);
         int N = 1000;
         double range_min = -M_PI;
         double range_max = M_PI;
         double bin_width = (range_max - range_min) / N;
-        TH2D *h_dPhi_Z = new TH2D("", "", N, range_min, range_max, 120, -25 - 0.5, -15. + 0.5);
+        // TH1D *h_dPhi = new TH1D("", "", 1601, -4 - .0025, 4 + .0025);
+        TH1D *h_dPhi = new TH1D("", "", N, range_min, range_max);
+        // TH2D *h_dPhi_Z = new TH2D("", "", N, range_min, range_max, 120, -25 - 0.5, -15. + 0.5);
+        TH2D *h_dPhi_Z = new TH2D("", "", N, range_min, range_max, 10, -25.*10., -15.*10.);
         const int n1 = 100;         // number of bins in [0, 0.1]
         const int n2 = 10;          // number of bins in [0.1, 1.1], [1.1, 2.1], ...
         const int n3 = 8 * n2 + n1; // total number of bins
@@ -1146,7 +1153,7 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
                 }
                 tracklet_layer_0.clear();   tracklet_layer_1.clear();
             }
-            dPhiCheckAll(h_dPhi);
+            dPhiCheckAll(h_dPhi, method);
         }
         else if (method[2] == "dR") {
             for (int i = 0; i < idx.size(); i++) {
@@ -1227,13 +1234,13 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
                     for (int j = 0; j < tracklet_layer_1.size(); j++) {
                         dPhi = tracklet_layer_0[i].phi - tracklet_layer_1[j].phi;
                         if (dPhi > M_PI) {
-                            h_dPhi_Z -> Fill(dPhi - 2*M_PI, fz);
+                            h_dPhi_Z -> Fill(dPhi - 2*M_PI, fz*10);
                         }
                         else if (dPhi < -M_PI) {
-                            h_dPhi_Z -> Fill(dPhi + 2*M_PI, fz);
+                            h_dPhi_Z -> Fill(dPhi + 2*M_PI, fz*10);
                         }
                         else {
-                            h_dPhi_Z -> Fill(dPhi, fz);
+                            h_dPhi_Z -> Fill(dPhi, fz*10);
                         }
                         // h_dPhi    -> Fill(dPhi);
                     }
@@ -1242,11 +1249,17 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
             }
             // dPhiCheckAll(h_dPhi_Z);
             h_dPhi_Z -> Draw("lego2");
+            h_dPhi_Z -> SetTitle("All dPhi values (no event mix) with 10 bins of Z vtx");
+            h_dPhi_Z -> GetXaxis() -> SetTitle("dPhi"); h_dPhi_Z -> GetXaxis() -> CenterTitle(true);
+            h_dPhi_Z -> GetYaxis() -> SetTitle("found z vtx position [mm]");   h_dPhi_Z -> GetYaxis() -> CenterTitle(true);
+            h_dPhi_Z -> GetXaxis() -> SetTitleOffset(1.8);   h_dPhi_Z -> GetYaxis() -> SetTitleOffset(1.8);
         }
     }
 }
 
 void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<std::string> method) {
+    double upperRange = stod(method[2]);
+    double lowerRange = stod(method[1]);
     ifstream myfile(savePath);
     if (!myfile.is_open()){
 		  cout << "Unable to open linelabel" << endl;
@@ -1256,9 +1269,12 @@ void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<st
     int Nparticles;
     string line, substr;
     double found_x, found_y, found_z, true_x, true_y, true_z;
-    vector<int> evt, idx;
+    std::vector<int> evt, idx;
     std::vector<double> foundx, foundy, foundz, dX, dY, dZ;
     std::vector<double> truex, truey, truez, totalsize;
+    std::vector<int> selected_evt, selected_idx;
+    std::ofstream outFile("test.txt");
+    std::ofstream outFile2("test2.txt");
     while (getline(myfile, line)) {
         stringstream str(line);
         getline(str, substr, ',');  int e      = stoi(substr);
@@ -1271,11 +1287,295 @@ void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<st
         getline(str, substr, ',');  true_y     = stod(substr);
         getline(str, substr, ',');  true_z     = stod(substr);
         
-        evt.push_back(e);   idx.push_back(index);
-        foundx.push_back(found_x);      foundy.push_back(found_y);      foundz.push_back(found_z);
-        truex.push_back(true_x);        truey.push_back(true_y);        truez.push_back(true_z);
-        dX.push_back(found_x - true_x); dY.push_back(found_y - true_y); dZ.push_back(found_z - true_z);
-        totalsize.push_back(Nparticles);
+        if (found_z >= -lowerRange && found_z <= -upperRange) {
+            evt.push_back(e);   idx.push_back(index);
+            foundx.push_back(found_x);      foundy.push_back(found_y);      foundz.push_back(found_z);
+            truex.push_back(true_x);        truey.push_back(true_y);        truez.push_back(true_z);
+            dX.push_back(found_x - true_x); dY.push_back(found_y - true_y); dZ.push_back(found_z - true_z);
+            totalsize.push_back(Nparticles);
+        }
     }
-    std::cout << "Hi" << std::endl;
+
+    // Set up variables to hold the data from .root file
+    std::vector<float> *ClusX = nullptr;
+    std::vector<float> *ClusY = nullptr;
+    std::vector<float> *ClusZ = nullptr;
+    std::vector<int>   *ClusLayer = nullptr;
+    std::vector<int>   *ClusLadderPhiId = nullptr;
+    std::vector<int>   *UniqueAncG4P_TrackID = nullptr;
+    std::vector<float> *TruthPV_x = nullptr;
+    std::vector<float> *TruthPV_y = nullptr;
+    std::vector<float> *TruthPV_z = nullptr;
+    std::vector<float> *TruthPV_Npart = nullptr;
+    int event, NTruthVtx;
+    float centrality_mbd;
+    EventTree -> SetBranchAddress("event", &event);
+    EventTree -> SetBranchAddress("ClusX", &ClusX);
+    EventTree -> SetBranchAddress("ClusY", &ClusY);
+    EventTree -> SetBranchAddress("ClusZ", &ClusZ);
+    EventTree -> SetBranchAddress("ClusLayer", &ClusLayer);
+    EventTree -> SetBranchAddress("ClusLadderPhiId", &ClusLadderPhiId);
+    EventTree -> SetBranchAddress("UniqueAncG4P_TrackID", &UniqueAncG4P_TrackID);
+    EventTree -> SetBranchAddress("TruthPV_x", &TruthPV_x);
+    EventTree -> SetBranchAddress("TruthPV_y", &TruthPV_y);
+    EventTree -> SetBranchAddress("TruthPV_z", &TruthPV_z);
+    EventTree -> SetBranchAddress("NTruthVtx", &NTruthVtx);
+    EventTree -> SetBranchAddress("TruthPV_Npart", &TruthPV_Npart);
+    EventTree -> SetBranchAddress("centrality_mbd", &centrality_mbd);
+    // setup ends
+
+    int N = 1000;
+    double range_min = -M_PI;
+    double range_max = M_PI;
+    double bin_width = (range_max - range_min) / N;
+    // TH1D *h_dPhi = new TH1D("", "", 1601, -4 - .0025, 4 + .0025);
+    TH1D *h_dPhi = new TH1D("", "", N, range_min, range_max);
+    double r, currentZ, theta, eta, phi;   // intermediate variables;
+    double dx, dy, dz, dPhi;
+    std::vector<myTrackletMember> tracklet_layer_0, tracklet_layer_1;
+    for (int i = 0; i < idx.size(); i++) {
+        EventTree->GetEntry(idx[i]);
+        // std::cout << idx[i] << "," << event << "," << evt[i] << std::endl;
+        // if (event != evt[i])    break;
+        double fx = foundx[i];
+        double fy = foundy[i];
+        double fz = foundz[i];
+        for (int k = 0; k < ClusX->size(); k++) {
+            dx       = ClusX->at(k) - fx;
+            dy       = ClusY->at(k) - fy;
+            r        = std::sqrt(dx * dx + dy * dy);
+            phi      = std::atan2(dy, dx);
+            currentZ = ClusZ->at(k);
+            dz       = currentZ - fz;
+            theta    = std::atan2(r, dz);
+            if (dz >= 0) {
+                eta = -log(tan(theta/2));
+            } else {
+                eta = log(tan((M_PI - theta)/2));
+            }         
+            if (ClusLayer->at(k) == 3 || ClusLayer->at(k) == 4) {
+                tracklet_layer_0.push_back({ClusX->at(k), ClusY->at(k), currentZ, r,
+                                            eta, phi, 
+                                            0});
+            } else {
+                tracklet_layer_1.push_back({ClusX->at(k), ClusY->at(k), currentZ, r,
+                                            eta, phi, 
+                                            1});
+            }
+        }
+        for (int i = 0; i < tracklet_layer_0.size(); i++) {
+            for (int j = 0; j < tracklet_layer_1.size(); j++) {
+                dPhi = tracklet_layer_0[i].phi - tracklet_layer_1[j].phi;
+                if (dPhi > M_PI) {
+                    h_dPhi -> Fill(dPhi - 2*M_PI);
+                }
+                else if (dPhi < -M_PI) {
+                    h_dPhi -> Fill(dPhi + 2*M_PI);
+                }
+                else {
+                    h_dPhi -> Fill(dPhi);
+                }
+            }
+        }
+        tracklet_layer_0.clear();   tracklet_layer_1.clear();
+    }
+    dPhiCheckAll(h_dPhi, method);
+        
+
+    // TFile *temp_file = new TFile("../External/temporary_files/allPhi.root", "RECREATE");
+    // float Phi_value;
+    // TTree *tree = new TTree("Phi", "Data Phi");
+    // tree->Branch("Phi_value", &Phi_value, "Phi_value/F");
+    // int counter = 0;
+    // for (int i = 0; i < selected_evt.size(); i++) {
+    //     EventTree->GetEntry(selected_evt[i]);
+    //     outFile2 << selected_evt[i] << "," << selected_idx[i] << "," << ClusX->size() << std::endl;
+    //     counter += ClusX->size();
+    //     for (int j = 0; j < ClusX->size(); j++) {
+    //         Phi_value = ClusX->at(j);
+    //         tree->Fill();
+    //     }
+    // }
+    // tree->Write();
+    // std::cout << counter << std::endl;
+
+    // Long64_t nEntries = tree->GetEntries();
+    // float phiI, phiJ;
+    // std::vector<double> phi_i(nEntries);
+    // // Set the branch address once to avoid setting it repeatedly inside the loop
+    // tree->SetBranchAddress("Phi_value", &Phi_value);
+    // TH1F *h = new TH1F("h", "Histogram of Phi Differences", 100, -10., 10.);
+    // for (Long64_t i = 0; i < nEntries; i++) {
+    //     tree->GetEntry(i);
+    //     phi_i[i] = Phi_value;
+    // }
+    // for (Long64_t i = 0; i < nEntries; i++) {
+    //     phiI = phi_i[i];
+    //     std::cout << i << std::endl;
+    //     for (Long64_t j = i + 1; j < nEntries; j++) {
+    //         // tree->GetEntry(j);  
+    //         phiJ = phi_i[j];  
+
+    //         h->Fill(phiI - phiJ);
+    //         // h->Fill(phi_j - phi_i);  // Optionally fill the opposite difference if needed
+    //     }
+    // }
+    // h->Draw();
+
+    // TH1D *h_foundz = new TH1D("", "", 161, (-25. - 0.03125)*10, (-15. + 0.03125)*10);
+    // for (int i = 0; i < foundz.size(); i++) {
+    //     h_foundz -> Fill(foundz[i]*10);
+    // }
+    // h_foundz -> Draw();
+    // h_foundz -> SetFillStyle(1001);
+    // h_foundz -> SetFillColor(kYellow - 7);
+    // h_foundz -> SetLineWidth(1);
+    // h_foundz -> GetXaxis() -> SetTitle("found z vtx position [mm]");
+    // h_foundz -> GetXaxis() -> CenterTitle(true);
+
+
+    // int binIndex = 1; // Example bin index
+    // double binWidth = h_foundz->GetBinWidth(binIndex);
+    // std::cout << "Width of bin " << binIndex << " is " << binWidth << std::endl;
+
+    // for (int i = 1; i <= h_foundz->GetNbinsX(); i++) {
+        // if (h_foundz->GetBinContent(i) == 0) {
+            // Get the center of the bin
+            // double binCenter = h_foundz->GetBinCenter(i);
+            // std::cout << "Empty bin at x = " << std::setprecision(8) << binCenter/10. << std::endl;
+        // }
+    // }
+
 }
+
+// void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<std::string> method) {
+//     ifstream myfile(savePath);
+//     if (!myfile.is_open()){
+// 		  cout << "Unable to open linelabel" << endl;
+// 		  system("read -n 1 -s -p \"Press any key to continue...\" echo");
+// 		  exit(1);
+//  	}
+//     int Nparticles;
+//     string line, substr;
+//     double found_x, found_y, found_z, true_x, true_y, true_z;
+//     std::vector<int> evt, idx;
+//     std::vector<double> foundx, foundy, foundz, dX, dY, dZ;
+//     std::vector<double> truex, truey, truez, totalsize;
+//     std::vector<int> selected_evt, selected_idx;
+//     std::ofstream outFile("test.txt");
+//     std::ofstream outFile2("test2.txt");
+//     while (getline(myfile, line)) {
+//         stringstream str(line);
+//         getline(str, substr, ',');  int e      = stoi(substr);
+//         getline(str, substr, ',');  int index  = stoi(substr);
+//         getline(str, substr, ',');  Nparticles = stoi(substr);
+//         getline(str, substr, ',');  found_x    = stod(substr);
+//         getline(str, substr, ',');  found_y    = stod(substr);
+//         getline(str, substr, ',');  found_z    = stod(substr);
+//         getline(str, substr, ',');  true_x     = stod(substr);
+//         getline(str, substr, ',');  true_y     = stod(substr);
+//         getline(str, substr, ',');  true_z     = stod(substr);
+        
+//         evt.push_back(e);   idx.push_back(index);
+//         foundx.push_back(found_x);      foundy.push_back(found_y);      foundz.push_back(found_z);
+//         truex.push_back(true_x);        truey.push_back(true_y);        truez.push_back(true_z);
+//         dX.push_back(found_x - true_x); dY.push_back(found_y - true_y); dZ.push_back(found_z - true_z);
+//         totalsize.push_back(Nparticles);
+//         if (found_z >= -21.4375 && found_z <= -20.5625) {
+//             outFile << e << "," << index << std::endl;
+//             selected_evt.push_back(e);
+//             selected_idx.push_back(index);
+//         }
+//     }
+
+//     // Set up variables to hold the data from .root file
+//     std::vector<float> *ClusX = nullptr;
+//     std::vector<float> *ClusY = nullptr;
+//     std::vector<float> *ClusZ = nullptr;
+//     std::vector<int>   *ClusLayer = nullptr;
+//     std::vector<int>   *ClusLadderPhiId = nullptr;
+//     std::vector<int>   *UniqueAncG4P_TrackID = nullptr;
+//     std::vector<float> *TruthPV_x = nullptr;
+//     std::vector<float> *TruthPV_y = nullptr;
+//     std::vector<float> *TruthPV_z = nullptr;
+//     std::vector<float> *TruthPV_Npart = nullptr;
+//     int event, NTruthVtx;
+//     float centrality_mbd;
+//     EventTree -> SetBranchAddress("event", &event);
+//     EventTree -> SetBranchAddress("ClusX", &ClusX);
+//     EventTree -> SetBranchAddress("ClusY", &ClusY);
+//     EventTree -> SetBranchAddress("ClusZ", &ClusZ);
+//     EventTree -> SetBranchAddress("ClusLayer", &ClusLayer);
+//     EventTree -> SetBranchAddress("ClusLadderPhiId", &ClusLadderPhiId);
+//     EventTree -> SetBranchAddress("UniqueAncG4P_TrackID", &UniqueAncG4P_TrackID);
+//     EventTree -> SetBranchAddress("TruthPV_x", &TruthPV_x);
+//     EventTree -> SetBranchAddress("TruthPV_y", &TruthPV_y);
+//     EventTree -> SetBranchAddress("TruthPV_z", &TruthPV_z);
+//     EventTree -> SetBranchAddress("NTruthVtx", &NTruthVtx);
+//     EventTree -> SetBranchAddress("TruthPV_Npart", &TruthPV_Npart);
+//     EventTree -> SetBranchAddress("centrality_mbd", &centrality_mbd);
+//     // setup ends
+
+//     std::vector<std::vector<double>> all_Phi;
+//     for (int i = 0; i < selected_evt.size(); i++) {
+//         EventTree -> GetEntry(selected_idx[i]);
+//         // std::cout << event << "," << selected_idx[i] << std::endl;
+//         all_Phi.push_back(std::vector<double>());
+//         for (int j = 0; j < ClusX->size(); j++) {
+//             all_Phi[i].push_back(ClusX->at(j));
+//         }
+//         // for (int j = 0; j < selected_evt.size(); j++) {
+//         //     EventTree2 -> GetEntry(selected_idx[j]);
+//         //     // std::cout << event2 << "," << selected_idx[j] << "              ";
+//         // }
+//     }
+//     // int size_i, size_j;
+//     // TH1F *h = new TH1F("h", "Histogram of Phi Differences", 100, -10., 10.);
+//     // for (int i = 0; i < all_Phi.size(); i++) {
+//     //     // std::cout << i << std::endl;
+//     //     for (int j = i; j < all_Phi.size(); j++) {
+            
+//     //         size_i = all_Phi[i].size();
+//     //         size_j = all_Phi[j].size();
+//     //         for (int k = 0; k < size_i; k++) {
+//     //             for (int l = 0; l < size_j; l++) {
+//     //                 h -> Fill(all_Phi[i][k] - all_Phi[j][l]);
+//     //             }
+//     //         }
+//     //     }
+//     // }
+//     #include <vector>
+
+// std::vector<float> flattened_Phi;
+// std::vector<int> indices;
+
+// int index = 0;
+// indices.push_back(index);
+
+// // Flatten the vector and store the starting indices of each original sub-vector
+// for (const auto& subVec : all_Phi) {
+//     flattened_Phi.insert(flattened_Phi.end(), subVec.begin(), subVec.end());
+//     index += subVec.size();
+//     indices.push_back(index); // This marks the end of a sub-vector
+// }
+// TH1F *h = new TH1F("h", "Histogram of Phi Differences", 100, -10., 10.);
+
+// // Adjust the loop to use the flattened structure
+// for (int i = 0; i < all_Phi.size(); i++) {
+//     for (int j = i; j < all_Phi.size(); j++) {
+//         std::cout << i << "," << j << std::endl;
+//         int start_i = indices[i];
+//         int end_i = indices[i+1];
+//         int start_j = indices[j];
+//         int end_j = indices[j+1];
+
+//         for (int k = start_i; k < end_i; k++) {
+//             for (int l = start_j; l < end_j; l++) {
+//                 h->Fill(flattened_Phi[k] - flattened_Phi[l]);
+//             }
+//         }
+//     }
+// }
+
+
+// }
