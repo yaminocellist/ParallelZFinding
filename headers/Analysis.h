@@ -1386,6 +1386,7 @@ void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<st
         std::cout << i << std::endl;
         if (i >= target)    break;
         for (int j = i; j < all_Phi_1.size(); j++) {
+            if (j >= target)    break;
             for (int k = 0; k < all_Phi_0[i].size(); k++) {
                 for (int l = 0; l < all_Phi_1[j].size(); l++) {
                     dPhi = all_Phi_0[i][k] - all_Phi_1[j][l];
@@ -1398,6 +1399,7 @@ void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<st
                     else {
                         h_dPhi -> Fill(dPhi);
                     }
+                    // h_dPhi -> Fill(dPhi);
                 }
             }
         }
