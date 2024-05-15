@@ -210,13 +210,50 @@ void dPhiCheckAll (TH1D* const h_dphi, std::vector<std::string> method, Int_t co
     h_dphi -> GetYaxis() -> SetLabelSize(.03);
     h_dphi -> GetYaxis() -> SetTitleOffset(.8);
     h_dphi -> GetYaxis() -> CenterTitle(true);
-    h_dphi -> GetXaxis() -> SetRangeUser(-M_PI, M_PI); // Setting x range;
-    // h_dphi -> GetYaxis() -> SetRangeUser(600e3, 4600e3);
+    // h_dphi -> GetXaxis() -> SetRangeUser(-M_PI, M_PI); // Setting x range;
+    // h_dphi -> GetYaxis() -> SetRangeUser(5300e3, 6130e3);
     // h_dphi -> SetTitle(Form("dPhi data of all events whose found z vtx is ~ [-%d, -%d] mm, centered at %0.4f", lowerRange, upperRange, maxBinCenter));
     // gPad -> SetLogy();
     // can1 -> SaveAs(Form("../External/xyFindingPlots/dPhi_all_%d_%d.png", lowerRange, upperRange));
     h_dphi-> SetTitle(Form("dPhi of %d events mixed up in range of [-209.375, -207.5] mm", target));
     can1 -> SaveAs(Form("../External/xyFindingPlots/dPhi_mixed_%d.png", target));
+}
+
+void dPhiCheckDouble (TH1D* const h_dphi, TH1D* const h_phi, std::vector<std::string> method, Int_t const & target) {
+    int upperRange = stoi(method[2]);
+    int lowerRange = stoi(method[1]);
+    int maxBin = h_dphi->GetMaximumBin();
+    double maxBinCenter = h_dphi->GetBinCenter(maxBin);
+    TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,1200);
+
+    
+
+    // Draw the first histogram
+    h_dphi -> Draw();
+    h_dphi -> SetFillColor(kYellow - 7);
+    h_dphi -> SetLineWidth(1);
+    h_dphi -> SetFillStyle(1001);
+    h_dphi -> GetXaxis() -> SetTitle("Phi value");
+    h_dphi -> GetXaxis() -> SetTitleSize(.05);
+    h_dphi -> GetXaxis() -> SetLabelSize(.03);
+    h_dphi -> GetXaxis() -> CenterTitle(true);
+    h_dphi -> GetXaxis() -> SetNdivisions(31, 5, 0);
+    h_dphi -> GetXaxis() -> SetTitleOffset(.8);
+    h_dphi -> GetYaxis() -> SetTitle("# of Counts");
+    h_dphi -> GetYaxis() -> SetTitleSize(.05);
+    h_dphi -> GetYaxis() -> SetLabelSize(.03);
+    h_dphi -> GetYaxis() -> SetTitleOffset(.8);
+    h_dphi -> GetYaxis() -> CenterTitle(true);
+    h_dphi -> GetYaxis() -> SetRangeUser(0, 6200e3); // Setting x range;
+
+    // Draw the second histogram on the same canvas
+    h_phi -> Draw("SAME");
+    h_phi -> SetFillColor(kBlue - 7);
+    h_phi -> SetLineWidth(1);
+    h_phi -> SetFillStyle(1001);
+
+    // h_dphi-> SetTitle(Form("dPhi of %d events mixed up in range of [-209.375, -207.5] mm", target));
+    // can1 -> SaveAs(Form("../External/xyFindingPlots/dPhi_mixed_%d.png", target));
 }
 
 void dRCheckAll (TH1D* const h) {
@@ -1333,6 +1370,7 @@ void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<st
     double bin_width = (range_max - range_min) / N;
     // TH1D *h_dPhi = new TH1D("", "", 1601, -4 - .0025, 4 + .0025);
     TH1D *h_dPhi = new TH1D("", "", N, range_min, range_max);
+    TH1D *h_Phi  = new TH1D("", "", N, range_min, range_max);
     double r, currentZ, theta, eta, phi;   // intermediate variables;
     double dx, dy, dz, dPhi;
     std::vector<std::vector<double>> all_Phi_0, all_Phi_1;
@@ -1381,12 +1419,13 @@ void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<st
     }
     std::cout << all_Phi_0.size() << "," << all_Phi_1.size() << std::endl;
     std::cout << all_Phi_0[0].size() << "," << all_Phi_1[0].size() << std::endl;
-
+    // /*
     for (int i = 0; i < all_Phi_0.size(); i++) {
-        std::cout << i << std::endl;
         if (i >= target)    break;
+        // std::cout << i << ". Event: " << evt[i] << ", index: " << idx[i] << std::endl;
         for (int j = i; j < all_Phi_1.size(); j++) {
             if (j >= target)    break;
+            // std::cout << " ---- interacting with Event: " << evt[j] << ", index: " << idx[j] << std::endl;
             for (int k = 0; k < all_Phi_0[i].size(); k++) {
                 for (int l = 0; l < all_Phi_1[j].size(); l++) {
                     dPhi = all_Phi_0[i][k] - all_Phi_1[j][l];
@@ -1404,7 +1443,44 @@ void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<st
             }
         }
     }
-    dPhiCheckAll(h_dPhi, method, target);
+    // */
+    // dPhiCheckAll(h_dPhi, method, target);
+    for (int n = 0; n < 20; n++) {
+    for (int i = 0; i < all_Phi_0.size(); i++) {
+        if (i >= target)    break;
+            for (int k = 0; k < all_Phi_0[i].size(); k++) {
+                for (int l = 0; l < all_Phi_1[i].size(); l++) {
+                    dPhi = all_Phi_0[i][k] - all_Phi_1[i][l];
+                    if (dPhi > M_PI) {
+                        h_Phi -> Fill(dPhi - 2*M_PI);
+                    }
+                    else if (dPhi < -M_PI) {
+                        h_Phi -> Fill(dPhi + 2*M_PI);
+                    }
+                    else {
+                        h_Phi -> Fill(dPhi);
+                    }
+                    // h_dPhi -> Fill(dPhi);
+                }
+            }
+    }
+    }
+    // for (int k = 0; k < 1e4; k++) {
+    // for (int i = 0; i < all_Phi_0.size(); i++) {
+    //     if (i >= target) break;
+    //     for (int j = 0; j < all_Phi_0[i].size(); j++) {
+    //         h_Phi -> Fill(all_Phi_0[i][j]);
+    //     }
+    // }
+    // for (int i = 0; i < all_Phi_1.size(); i++) {
+    //     if (i >= target) break;
+    //     for (int j = 0; j < all_Phi_1[i].size(); j++) {
+    //         h_Phi -> Fill(all_Phi_1[i][j]);
+    //     }
+    // }
+    // }
+    // dPhiCheckAll(h_Phi, method, target);
+    dPhiCheckDouble(h_dPhi, h_Phi, method, target);
     /*
     TH1D *h_foundz = new TH1D("", "", 161, (-25. - 0.03125)*10, (-15. + 0.03125)*10);
     for (int i = 0; i < foundz.size(); i++) {
