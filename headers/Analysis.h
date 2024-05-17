@@ -1401,21 +1401,6 @@ void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<st
                 all_Phi_1[i].push_back(phi);
             }
         }
-        // for (int i = 0; i < tracklet_layer_0.size(); i++) {
-        //     for (int j = 0; j < tracklet_layer_1.size(); j++) {
-        //         dPhi = tracklet_layer_0[i].phi - tracklet_layer_1[j].phi;
-        //         if (dPhi > M_PI) {
-        //             h_dPhi -> Fill(dPhi - 2*M_PI);
-        //         }
-        //         else if (dPhi < -M_PI) {
-        //             h_dPhi -> Fill(dPhi + 2*M_PI);
-        //         }
-        //         else {
-        //             h_dPhi -> Fill(dPhi);
-        //         }
-        //     }
-        // }
-        // tracklet_layer_0.clear();   tracklet_layer_1.clear();
     }
     std::cout << all_Phi_0.size() << "," << all_Phi_1.size() << std::endl;
     std::cout << all_Phi_0[0].size() << "," << all_Phi_1[0].size() << std::endl;
