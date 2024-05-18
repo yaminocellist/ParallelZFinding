@@ -226,8 +226,6 @@ void dPhiCheckDouble (TH1D* const h_dphi, TH1D* const h_phi, std::vector<std::st
     double maxBinCenter = h_dphi->GetBinCenter(maxBin);
     TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,1200);
 
-    
-
     // Draw the first histogram
     h_dphi -> Draw();
     h_dphi -> SetFillColor(kYellow - 7);
@@ -244,7 +242,7 @@ void dPhiCheckDouble (TH1D* const h_dphi, TH1D* const h_phi, std::vector<std::st
     h_dphi -> GetYaxis() -> SetLabelSize(.03);
     h_dphi -> GetYaxis() -> SetTitleOffset(.8);
     h_dphi -> GetYaxis() -> CenterTitle(true);
-    h_dphi -> GetYaxis() -> SetRangeUser(0, 6200e3); // Setting x range;
+    h_dphi -> GetYaxis() -> SetRangeUser(4000e3, 6200e3); // Setting x range;
 
     // Draw the second histogram on the same canvas
     h_phi -> Draw("SAME");
@@ -252,6 +250,7 @@ void dPhiCheckDouble (TH1D* const h_dphi, TH1D* const h_phi, std::vector<std::st
     h_phi -> SetLineWidth(1);
     h_phi -> SetFillStyle(1001);
 
+    h_dphi -> SetTitle(Form("dPhi of %d events mix-up/non-mix-up in range of [-209.375, -207.5] mm", target));
     // h_dphi-> SetTitle(Form("dPhi of %d events mixed up in range of [-209.375, -207.5] mm", target));
     // can1 -> SaveAs(Form("../External/xyFindingPlots/dPhi_mixed_%d.png", target));
 }
@@ -1369,8 +1368,8 @@ void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<st
     double range_max = M_PI;
     double bin_width = (range_max - range_min) / N;
     // TH1D *h_dPhi = new TH1D("", "", 1601, -4 - .0025, 4 + .0025);
-    TH1D *h_dPhi = new TH1D("", "", N, range_min, range_max);
-    TH1D *h_Phi  = new TH1D("", "", N, range_min, range_max);
+    TH1D *h_dPhi = new TH1D("dPhi of mixed", "dPhi of mixed", N, range_min, range_max);
+    TH1D *h_Phi  = new TH1D("dPhi of unmixed", "dPhi of unmixed", N, range_min, range_max);
     double r, currentZ, theta, eta, phi;   // intermediate variables;
     double dx, dy, dz, dPhi;
     std::vector<std::vector<double>> all_Phi_0, all_Phi_1;
