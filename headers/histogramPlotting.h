@@ -1,5 +1,33 @@
 #include "globalDefinitions.h"
 
+void singlePlot (TH1D* const histo, std::vector<std::string> method, Int_t const & target) {
+    int upperRange = stoi(method[2]);
+    int lowerRange = stoi(method[1]);
+    int maxBin = histo->GetMaximumBin();
+    double maxBinCenter = histo->GetBinCenter(maxBin);
+    TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,1200);
+    histo -> Draw();
+    histo -> SetFillColor(kYellow - 7);
+    histo -> SetLineWidth(1);
+    histo -> SetFillStyle(1001);
+    histo -> GetXaxis() -> SetTitleSize(.05);
+    histo -> GetXaxis() -> SetLabelSize(.03);
+    histo -> GetXaxis() -> CenterTitle(true);
+    histo -> GetXaxis() -> SetNdivisions(31, 5, 0);
+    histo -> GetXaxis() -> SetTitleOffset(.8);
+    histo -> GetYaxis() -> SetTitleSize(.05);
+    histo -> GetYaxis() -> SetLabelSize(.03);
+    histo -> GetYaxis() -> SetTitleOffset(.8);
+    histo -> GetYaxis() -> CenterTitle(true);
+    // histo -> GetXaxis() -> SetRangeUser(-M_PI, M_PI); // Setting x range;
+    // histo -> GetYaxis() -> SetRangeUser(5300e3, 6130e3);
+    // histo -> SetTitle(Form("dPhi data of all events whose found z vtx is ~ [-%d, -%d] mm, centered at %0.4f", lowerRange, upperRange, maxBinCenter));
+    // gPad -> SetLogy();
+    // can1 -> SaveAs(Form("../External/xyFindingPlots/dPhi_all_%d_%d.png", lowerRange, upperRange));
+    // histo-> SetTitle(Form("dPhi of %d events mixed up in range of [-209.375, -207.5] mm", target));
+    // can1 -> SaveAs(Form("../External/xyFindingPlots/dPhi_mixed_%d.png", target));
+}
+
 void backgroundCancelling (TH1D* const hBackground, TH1D* const hSignal, std::vector<std::string> method, Int_t const & target) {
     TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,1200);
     can1 -> Divide(1, 2);
@@ -41,7 +69,7 @@ void backgroundCancelling (TH1D* const hBackground, TH1D* const hSignal, std::ve
     hNormalized -> Add(hBackground, N-1);
     TH1D* hDiff = (TH1D*) hSignal->Clone("Background Subtracted Signal");
     hDiff -> Add(hNormalized, -1);
-    //hDiff -> Sumw2();
+    hDiff -> Sumw2();
     hDiff -> Draw("HIST SAME");
     hDiff -> Draw("e1psame");
     hDiff -> GetXaxis() -> SetTitle("dPhi");
