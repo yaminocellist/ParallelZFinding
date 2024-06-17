@@ -28,6 +28,42 @@ void singlePlot (TH1D* const histo, std::vector<std::string> method, Int_t const
     // can1 -> SaveAs(Form("../External/xyFindingPlots/dPhi_mixed_%d.png", target));
 }
 
+void doublePlot (TH1D* const hBackground, TH1D* const hSignal, std::vector<std::string> method, Int_t const & target) {
+    int upperRange = stoi(method[2]);
+    int lowerRange = stoi(method[1]);
+    int maxBin = hBackground->GetMaximumBin();
+    double maxBinCenter = hBackground->GetBinCenter(maxBin);
+    TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,1200);
+
+    // Draw the first histogram
+    hBackground -> Draw();
+    hBackground -> SetFillColor(kYellow - 7);
+    hBackground -> SetLineWidth(1);
+    hBackground -> SetFillStyle(1001);
+    hBackground -> GetXaxis() -> SetTitle("Phi value");
+    hBackground -> GetXaxis() -> SetTitleSize(.05);
+    hBackground -> GetXaxis() -> SetLabelSize(.03);
+    hBackground -> GetXaxis() -> CenterTitle(true);
+    hBackground -> GetXaxis() -> SetNdivisions(31, 5, 0);
+    hBackground -> GetXaxis() -> SetTitleOffset(.8);
+    hBackground -> GetYaxis() -> SetTitle("# of Counts");
+    hBackground -> GetYaxis() -> SetTitleSize(.05);
+    hBackground -> GetYaxis() -> SetLabelSize(.03);
+    hBackground -> GetYaxis() -> SetTitleOffset(.8);
+    hBackground -> GetYaxis() -> CenterTitle(true);
+    hBackground -> GetYaxis() -> SetRangeUser(4000e3, 6200e3); // Setting x range;
+
+    // Draw the second histogram on the same canvas
+    hSignal -> Draw("SAME");
+    hSignal -> SetFillColor(kBlue - 7);
+    hSignal -> SetLineWidth(1);
+    hSignal -> SetFillStyle(1001);
+
+    // hBackground -> SetTitle(Form("dPhi of %d events mix-up/non-mix-up in range of [-209.375, -207.5] mm", target));
+    // hBackground-> SetTitle(Form("dPhi of %d events mixed up in range of [-209.375, -207.5] mm", target));
+    // can1 -> SaveAs(Form("../External/xyFindingPlots/dPhi_mixed_%d.png", target));
+}
+
 void backgroundCancelling (TH1D* const hBackground, TH1D* const hSignal, std::vector<std::string> method, Int_t const & target) {
     TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,1200);
     can1 -> Divide(1, 2);

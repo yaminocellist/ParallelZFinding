@@ -189,12 +189,14 @@ h_dphi->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
     can1 -> SaveAs(Form("../External/xyFindingPlots/dPhi_single_%d.png", evt));
 }
 
-// void dPhiCheckAll (TH1D* const h_dphi, std::vector<std::string> method, Int_t const & target) {
+// void dPhiCheckDouble (TH1D* const h_dphi, TH1D* const h_phi, std::vector<std::string> method, Int_t const & target) {
 //     int upperRange = stoi(method[2]);
 //     int lowerRange = stoi(method[1]);
 //     int maxBin = h_dphi->GetMaximumBin();
 //     double maxBinCenter = h_dphi->GetBinCenter(maxBin);
 //     TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,1200);
+
+//     // Draw the first histogram
 //     h_dphi -> Draw();
 //     h_dphi -> SetFillColor(kYellow - 7);
 //     h_dphi -> SetLineWidth(1);
@@ -210,50 +212,18 @@ h_dphi->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
 //     h_dphi -> GetYaxis() -> SetLabelSize(.03);
 //     h_dphi -> GetYaxis() -> SetTitleOffset(.8);
 //     h_dphi -> GetYaxis() -> CenterTitle(true);
-//     // h_dphi -> GetXaxis() -> SetRangeUser(-M_PI, M_PI); // Setting x range;
-//     // h_dphi -> GetYaxis() -> SetRangeUser(5300e3, 6130e3);
-//     // h_dphi -> SetTitle(Form("dPhi data of all events whose found z vtx is ~ [-%d, -%d] mm, centered at %0.4f", lowerRange, upperRange, maxBinCenter));
-//     // gPad -> SetLogy();
-//     // can1 -> SaveAs(Form("../External/xyFindingPlots/dPhi_all_%d_%d.png", lowerRange, upperRange));
-//     h_dphi-> SetTitle(Form("dPhi of %d events mixed up in range of [-209.375, -207.5] mm", target));
-//     can1 -> SaveAs(Form("../External/xyFindingPlots/dPhi_mixed_%d.png", target));
+//     h_dphi -> GetYaxis() -> SetRangeUser(4000e3, 6200e3); // Setting x range;
+
+//     // Draw the second histogram on the same canvas
+//     h_phi -> Draw("SAME");
+//     h_phi -> SetFillColor(kBlue - 7);
+//     h_phi -> SetLineWidth(1);
+//     h_phi -> SetFillStyle(1001);
+
+//     h_dphi -> SetTitle(Form("dPhi of %d events mix-up/non-mix-up in range of [-209.375, -207.5] mm", target));
+//     // h_dphi-> SetTitle(Form("dPhi of %d events mixed up in range of [-209.375, -207.5] mm", target));
+//     // can1 -> SaveAs(Form("../External/xyFindingPlots/dPhi_mixed_%d.png", target));
 // }
-
-void dPhiCheckDouble (TH1D* const h_dphi, TH1D* const h_phi, std::vector<std::string> method, Int_t const & target) {
-    int upperRange = stoi(method[2]);
-    int lowerRange = stoi(method[1]);
-    int maxBin = h_dphi->GetMaximumBin();
-    double maxBinCenter = h_dphi->GetBinCenter(maxBin);
-    TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,1200);
-
-    // Draw the first histogram
-    h_dphi -> Draw();
-    h_dphi -> SetFillColor(kYellow - 7);
-    h_dphi -> SetLineWidth(1);
-    h_dphi -> SetFillStyle(1001);
-    h_dphi -> GetXaxis() -> SetTitle("Phi value");
-    h_dphi -> GetXaxis() -> SetTitleSize(.05);
-    h_dphi -> GetXaxis() -> SetLabelSize(.03);
-    h_dphi -> GetXaxis() -> CenterTitle(true);
-    h_dphi -> GetXaxis() -> SetNdivisions(31, 5, 0);
-    h_dphi -> GetXaxis() -> SetTitleOffset(.8);
-    h_dphi -> GetYaxis() -> SetTitle("# of Counts");
-    h_dphi -> GetYaxis() -> SetTitleSize(.05);
-    h_dphi -> GetYaxis() -> SetLabelSize(.03);
-    h_dphi -> GetYaxis() -> SetTitleOffset(.8);
-    h_dphi -> GetYaxis() -> CenterTitle(true);
-    h_dphi -> GetYaxis() -> SetRangeUser(4000e3, 6200e3); // Setting x range;
-
-    // Draw the second histogram on the same canvas
-    h_phi -> Draw("SAME");
-    h_phi -> SetFillColor(kBlue - 7);
-    h_phi -> SetLineWidth(1);
-    h_phi -> SetFillStyle(1001);
-
-    h_dphi -> SetTitle(Form("dPhi of %d events mix-up/non-mix-up in range of [-209.375, -207.5] mm", target));
-    // h_dphi-> SetTitle(Form("dPhi of %d events mixed up in range of [-209.375, -207.5] mm", target));
-    // can1 -> SaveAs(Form("../External/xyFindingPlots/dPhi_mixed_%d.png", target));
-}
 
 void dRCheckAll (TH1D* const h) {
     int bin1 = h->FindBin(0.01);  // find the bin number corresponding to 0.0
@@ -1463,8 +1433,8 @@ void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<st
     //     }
     // }
     // }
-    singlePlot(h_unmixed_dPhi, method, target);
-    // dPhiCheckDouble(h_mixed_dPhi, h_unmixed_dPhi, method, target);
+    // singlePlot(h_unmixed_dPhi, method, target);
+    doublePlot(h_mixed_dPhi, h_unmixed_dPhi, method, target);
     // backgroundCancelling(h_mixed_dPhi, h_unmixed_dPhi, method, target);
     /*
     TH1D *h_foundz = new TH1D("", "", 161, (-25. - 0.03125)*10, (-15. + 0.03125)*10);

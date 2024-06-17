@@ -4,15 +4,15 @@
 void single_xyFinding (TTree *EventTree, Int_t target, std::vector<std::string> method, const std::string &filePath) {
     std::ifstream myfile(filePath);
     if (!myfile.is_open()) {
-		  cout << "Unable to open text file" << endl;
+		  std::cout << "Unable to open text file" << std::endl;
 		  system("read -n 1 -s -p \"Press any key to continue...\" echo");
 		  exit(1);
  	}
     
-    vector<double> foundz, truez;
-    vector<double> totalsize;
-    vector<int>    evt, idx;
-    string line, substr;
+    std::vector<double> foundz, truez;
+    std::vector<double> totalsize;
+    std::vector<int>    evt, idx;
+    std::string line, substr;
     getline(myfile, line);
     while (getline(myfile, line)) {
         stringstream str(line);
@@ -31,13 +31,13 @@ void single_xyFinding (TTree *EventTree, Int_t target, std::vector<std::string> 
     }
 
     // Set up event variables to inherit the data
-    std::vector<float> *ClusX = nullptr;
-    std::vector<float> *ClusY = nullptr;
-    std::vector<float> *ClusZ = nullptr;
-    std::vector<int>   *ClusLayer = nullptr;
-    std::vector<float> *TruthPV_x = nullptr;
-    std::vector<float> *TruthPV_y = nullptr;
-    std::vector<float> *TruthPV_z = nullptr;
+    std::vector<float> *ClusX         = nullptr;
+    std::vector<float> *ClusY         = nullptr;
+    std::vector<float> *ClusZ         = nullptr;
+    std::vector<int>   *ClusLayer     = nullptr;
+    std::vector<float> *TruthPV_x     = nullptr;
+    std::vector<float> *TruthPV_y     = nullptr;
+    std::vector<float> *TruthPV_z     = nullptr;
     std::vector<int>   *TruthPV_Npart = nullptr;
     int   event, NTruthVtx;
     float centrality_bimp, centrality_impactparam, centrality_mbdquantity, centrality_mbd;
@@ -57,6 +57,8 @@ void single_xyFinding (TTree *EventTree, Int_t target, std::vector<std::string> 
     EventTree -> SetBranchAddress("TruthPV_z", &TruthPV_z);
 
     Long64_t j = 0;
+    // "ad" stand for Angular distance;
+    // https://particle.wiki/wiki/Angular_distance
     std::vector<myTrackletMember> t0_for_ad, t1_for_ad, tracklet_layer_0, tracklet_layer_1;
     double r, currentZ, dZ, theta, eta, phi;   // intermediate variables;
     for (Long64_t i = 0; i < EventTree->GetEntries(); ++i) {
@@ -303,7 +305,7 @@ void INTT_xyFinding (std::string method = "single", Int_t target = 0) {
         substrings.push_back("");
     }
 
-    if (substrings[0] == "single") {
+    if        (substrings[0] == "single") {
         single_xyFinding(EventTree, target, substrings, filePath);
     } else if (substrings[0] == "all") {
         all_xyFinding(EventTree, target, substrings, filePath, saveFile);
@@ -312,7 +314,7 @@ void INTT_xyFinding (std::string method = "single", Int_t target = 0) {
     } else if (substrings[0] == "etaPhiAnal") {
         foundEtaPhiAnalysis(EventTree, saveFile, target, substrings);
     }
-    else if (substrings[0] == "dPhiInZ") {
+    else if   (substrings[0] == "dPhiInZ") {
         dPhiInZVtx(EventTree, saveFile, target, substrings);
     }
     else {
