@@ -62,47 +62,52 @@ void single_xyFinding (TTree *EventTree, Int_t target, std::vector<std::string> 
     std::vector<myTrackletMember> t0_for_ad, t1_for_ad, tracklet_layer_0, tracklet_layer_1;
     double r, currentZ, dZ, theta, eta, phi;   // intermediate variables;
     for (Long64_t i = 0; i < EventTree->GetEntries(); ++i) {
-        EventTree->GetEntry(i);
-        if (NTruthVtx == 1 && TruthPV_Npart->at(0) > 500 && j < evt.size() &&
-            centrality_mbd <= 70 && TruthPV_z->at(0) >= -25. && TruthPV_z->at(0) <= -15.) {
-            while (evt[j] != event || i != idx[j] || TruthPV_Npart->at(0) != totalsize[j]) {
-                i++;    EventTree->GetEntry(i);
-            }
-            if (i == target) {
+        // EventTree->GetEntry(i);
+        EventTree -> GetEntry(idx[i]);
+        // if (NTruthVtx == 1 && TruthPV_Npart->at(0) > 500 && j < evt.size() &&
+        //     centrality_mbd <= 70 && TruthPV_z->at(0) >= -25. && TruthPV_z->at(0) <= -15.) {
+            // while (evt[j] != event || i != idx[j] || TruthPV_Npart->at(0) != totalsize[j]) {
+            //     i++;    EventTree->GetEntry(i);
+            // }
+            // if (i == target) {
+            if (idx[i] == target && NTruthVtx == 1 && TruthPV_Npart->at(0) > 500 && j < evt.size() &&
+                centrality_mbd <= 70 && TruthPV_z->at(0) >= -25. && TruthPV_z->at(0) <= -15.) {
+                std::cout << evt[i] << ", " << event << std::endl;
+                std::cout << truez[i] << ", " << TruthPV_z->at(0) << std::endl;
+                std::cout << totalsize[i] << ", " << TruthPV_Npart->at(0) << std::endl;
                 for (int k = 0; k < ClusX->size(); k++) {
                     // r   = std::sqrt(std::pow(ClusX->at(k), 2) + std::pow(ClusY->at(k), 2));
                     r   = std::sqrt((ClusX->at(k) - TruthPV_x->at(0))*(ClusX->at(k) - TruthPV_x->at(0)) + (ClusY->at(k) - TruthPV_y->at(0))*(ClusY->at(k) - TruthPV_y->at(0)));
                     phi = std::atan2(ClusY->at(k), ClusX->at(k));
-                    // 
-                        currentZ         = ClusZ->at(k);
-                        // dZ               = currentZ - foundz[j];
-                        dZ               = currentZ - TruthPV_z->at(0);
-                        theta            = std::atan2(r, dZ);
-                        if (dZ >= 0) {
-                            eta = -log(tan(theta/2));
-                        } else {
-                            eta = log(tan((M_PI - theta)/2));
-                        }         
-                        if (ClusLayer->at(k) == 3 || ClusLayer->at(k) == 4) {
-                            t0_for_ad.push_back({ClusX->at(k), ClusY->at(k), currentZ, r,
-                                                        eta, phi, 
-                                                        0});
-                            tracklet_layer_0.push_back({ClusX->at(k), ClusY->at(k), currentZ, r,
-                                                        eta, phi, 
-                                                        0});
-                        } else {
-                            t1_for_ad.push_back({ClusX->at(k), ClusY->at(k), currentZ, r,
-                                                        eta, phi, 
-                                                        1});
-                            tracklet_layer_1.push_back({ClusX->at(k), ClusY->at(k), currentZ, r,
-                                                        eta, phi, 
-                                                        1});
-                        }
+                    currentZ         = ClusZ->at(k);
+                    dZ               = currentZ - foundz[j];
+                    // dZ               = currentZ - TruthPV_z->at(0);
+                    theta            = std::atan2(r, dZ);
+                    if (dZ >= 0) {
+                        eta = -log(tan(theta/2));
+                    } else {
+                        eta = log(tan((M_PI - theta)/2));
+                    }         
+                    if (ClusLayer->at(k) == 3 || ClusLayer->at(k) == 4) {
+                        t0_for_ad.push_back({ClusX->at(k), ClusY->at(k), currentZ, r,
+                                                    eta, phi, 
+                                                    0});
+                        tracklet_layer_0.push_back({ClusX->at(k), ClusY->at(k), currentZ, r,
+                                                    eta, phi, 
+                                                    0});
+                    } else {
+                        t1_for_ad.push_back({ClusX->at(k), ClusY->at(k), currentZ, r,
+                                                    eta, phi, 
+                                                    1});
+                        tracklet_layer_1.push_back({ClusX->at(k), ClusY->at(k), currentZ, r,
+                                                    eta, phi, 
+                                                    1});
+                    }
                     //
                     for (int l = 1; l <= 32; l++) {
                         currentZ         = ClusZ->at(k) + l*0.05;
-                        // dZ               = currentZ - foundz[j];
-                        dZ               = currentZ - TruthPV_z->at(0);
+                        dZ               = currentZ - foundz[j];
+                        // dZ               = currentZ - TruthPV_z->at(0);
                         theta            = std::atan2(r, dZ);
                         if (dZ >= 0) {
                             eta = -log(tan(theta/2));
@@ -130,15 +135,15 @@ void single_xyFinding (TTree *EventTree, Int_t target, std::vector<std::string> 
             }
             j++;
         }
-    }
+    // }
 }
 
 void all_xyFinding (TTree *EventTree, Int_t target, std::vector<std::string> method, const std::string &filePath, const std::string &saveFile) {
     std::ifstream myfile(filePath);
     if (!myfile.is_open()) {
-		  cout << "Unable to open text file" << endl;
-		  system("read -n 1 -s -p \"Press any key to continue...\" echo");
-		  exit(1);
+		std::cout << "Unable to open text file" << std::endl;
+		system("read -n 1 -s -p \"Press any key to continue...\" echo");
+		exit(1);
  	}
     std::ofstream outputFile(saveFile, std::ios_base::app);
     if (!outputFile.is_open()) {
