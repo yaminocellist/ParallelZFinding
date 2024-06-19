@@ -114,81 +114,6 @@ void dEtaCheckAll (TH1D* const h_dEta) {
     can1 -> SaveAs("../External/xyFindingPlots/dEta_all.png");
 }
 
-void dPhiCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<myTrackletMember> t1) {
-    // TH1D *h_dphi = new TH1D("", "", 1601, -4 - .0025, 4 + .0025);
-    int N = 1000;  // Choose an odd number of bins
-    double range_min = -M_PI;
-    double range_max = M_PI;
-    double bin_width = (range_max - range_min) / N;
-    TH1D *h_dphi = new TH1D("", "", N, range_min, range_max);
-    for (int i = 0; i < t0.size(); i++) {
-        for (int j = 0; j < t1.size(); j++) {
-            if (t0[i].phi - t1[j].phi > M_PI) {
-                h_dphi -> Fill(t0[i].phi - t1[j].phi - 2*M_PI);
-            }
-            else if (t0[i].phi - t1[j].phi < -M_PI) {
-                h_dphi -> Fill(t0[i].phi - t1[j].phi + 2*M_PI);
-            }
-            else {
-                h_dphi -> Fill(t0[i].phi - t1[j].phi);
-            }
-                // h_dphi -> Fill(t0[i].phi - t1[j].phi);
-        }
-    }
-    int maxBin = h_dphi->GetMaximumBin();
-    double maxBinCenter = h_dphi->GetBinCenter(maxBin);
-    TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,1200);
-    h_dphi -> Draw();
-    h_dphi -> SetFillColor(kYellow - 7);
-    h_dphi -> SetLineWidth(1);
-    h_dphi -> SetFillStyle(1001);
-    h_dphi -> GetXaxis() -> SetTitle("Phi value");
-    h_dphi -> GetXaxis() -> SetTitleSize(.05);
-    h_dphi -> GetXaxis() -> SetLabelSize(.03);
-    h_dphi -> GetXaxis() -> CenterTitle(true);
-    h_dphi -> GetXaxis() -> SetNdivisions(31, 5, 0);
-    h_dphi -> GetXaxis() -> SetTitleOffset(.8);
-    h_dphi -> GetYaxis() -> SetTitle("# of Counts");
-    h_dphi -> GetYaxis() -> SetTitleSize(.05);
-    h_dphi -> GetYaxis() -> SetLabelSize(.03);
-    h_dphi -> GetYaxis() -> SetTitleOffset(.8);
-    h_dphi -> GetYaxis() -> CenterTitle(true);
-    // h_dphi -> GetXaxis() -> SetRangeUser(-3., 3.); // Setting x range;
-    h_dphi -> SetTitle(Form("dPhi data of Event %d, centered at %0.4f", evt, maxBinCenter));
-    gPad -> SetLogy();
-    double pi = TMath::Pi();
-    int bin_min = 1;  // The first bin
-    int bin_max = h_dphi->GetNbinsX();  // The last bin
-
-// Calculate bin positions for each label
-int bin_pi = bin_max;
-int bin_0 = bin_min + (bin_max - bin_min)/2;
-int binPi_2 = bin_min + 3*(bin_max - bin_min)/4;
-// int bin_pi_2 = bin_min + (bin_max - bin_min)/2;
-int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
-
-
-
-// Set the labels at the calculated positions
-h_dphi->GetXaxis()->SetBinLabel(bin_0, "0");
-h_dphi->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
-h_dphi->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
-// h_dphi->GetXaxis()->SetBinLabel(bin_3pi_4, "#frac{3#pi}{4}");
-h_dphi->GetXaxis()->SetBinLabel(bin_pi, "#pi");
-h_dphi->GetXaxis()->SetBinLabel(bin_min, "-#pi");
-// h_dphi->GetXaxis()->SetBinLabel(bin_max - 3*(bin_max - bin_min)/4, "-#frac{3#pi}{4}");
-// h_dphi->GetXaxis()->SetBinLabel(bin_max - (bin_max - bin_min)/2, "-#frac{#pi}{2}");
-// h_dphi->GetXaxis()->SetBinLabel(bin_max - (bin_max - bin_min)/4, "-#frac{#pi}{4}");
-
-// Ensure the custom labels are displayed by setting the number of divisions
-h_dphi->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
-
-// Update histogram to refresh the axis
-h_dphi->Draw("HIST");
-h_dphi->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
-    can1 -> SaveAs(Form("../External/xyFindingPlots/dPhi_single_%d.png", evt));
-}
-
 // void dPhiCheckDouble (TH1D* const h_dphi, TH1D* const h_phi, std::vector<std::string> method, Int_t const & target) {
 //     int upperRange = stoi(method[2]);
 //     int lowerRange = stoi(method[1]);
@@ -954,14 +879,14 @@ void foundXYAnalysis (TTree *EventTree, string savePath, string select = "zscan"
 void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::vector<std::string> method) {
     ifstream myfile(savePath);
     if (!myfile.is_open()){
-		  cout << "Unable to open linelabel" << endl;
-		  system("read -n 1 -s -p \"Press any key to continue...\" echo");
-		  exit(1);
+		std::cout << "Unable to open linelabel" << std::endl;
+		system("read -n 1 -s -p \"Press any key to continue...\" echo");
+		exit(1);
  	}
     int Nparticles;
     string line, substr;
     double found_x, found_y, found_z, true_x, true_y, true_z;
-    vector<int> evt, idx;
+    std::vector<int> evt, idx;
     std::vector<double> foundx, foundy, foundz, dX, dY, dZ;
     std::vector<double> truex, truey, truez, totalsize;
     while (getline(myfile, line)) {
@@ -1014,6 +939,7 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
     double dx, dy, dz, dPhi;
     if (method[1] == "single") {
         for (int i = 0; i < idx.size(); i++) {
+            if (idx[i] > target)    break;
             if (idx[i] == target) {
                 target = evt[i];
                 EventTree->GetEntry(idx[i]);
@@ -1040,17 +966,38 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
                 }
                 break;
             }
-            if (idx[i] > target)    break;
         }
         std::cout << tracklet_layer_0.size() << "," << tracklet_layer_1.size() << std::endl;
         if (method[2] == "deta") {
             dEtaCheck(target, tracklet_layer_0, tracklet_layer_1);
         }
         if (method[2] == "dphi") {
-            dPhiCheck(target, tracklet_layer_0, tracklet_layer_1);
+            // TH1D *h_dphi = new TH1D("", "", 1601, -4 - .0025, 4 + .0025);
+            int N = 1000;  // Choose an odd number of bins
+            double range_min = -M_PI;
+            double range_max = M_PI;
+            double bin_width = (range_max - range_min) / N;
+            TH1D *h_dphi = new TH1D(Form("dPhi dist for Event %d", target), Form("dPhi distribution for Event %d; dPhi; # of counts", target), N, range_min, range_max);
+            for (int i = 0; i < tracklet_layer_0.size(); i++) {
+                for (int j = 0; j < tracklet_layer_1.size(); j++) {
+                    double deltaPhi = tracklet_layer_0[i].phi - tracklet_layer_1[j].phi;
+                    if (deltaPhi > M_PI) {
+                        h_dphi -> Fill(deltaPhi - 2*M_PI);
+                    }
+                    else if (deltaPhi < -M_PI) {
+                        h_dphi -> Fill(deltaPhi + 2*M_PI);
+                    }
+                    else {
+                        h_dphi -> Fill(deltaPhi);
+                    }
+                    // h_dphi -> Fill(deltaPhi);
+                }
+            }
+            histogramSinglePlot(h_dphi, method, target);
+            // dPhiCheck(target, tracklet_layer_0, tracklet_layer_1);
         }
     } else if (method[1] == "all") {
-        TH1D *h_dEta = new TH1D("", "", 1601, -4 - .0025, 4 + .0025);
+        TH1D *h_dEta    = new TH1D("", "", 1601, -4 - .0025, 4 + .0025);
         TH2D *h_eta_phi = new TH2D("", "", 80, -4 - .05, 4 + .05, 70, -3.5 - .05, 3.5 + .05);
         int N = 1000;
         double range_min = -M_PI;
@@ -1058,8 +1005,6 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
         double bin_width = (range_max - range_min) / N;
         // TH1D *h_dPhi = new TH1D("", "", 1601, -4 - .0025, 4 + .0025);
         TH1D *h_dPhi = new TH1D("", "", N, range_min, range_max);
-        // TH2D *h_dPhi_Z = new TH2D("", "", N, range_min, range_max, 120, -25 - 0.5, -15. + 0.5);
-        TH2D *h_dPhi_Z = new TH2D("", "", N, range_min, range_max, 7, -25.6*10., -14.4*10.);
         const int n1 = 100;         // number of bins in [0, 0.1]
         const int n2 = 10;          // number of bins in [0.1, 1.1], [1.1, 2.1], ...
         const int n3 = 8 * n2 + n1; // total number of bins
@@ -1119,21 +1064,22 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
             dEtaCheckAll(h_dEta);
         }
         else if (method[2] == "dphi") {
+            r = 0; currentZ = 0; eta = 0;
             for (int i = 0; i < idx.size(); i++) {
                 EventTree->GetEntry(idx[i]);
                 // std::cout << idx[i] << "," << event << "," << evt[i] << std::endl;
                 if (event != evt[i])    break;
                 for (int k = 0; k < ClusX->size(); k++) {
-                    r        = std::sqrt((ClusX->at(k) - foundx[i])*(ClusX->at(k) - foundx[i]) + (ClusY->at(k) - foundy[i])*(ClusY->at(k) - foundy[i]));
+                    // r        = std::sqrt((ClusX->at(k) - foundx[i])*(ClusX->at(k) - foundx[i]) + (ClusY->at(k) - foundy[i])*(ClusY->at(k) - foundy[i]));
                     phi      = std::atan2(ClusY->at(k) - foundy[i], ClusX->at(k) - foundx[i]);
-                    currentZ = ClusZ->at(k);
-                    dz       = currentZ - foundz[i];
-                    theta    = std::atan2(r, dz);
-                    if (dz >= 0) {
-                        eta = -log(tan(theta/2));
-                    } else {
-                        eta = log(tan((M_PI - theta)/2));
-                    }         
+                    // currentZ = ClusZ->at(k);
+                    // dz       = currentZ - foundz[i];
+                    // theta    = std::atan2(r, dz);
+                    // if (dz >= 0) {
+                    //     eta = -log(tan(theta/2));
+                    // } else {
+                    //     eta = log(tan((M_PI - theta)/2));
+                    // }         
                     if (ClusLayer->at(k) == 3 || ClusLayer->at(k) == 4) {
                         tracklet_layer_0.push_back({ClusX->at(k), ClusY->at(k), currentZ, r,
                                                     eta, phi, 
@@ -1161,7 +1107,7 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
                 }
                 tracklet_layer_0.clear();   tracklet_layer_1.clear();
             }
-            singlePlot(h_dPhi, method, target);
+            histogramSinglePlot(h_dPhi, method, target);
         }
         else if (method[2] == "dR") {
             for (int i = 0; i < idx.size(); i++) {
@@ -1206,6 +1152,9 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
             dRCheckAll(h_ad);
         }
         else if (method[2] == "dphiZ") {
+            TH2D *h_dPhi_Z = new TH2D("", "", N, range_min, range_max, 120, (-25 - 0.5)*10, (-15. + 0.5)*10);
+            // TH2D *h_dPhi_Z = new TH2D("", "", N, range_min, range_max, 10, -25.6*10., -14.4*10.);
+            r = 0; currentZ = 0; eta = 0;
             for (int i = 0; i < idx.size(); i++) {
                 EventTree->GetEntry(idx[i]);
                 // std::cout << idx[i] << "," << event << "," << evt[i] << std::endl;
@@ -1216,18 +1165,16 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
                 for (int k = 0; k < ClusX->size(); k++) {
                     dx       = ClusX->at(k) - fx;
                     dy       = ClusY->at(k) - fy;
-                    r        = std::sqrt(dx * dx + dy * dy);
+                    // r        = std::sqrt(dx * dx + dy * dy);
                     phi      = std::atan2(dy, dx);
-                    // r        = std::sqrt((ClusX->at(k) - fx)*(ClusX->at(k) - fx) + (ClusY->at(k) - fy)*(ClusY->at(k) - fy));
-                    // phi      = std::atan2(ClusY->at(k) - foundy[i], ClusX->at(k) - foundx[i]);
-                    currentZ = ClusZ->at(k);
-                    dz       = currentZ - fz;
-                    theta    = std::atan2(r, dz);
-                    if (dz >= 0) {
-                        eta = -log(tan(theta/2));
-                    } else {
-                        eta = log(tan((M_PI - theta)/2));
-                    }         
+                    // currentZ = ClusZ->at(k);
+                    // dz       = currentZ - fz;
+                    // theta    = std::atan2(r, dz);
+                    // if (dz >= 0) {
+                    //     eta = -log(tan(theta/2));
+                    // } else {
+                    //     eta = log(tan((M_PI - theta)/2));
+                    // }         
                     if (ClusLayer->at(k) == 3 || ClusLayer->at(k) == 4) {
                         tracklet_layer_0.push_back({ClusX->at(k), ClusY->at(k), currentZ, r,
                                                     eta, phi, 
@@ -1255,9 +1202,8 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
                 }
                 tracklet_layer_0.clear();   tracklet_layer_1.clear();
             }
-            // dPhiCheckAll(h_dPhi_Z);
             h_dPhi_Z -> Draw("lego2");
-            h_dPhi_Z -> SetTitle("All dPhi values (no event mix) with 10 bins of Z vtx");
+            h_dPhi_Z -> SetTitle(Form("All dPhi values (no event mixed) with %d bins of Z vtx", h_dPhi_Z->GetNbinsY()));
             h_dPhi_Z -> GetXaxis() -> SetTitle("dPhi"); h_dPhi_Z -> GetXaxis() -> CenterTitle(true);
             h_dPhi_Z -> GetYaxis() -> SetTitle("found z vtx position [mm]");   h_dPhi_Z -> GetYaxis() -> CenterTitle(true);
             h_dPhi_Z -> GetXaxis() -> SetTitleOffset(1.8);   h_dPhi_Z -> GetYaxis() -> SetTitleOffset(1.8);
@@ -1433,7 +1379,7 @@ void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<st
     //     }
     // }
     // }
-    // singlePlot(h_unmixed_dPhi, method, target);
+    // histogramSinglePlot(h_unmixed_dPhi, method, target);
     doublePlot(h_mixed_dPhi, h_unmixed_dPhi, method, target);
     // backgroundCancelling(h_mixed_dPhi, h_unmixed_dPhi, method, target);
     /*

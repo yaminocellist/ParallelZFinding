@@ -78,6 +78,10 @@ std::vector<std::string> splitString(const std::string &str, char delim) {
     return tokens;
 }
 
-
+bool isInteger(const std::string& s) {
+    std::istringstream iss(s);
+    int x;
+    return (iss >> x) && (iss.eof());
+}
 
 #endif

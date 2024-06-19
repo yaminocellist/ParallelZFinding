@@ -152,9 +152,9 @@ void all_xyFinding (TTree *EventTree, Int_t target, std::vector<std::string> met
 		exit(1);
 	}
     
-    vector<double> foundz, truez;
-    vector<double> totalsize;
-    vector<int>    evt, idx;
+    std::vector<double> foundz, truez;
+    std::vector<double> totalsize;
+    std::vector<int>    evt, idx;
     string line, substr;
     getline(myfile, line);
     while (getline(myfile, line)) {

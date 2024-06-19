@@ -358,23 +358,23 @@ void trueEtaPhiAnalysis (TTree *EventTree, Int_t target, std::vector<std::string
         can1 -> SaveAs("../External/zFindingPlots/dPhi_all.png");
         } else {
             h_deta -> Draw();
-        h_deta -> SetFillColor(kYellow - 7);
-        h_deta -> SetLineWidth(1);
-        h_deta -> SetFillStyle(1001);
-        h_deta -> GetXaxis() -> SetTitle("Eta value");
-        h_deta -> GetXaxis() -> SetTitleSize(.05);
-        h_deta -> GetXaxis() -> SetLabelSize(.04);
-        h_deta -> GetXaxis() -> CenterTitle(true);
-        h_deta -> GetXaxis() -> SetNdivisions(31, 5, 0);
-        h_deta -> GetXaxis() -> SetTitleOffset(.8);
-        h_deta -> GetYaxis() -> SetTitle("# of Counts");
-        h_deta -> GetYaxis() -> SetTitleSize(.05);
-        h_deta -> GetYaxis() -> SetLabelSize(.04);
-        h_deta -> GetYaxis() -> SetTitleOffset(.62);
-        h_deta -> GetYaxis() -> CenterTitle(true);
-        h_deta -> SetTitle("dEta data of all Event");
-        gPad -> SetLogy();
-        can1 -> SaveAs("../External/zFindingPlots/dEta_all.png");
+            h_deta -> SetFillColor(kYellow - 7);
+            h_deta -> SetLineWidth(1);
+            h_deta -> SetFillStyle(1001);
+            h_deta -> GetXaxis() -> SetTitle("Eta value");
+            h_deta -> GetXaxis() -> SetTitleSize(.05);
+            h_deta -> GetXaxis() -> SetLabelSize(.04);
+            h_deta -> GetXaxis() -> CenterTitle(true);
+            h_deta -> GetXaxis() -> SetNdivisions(31, 5, 0);
+            h_deta -> GetXaxis() -> SetTitleOffset(.8);
+            h_deta -> GetYaxis() -> SetTitle("# of Counts");
+            h_deta -> GetYaxis() -> SetTitleSize(.05);
+            h_deta -> GetYaxis() -> SetLabelSize(.04);
+            h_deta -> GetYaxis() -> SetTitleOffset(.62);
+            h_deta -> GetYaxis() -> CenterTitle(true);
+            h_deta -> SetTitle("dEta data of all Event");
+            gPad -> SetLogy();
+            can1 -> SaveAs("../External/zFindingPlots/dEta_all.png");
         }
     }
     else if (method[2] == "dEtaPhi") {
@@ -456,7 +456,7 @@ void single_z_finding (TTree *EventTree, Int_t target, std::vector<std::string> 
     for (int i = 0; i < EventTree -> GetEntries(); ++i) {
         EventTree -> GetEntry(i);
         if (target == i && NTruthVtx == 1 && TruthPV_Npart->at(0) > 500
-            && centrality_mbd <= 70 && TruthPV_z->at(0) >= -25. && TruthPV_z->at(0) <= -15.) {
+            && centrality_mbd <= 70 && TruthPV_z->at(0) >= -30. && TruthPV_z->at(0) <= -10.) {
             for (int j = 0; j < ClusX->size(); j++) {
                 if (ClusLayer->at(j) == 3 || ClusLayer->at(j) == 4) {
                     for (int k = 0; k <= 32; k++) {
@@ -522,7 +522,8 @@ void all_z_finding (TTree *EventTree, Int_t target, std::vector<std::string> met
         exit(1);
     }
     bool isEmpty = (checkFile.tellg() == 0);
-    if(isEmpty) outputFile << "MBD: 0-10. Phi cut: " << lower_bound << " ~ " << upper_bound << ", DCA cut: " << DCA_cut << ", bin width: " << scanstep << std::endl;
+    if(isEmpty) outputFile << "MBD: 0-10; Expansion from 0 to 1.6 cm; Phi cut: " << lower_bound << " ~ " << upper_bound 
+                << ", DCA cut: " << DCA_cut << ", bin width: " << scanstep << ", true Z vertex range is [-30., -10.]" << std::endl;
     
     // Set up variables to hold the data
     std::vector<float> *ClusX = nullptr;
@@ -561,9 +562,9 @@ void all_z_finding (TTree *EventTree, Int_t target, std::vector<std::string> met
 
     for (int i = 0; i < EventTree -> GetEntries(); ++i) {
         EventTree -> GetEntry(i);
-        // Suggested fiducial cuts: centrality 0 - 70% and vtx_z (reconstructed) -25cm to -15cm
+        // Suggested fiducial cuts: centrality 0 - 70% and vtx_z (reconstructed) -30cm to -10cm
         if (i >= target && NTruthVtx == 1 && TruthPV_Npart->at(0) > 500
-            && centrality_mbd <= 10 && TruthPV_z->at(0) >= -25. && TruthPV_z->at(0) <= -15.) {
+            && centrality_mbd <= 10 && TruthPV_z->at(0) >= -30. && TruthPV_z->at(0) <= -10.) {
             for (int j = 0; j < ClusX->size(); j++) {
                 if (ClusLayer->at(j) == 3 || ClusLayer->at(j) == 4) {
                     for (int k = 0; k <= 32; k++) {
@@ -627,7 +628,8 @@ void InttZFinding_debug_ver_3 (std::string method = "single", double lower_bound
     // std::string filePath = "foundZ_allInfo_DCA_-8_8_-010_010_2e-1.txt";
     // std::string filePath = "./zFindingResults/foundZ_allInfo_DCA_0_16_-001_001_2e-1.txt";
     // std::string filePath = "./zFindingResults/foundZ_MBD0_10_DCA_0_16_-001_001_2e-1.txt";
-    std::string filePath = "./zFindingResults/foundZ_MBD0_10_DCAfit_0_16_-001_001_2e-1.txt";
+    // std::string filePath = "./zFindingResults/foundZ_MBD0_10_DCAfit_0_16_-001_001_2e-1.txt";
+    std::string filePath = "./zFindingResults/foundZ_MBD0_10_DCAfit_0_16_-001_001_step2e-1_z_30_10.txt";
 
     // Open the ROOT file
     TFile *f = TFile::Open("../External/INTTRecoClusters_sim_ana382_zvtx-20cm_Bfield0T.root");

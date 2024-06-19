@@ -22,14 +22,14 @@ Double_t fpeaks(Double_t *x, Double_t *par) {
    return result;
 }
 
+// This is the original DCA (Distance of the Closest Approach) method:
 double nearest_z_method (const int &evt, const std::vector<myTrackletMemberExtended> &t0, const std::vector<myTrackletMemberExtended> &t1,
                          const double &eta_cut_low, const double &eta_cut_high,
                          const double &phi_cut_low, const double &phi_cut_high, const double &trueZ) {
     // TH1D *h = new TH1D("", "", bins, zmin - scanstep/2, zmax + scanstep/2);
     auto h = std::make_unique<TH1D>("", "", bins, zmin - scanstep/2, zmax + scanstep/2);
-    // Disable the storage of the sum of squares of weights;
-    // Save both memory and run time;
-    h->Sumw2(kFALSE);
+    h -> Sumw2(kFALSE);     // Disable the storage of the sum of squares of weights;
+                            // reduce both memory and run time;
     for (int i = 0; i < t0.size(); i++) {
         for (int j = 0; j < t1.size(); j++) {
             double dPhi = t0[i].phi - t1[j].phi;
@@ -44,20 +44,6 @@ double nearest_z_method (const int &evt, const std::vector<myTrackletMemberExten
             }
         }
     }
-    // for (int i = 0; i < t1.size(); i++) {
-    //     for (int j = 0; j < t0.size(); j++) {
-    //         double dPhi = t1[i].phi - t0[j].phi;
-    //         if (dPhi >= phi_cut_low && dPhi <= phi_cut_high) {
-    //             myPoint3D P1 = {t1[i].x, t1[i].y, t1[i].z};
-    //             myPoint3D P2 = {t0[j].x, t0[j].y, t0[j].z};
-    //             double foundZ = nearestZ(P1, P2).first;
-    //             double nearest_d = nearestZ(P1, P2).second;
-    //             if (foundZ >= zmin && foundZ <= zmax && nearest_d <= DCA_cut) {
-    //                 h -> Fill(foundZ);
-    //             }
-    //         }
-    //     }
-    // }
 
     // TFitResultPtr fitResult = h->Fit("gaus", "SQ");  // Get the fit result
     // if (fitResult && fitResult->Status() == 0) {
@@ -65,13 +51,11 @@ double nearest_z_method (const int &evt, const std::vector<myTrackletMemberExten
     //     double sigma = fitResult->Parameter(2);  // Get the standard deviation
     // }
     
-
-
-    int binmax = h -> GetMaximumBin(); 
-    double xlabel0 = h -> GetXaxis() -> GetBinCenter(binmax);      double entry0 = h -> GetBinContent(binmax);
-    double xlabel_1 = h -> GetXaxis() -> GetBinCenter(binmax - 1); double entry_1 = h -> GetBinContent(binmax - 1);
-    double xlabel1 = h -> GetXaxis() -> GetBinCenter(binmax + 1);  double entry1 = h -> GetBinContent(binmax + 1);
-    double ctz = (xlabel0*entry0 + xlabel_1*entry_1 + xlabel1*entry1) / (entry0 + entry1 + entry_1);
+    int binmax      = h -> GetMaximumBin(); 
+    double xlabel0  = h -> GetXaxis() -> GetBinCenter(binmax);      double entry0  = h -> GetBinContent(binmax);
+    double xlabel_1 = h -> GetXaxis() -> GetBinCenter(binmax - 1);  double entry_1 = h -> GetBinContent(binmax - 1);
+    double xlabel1  = h -> GetXaxis() -> GetBinCenter(binmax + 1);  double entry1  = h -> GetBinContent(binmax + 1);
+    double ctz      = (xlabel0*entry0 + xlabel_1*entry_1 + xlabel1*entry1) / (entry0 + entry1 + entry_1);
     // double ctz = mean;
 // /*
     TCanvas *can2 = new TCanvas("c2","c2",0,50,1800,550);

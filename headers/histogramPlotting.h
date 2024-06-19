@@ -1,8 +1,8 @@
 #include "globalDefinitions.h"
 
-void singlePlot (TH1D* const histo, std::vector<std::string> method, Int_t const & target) {
-    int upperRange = stoi(method[2]);
-    int lowerRange = stoi(method[1]);
+void histogramSinglePlot (TH1D* const histo, std::vector<std::string> method, Int_t const & target) {
+    if (isInteger(method[1]))   int lowerRange = stoi(method[1]);
+    if (isInteger(method[2]))   int upperRange = stoi(method[2]);
     int maxBin = histo->GetMaximumBin();
     double maxBinCenter = histo->GetBinCenter(maxBin);
     TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,1200);
@@ -19,7 +19,35 @@ void singlePlot (TH1D* const histo, std::vector<std::string> method, Int_t const
     histo -> GetYaxis() -> SetLabelSize(.03);
     histo -> GetYaxis() -> SetTitleOffset(.8);
     histo -> GetYaxis() -> CenterTitle(true);
-    // histo -> GetXaxis() -> SetRangeUser(-M_PI, M_PI); // Setting x range;
+
+    double pi = TMath::Pi();
+    int bin_min = 1;  // The first bin
+    int bin_max = histo->GetNbinsX();  // The last bin
+
+    // Calculate bin positions for each label
+    int bin_pi = bin_max;
+    int bin_0 = bin_min + (bin_max - bin_min)/2;
+    int binPi_2 = bin_min + 3*(bin_max - bin_min)/4;
+    // int bin_pi_2 = bin_min + (bin_max - bin_min)/2;
+    int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
+
+    // Set the labels at the calculated positions
+    histo->GetXaxis()->SetBinLabel(bin_0, "0");
+    histo->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
+    histo->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
+    // histo->GetXaxis()->SetBinLabel(bin_3pi_4, "#frac{3#pi}{4}");
+    histo->GetXaxis()->SetBinLabel(bin_pi, "#pi");
+    histo->GetXaxis()->SetBinLabel(bin_min, "-#pi");
+    // histo->GetXaxis()->SetBinLabel(bin_max - 3*(bin_max - bin_min)/4, "-#frac{3#pi}{4}");
+    // histo->GetXaxis()->SetBinLabel(bin_max - (bin_max - bin_min)/2, "-#frac{#pi}{2}");
+    // histo->GetXaxis()->SetBinLabel(bin_max - (bin_max - bin_min)/4, "-#frac{#pi}{4}");
+
+    // Ensure the custom labels are displayed by setting the number of divisions
+    histo->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
+    histo->GetXaxis()->SetLabelSize(0.04);
+    // Update histogram to refresh the axis
+    histo->Draw("HIST");
+    histo->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
     // histo -> GetYaxis() -> SetRangeUser(5300e3, 6130e3);
     // histo -> SetTitle(Form("dPhi data of all events whose found z vtx is ~ [-%d, -%d] mm, centered at %0.4f", lowerRange, upperRange, maxBinCenter));
     // gPad -> SetLogy();
