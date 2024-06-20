@@ -1365,24 +1365,10 @@ void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<st
             }
         }
     }
-    // for (int k = 0; k < 1e4; k++) {
-    // for (int i = 0; i < all_Phi_0.size(); i++) {
-    //     if (i >= target) break;
-    //     for (int j = 0; j < all_Phi_0[i].size(); j++) {
-    //         h_unmixed_dPhi -> Fill(all_Phi_0[i][j]);
-    //     }
-    // }
-    // for (int i = 0; i < all_Phi_1.size(); i++) {
-    //     if (i >= target) break;
-    //     for (int j = 0; j < all_Phi_1[i].size(); j++) {
-    //         h_unmixed_dPhi -> Fill(all_Phi_1[i][j]);
-    //     }
-    // }
-    // }
     // histogramSinglePlot(h_unmixed_dPhi, method, target);
-    doublePlot(h_mixed_dPhi, h_unmixed_dPhi, method, target);
+    // doublePlot(h_mixed_dPhi, h_unmixed_dPhi, method, target);
     // backgroundCancelling(h_mixed_dPhi, h_unmixed_dPhi, method, target);
-    /*
+    // /*
     TH1D *h_foundz = new TH1D("", "", 161, (-25. - 0.03125)*10, (-15. + 0.03125)*10);
     for (int i = 0; i < foundz.size(); i++) {
         h_foundz -> Fill(foundz[i]*10);
@@ -1393,7 +1379,6 @@ void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<st
     h_foundz -> SetLineWidth(1);
     h_foundz -> GetXaxis() -> SetTitle("found z vtx position [mm]");
     h_foundz -> GetXaxis() -> CenterTitle(true);
-
 
     int binIndex = 1; // Example bin index
     double binWidth = h_foundz->GetBinWidth(binIndex);
@@ -1406,7 +1391,7 @@ void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<st
             std::cout << "Empty bin at x = " << std::setprecision(8) << binCenter/10. << std::endl;
         }
     }
-    */
+    // */
 }
 
 // void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<std::string> method) {
