@@ -10,6 +10,9 @@
 #include <TGraph.h>
 #include <TPolyMarker.h>
 #include <TAxis.h>
+#include <TFile.h>
+#include <TTree.h>
+#include <iostream>
 /*********************************************************************
  *                      GLOBAL VARIABLES;
  * ******************************************************************/
@@ -19,6 +22,10 @@ double scanstep = 0.1;  // unit: cm;
 int bins = (zmax - zmin)/scanstep + 1;
 double DCA_cut = 0.2;   // unit: cm;
 double MBD_lower = 0., MBD_upper = 10.;
+
+ // ANSI escape code for red text
+const std::string red = "\033[31m";
+const std::string color_reset = "\033[0m";
 
 /*  Genearting unequal bin ranges for a historgram  */
 // Double_t binEdges[481];
