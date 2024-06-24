@@ -16,9 +16,9 @@
 /*********************************************************************
  *                      GLOBAL VARIABLES;
  * ******************************************************************/
-double zmin = -40.6;
-double zmax = 3.2;        // From sPHENIX paper, the stave's length is aroung 27.12 cm;
-double scanstep = 0.1;  // unit: cm; 
+double zmin = -45;
+double zmax = 5;        // From sPHENIX paper, the stave's length is aroung 27.12 cm;
+double scanstep = 0.2;  // unit: cm; 
 int bins = (zmax - zmin)/scanstep + 1;
 double DCA_cut = 0.2;   // unit: cm;
 double MBD_lower = 0., MBD_upper = 10.;
@@ -46,6 +46,11 @@ const std::string color_reset = "\033[0m";
 
 struct myPoint3D {
     double x, y, z;
+};
+
+struct myTrackletMemberLite {
+    Double_t x, y, z;
+    Double_t phi;
 };
 
 struct myTrackletMember {

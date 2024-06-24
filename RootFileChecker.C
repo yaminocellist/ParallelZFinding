@@ -159,6 +159,7 @@ root [1] EventTree->Print()
 *............................................................................*/
 
 #include "headers/globalDefinitions.h"
+#include "headers/histogramPlotting.h"
 
 void readTree(TTree * tree) {
     // Define the variables to hold the data
@@ -209,7 +210,6 @@ void readTree(TTree * tree) {
             exit(1);
         }
     }
-
 }
 
 void RootFileChecker () {
