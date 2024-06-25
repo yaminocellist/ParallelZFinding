@@ -318,250 +318,241 @@ double EtaCheck (const int &evt, std::vector<myTrackletMember> t0, std::vector<m
     return lastNonZeroBinEdge - firstNonZeroBinEdge;
 }
 
-void foundZAnalysisLite (string filePath, string select = "zscan", string dim = "2D") {
-    // if (select == "zscanE") {
-    //     filePath = "foundZ_debug_zscan_with_error.txt";
-    // } else if (select == "zscan") {
-    //     filePath = "foundZ_debug_zscan.txt";
-    // } else if (select == "e") {
-    //     filePath = "foundZ_debug_nearest_z_with_error.txt";
-    // } else {
-        // filePath = "/Users/yaminocellist/MIT_mentorship/3rd_semester/Meeting5/foundZ_debug2_nearest_z.txt";
-    // }
+void foundZAnalysisLite (string filePath, std::vector<string> options) {
     ifstream myfile(filePath);
     if (!myfile.is_open()){
-		  cout << "Unable to open linelabel" << endl;
-		  system("read -n 1 -s -p \"Press any key to continue...\" echo");
-		  exit(1);
+		std::cout << "Unable to open linelabel" << std::endl;
+		system("read -n 1 -s -p \"Press any key to continue...\" echo");
+		exit(1);
  	}
 
-    TH1D *h = new TH1D("", "", 151, -1e2, 1e2);
-
-    int evt, Nparticles;
     string line, substr;
-    double found_z, true_z;
-    std::vector<double> foundz, dZ;
-    std::vector<double> truez, uppersize, lowersize, totalsize;
+    std::vector<int> index, event, NClus;
+    std::vector<double> foundZ, MBD_z_vtx, MBD_centrality;
 
+    getline(myfile, line);
     while (getline(myfile, line)) {
         stringstream str(line);
-        getline(str, substr, ',');
-        getline(str, substr, ',');
-        evt = stoi(substr);
-        getline(str, substr, ',');
-        Nparticles = stoi(substr);
-        getline(str, substr, ',');
-        found_z = stod(substr)*1e1;
-        getline(str, substr, ',');
-        getline(str, substr, ',');
-        getline(str, substr, ',');
-        true_z = stod(substr)*1e1;
-
-        foundz.push_back(found_z);
-        truez.push_back(true_z);
-        totalsize.push_back(Nparticles);
-        dZ.push_back(found_z - true_z);
-        h -> Fill(found_z - true_z);
+        getline(str, substr, ',');  index.push_back(std::stoi(substr));
+        getline(str, substr, ',');  event.push_back(std::stoi(substr));
+        getline(str, substr, ',');  NClus.push_back(std::stoi(substr));
+        getline(str, substr, ',');  foundZ.push_back(std::stod(substr)*10);
+        getline(str, substr, ',');  MBD_z_vtx.push_back(std::stod(substr)*10);
+        getline(str, substr, ',');  MBD_centrality.push_back(std::stod(substr));
     }
     
-    TGraph *g0 = new TGraph(dZ.size(), totalsize.data(), dZ.data());
-    TGraph *g1 = new TGraph(dZ.size(), truez.data(), dZ.data());
-    TCanvas *canvas = new TCanvas("c2","c2", 0, 0,1350,800);
+    TH1D *h_resolution = new TH1D("found z resolution", Form("INTT found z resolution of %lu events;dZ [mm];# of counts", index.size()), 151, -1e2, 1e2);
+    TGraph *g_NFunction = new TGraph();
+    TGraph *g_ZFunction = new TGraph();
+    double z_resolution;
+    for (int i = 0; i < index.size(); i++) {
+        if (foundZ[i] >= -250. && foundZ[i] <= -50.) {
+            z_resolution = foundZ[i] - MBD_z_vtx[i];
+            h_resolution -> Fill(z_resolution);
+            g_NFunction->SetPoint(g_NFunction->GetN(), NClus[i], z_resolution);
+            g_ZFunction->SetPoint(g_ZFunction->GetN(), MBD_z_vtx[i], z_resolution);
+        }
+    }
+    ZResolutionSinglePlot(h_resolution, options);
+    // TGraphSinglePlot(g_NFunction, Form("INTT found z resolution of %lu events", index.size()));
+    TGraphSinglePlot(g_ZFunction, Form("INTT found z resolution of %lu events", index.size()));
+
+    // TCanvas *canvas = new TCanvas("c2","c2", 0, 0,1350,800);
     
-    if (dim == "1D") {
-        h -> Draw();
-        h -> SetFillColor(kYellow - 7);
-        h -> SetLineWidth(1);
-        h -> SetFillStyle(1001);
-        h -> GetXaxis() -> SetTitle("foundZ - trueZ [mm]");
-        h -> GetXaxis() -> SetTitleSize(.05);
-        h -> GetXaxis() -> SetLabelSize(.03);
-        h -> GetXaxis() -> CenterTitle(true);
-        h -> GetXaxis() -> SetNdivisions(31, 5, 0);
-        h -> GetXaxis() -> SetTitleOffset(.8);
-        h -> GetXaxis() -> SetRangeUser(-50, 50); // Setting x range;
-        h -> GetYaxis() -> SetTitle("# of Counts");
-        h -> GetYaxis() -> SetTitleSize(.05);
-        h -> GetYaxis() -> SetLabelSize(.04);
-        h -> GetYaxis() -> SetTitleOffset(.8);
-        h -> GetYaxis() -> CenterTitle(true);
+    // if (dim == "1D") {
+    //     h -> Draw();
+    //     h -> SetFillColor(kYellow - 7);
+    //     h -> SetLineWidth(1);
+    //     h -> SetFillStyle(1001);
+    //     h -> GetXaxis() -> SetTitle("foundZ - trueZ [mm]");
+    //     h -> GetXaxis() -> SetTitleSize(.05);
+    //     h -> GetXaxis() -> SetLabelSize(.03);
+    //     h -> GetXaxis() -> CenterTitle(true);
+    //     h -> GetXaxis() -> SetNdivisions(31, 5, 0);
+    //     h -> GetXaxis() -> SetTitleOffset(.8);
+    //     h -> GetXaxis() -> SetRangeUser(-50, 50); // Setting x range;
+    //     h -> GetYaxis() -> SetTitle("# of Counts");
+    //     h -> GetYaxis() -> SetTitleSize(.05);
+    //     h -> GetYaxis() -> SetLabelSize(.04);
+    //     h -> GetYaxis() -> SetTitleOffset(.8);
+    //     h -> GetYaxis() -> CenterTitle(true);
 
-        static TLine *l1 = new TLine();
-        l1 -> SetLineColor(kRed);
-        l1 -> SetLineStyle(0);
-        l1 -> SetLineWidth(2);
-        l1 -> SetX1(0);   l1 -> SetY1(0);
-        l1 -> SetX2(0);   l1 -> SetY2(h->GetMaximum());
-        l1 -> Draw("same");
+    //     static TLine *l1 = new TLine();
+    //     l1 -> SetLineColor(kRed);
+    //     l1 -> SetLineStyle(0);
+    //     l1 -> SetLineWidth(2);
+    //     l1 -> SetX1(0);   l1 -> SetY1(0);
+    //     l1 -> SetX2(0);   l1 -> SetY2(h->GetMaximum());
+    //     l1 -> Draw("same");
 
-        static TLine *l2 = new TLine();
-        l2 -> SetLineColor(kRed);
-        l2 -> SetLineStyle(2);
-        l2 -> SetLineWidth(4);
-        l2 -> SetX1(-16);   l2 -> SetY1(0);
-        l2 -> SetX2(-16);   l2 -> SetY2(h->GetMaximum());
-        l2 -> Draw("same");
+    //     static TLine *l2 = new TLine();
+    //     l2 -> SetLineColor(kRed);
+    //     l2 -> SetLineStyle(2);
+    //     l2 -> SetLineWidth(4);
+    //     l2 -> SetX1(-16);   l2 -> SetY1(0);
+    //     l2 -> SetX2(-16);   l2 -> SetY2(h->GetMaximum());
+    //     l2 -> Draw("same");
 
-        static TLine *l3 = new TLine();
-        l3 -> SetLineColor(kRed);
-        l3 -> SetLineStyle(2);
-        l3 -> SetLineWidth(4);
-        l3 -> SetX1(+16);   l3 -> SetY1(0);
-        l3 -> SetX2(+16);   l3 -> SetY2(h->GetMaximum());
-        l3 -> Draw("same");
-        TLegend *legend = new TLegend(0.5,0.8,0.9,0.9);
-        // legend->SetHeader("Legend","C"); // option "C" allows to center the header
-        legend->AddEntry(h,"Segments expanded between [-8, 8]mm","f");
-        legend->Draw("same");
-        legend->SetTextSize(0.03);
+    //     static TLine *l3 = new TLine();
+    //     l3 -> SetLineColor(kRed);
+    //     l3 -> SetLineStyle(2);
+    //     l3 -> SetLineWidth(4);
+    //     l3 -> SetX1(+16);   l3 -> SetY1(0);
+    //     l3 -> SetX2(+16);   l3 -> SetY2(h->GetMaximum());
+    //     l3 -> Draw("same");
+    //     TLegend *legend = new TLegend(0.5,0.8,0.9,0.9);
+    //     // legend->SetHeader("Legend","C"); // option "C" allows to center the header
+    //     legend->AddEntry(h,"Segments expanded between [-8, 8]mm","f");
+    //     legend->Draw("same");
+    //     legend->SetTextSize(0.03);
 
-        if (select == "zscanE") {
-            h -> SetTitle("Z Scan with Errors, |dEta| < 0.01 (for small N) or 0.001 (for large N), |dPhi| < 0.1");
-        } else if (select == "zscan") {
-            h -> SetTitle("Traditional Z Scan method, |dEta| < 0.01 (for small N) or 0.001 (for large N), |dPhi| < 0.1");
-        } else if (select == "e") {
-            h -> SetTitle("Nearest Z with Errors, |dPhi| < 0.1");
-        } else if (select == "zscanN") {
-            h -> SetTitle("Z Scan with Background Normalized");
-        }
-        else {
-            h -> SetTitle(Form("DCA indicated by greatest bin, %lu events, |dPhi| < 0.01,  closest distance cut = %1.2f", foundz.size(), DCA_cut));
-            // h -> SetTitle(Form("DCA indicated with Gaussian Fit, |dPhi| < 0.01, closest distance cut = %1.2f", DCA_cut));
-        }
-    }
-    else if (dim == "2D") {
-        g0 -> SetMarkerStyle(29);
-        g0 -> SetMarkerSize(2);
-        g0 -> SetMarkerColor(kBlue);
-        g0 -> SetLineWidth(3);
-        g0 -> SetLineColor(kWhite);
-        if (select == "zscanE") {
-            g0 -> SetTitle("Z Scan with Errors, |dEta| < 0.01 (for small N) or 0.001 (for large N), |dPhi| < 0.1");
-        } else if (select == "zscan") {
-            g0 -> SetTitle("Traditional Z Scan method, |dEta| < 0.01 (for small N) or 0.001 (for large N), |dPhi| < 0.1");
-        } else if (select == "e") {
-            g0 -> SetTitle("Nearest Z with Errors, |dPhi| < 0.1");
-        } 
-        else if (select == "zscanN") {
-            g0 -> SetTitle("Z Scan with Background Normalized");
-        }
-        else {
-            g0 -> SetTitle(Form("DCA indicated by greatest bin, %lu events, |dPhi| < 0.01, closest distance cut = %1.2f", foundz.size(), DCA_cut));
-            // g0 -> SetTitle(Form("DCA indicated with Gaussian Fit, |dPhi| < 0.01, closest distance cut = %1.2f", DCA_cut));
-        }
+    //     if (select == "zscanE") {
+    //         h -> SetTitle("Z Scan with Errors, |dEta| < 0.01 (for small N) or 0.001 (for large N), |dPhi| < 0.1");
+    //     } else if (select == "zscan") {
+    //         h -> SetTitle("Traditional Z Scan method, |dEta| < 0.01 (for small N) or 0.001 (for large N), |dPhi| < 0.1");
+    //     } else if (select == "e") {
+    //         h -> SetTitle("Nearest Z with Errors, |dPhi| < 0.1");
+    //     } else if (select == "zscanN") {
+    //         h -> SetTitle("Z Scan with Background Normalized");
+    //     }
+    //     else {
+    //         h -> SetTitle(Form("DCA indicated by greatest bin, %lu events, |dPhi| < 0.01,  closest distance cut = %1.2f", foundz.size(), DCA_cut));
+    //         // h -> SetTitle(Form("DCA indicated with Gaussian Fit, |dPhi| < 0.01, closest distance cut = %1.2f", DCA_cut));
+    //     }
+    // }
+    // else if (dim == "2D") {
+    //     g0 -> SetMarkerStyle(29);
+    //     g0 -> SetMarkerSize(2);
+    //     g0 -> SetMarkerColor(kBlue);
+    //     g0 -> SetLineWidth(3);
+    //     g0 -> SetLineColor(kWhite);
+    //     if (select == "zscanE") {
+    //         g0 -> SetTitle("Z Scan with Errors, |dEta| < 0.01 (for small N) or 0.001 (for large N), |dPhi| < 0.1");
+    //     } else if (select == "zscan") {
+    //         g0 -> SetTitle("Traditional Z Scan method, |dEta| < 0.01 (for small N) or 0.001 (for large N), |dPhi| < 0.1");
+    //     } else if (select == "e") {
+    //         g0 -> SetTitle("Nearest Z with Errors, |dPhi| < 0.1");
+    //     } 
+    //     else if (select == "zscanN") {
+    //         g0 -> SetTitle("Z Scan with Background Normalized");
+    //     }
+    //     else {
+    //         g0 -> SetTitle(Form("DCA indicated by greatest bin, %lu events, |dPhi| < 0.01, closest distance cut = %1.2f", foundz.size(), DCA_cut));
+    //         // g0 -> SetTitle(Form("DCA indicated with Gaussian Fit, |dPhi| < 0.01, closest distance cut = %1.2f", DCA_cut));
+    //     }
         
-        gStyle -> SetTitleW(0.7);  //per cent of the pad width
-        gStyle -> SetTitleH(0.08); //per cent of the pad height
-        g0 -> GetXaxis() -> SetTitle("Number of particles");
-        g0 -> GetXaxis() -> SetTitleSize(0.06);
-        g0 -> GetXaxis() -> SetLabelSize(0.04);
-        g0 -> GetXaxis() -> CenterTitle(true);
-        g0 -> GetYaxis() -> SetTitle("Found_z - True_z [mm]");
-        g0 -> GetYaxis() -> SetTitleSize(0.06);
-        g0 -> GetYaxis() -> SetLabelSize(0.025);
-        g0 -> GetYaxis() -> CenterTitle(true);
-        g0 -> SetMinimum(-300); // Setting y range;
-        g0 -> SetMaximum(300);  // Setting y range;
-        g0 -> GetYaxis() -> SetTitleOffset(0.8); 
-        g0 -> GetXaxis() -> SetTitleOffset(0.8); 
-        // g0 -> GetXaxis() -> SetLimits(0, 6000); // Setting x range;
-        g0 -> Draw("AP SAME");
+    //     gStyle -> SetTitleW(0.7);  //per cent of the pad width
+    //     gStyle -> SetTitleH(0.08); //per cent of the pad height
+    //     g0 -> GetXaxis() -> SetTitle("Number of particles");
+    //     g0 -> GetXaxis() -> SetTitleSize(0.06);
+    //     g0 -> GetXaxis() -> SetLabelSize(0.04);
+    //     g0 -> GetXaxis() -> CenterTitle(true);
+    //     g0 -> GetYaxis() -> SetTitle("Found_z - True_z [mm]");
+    //     g0 -> GetYaxis() -> SetTitleSize(0.06);
+    //     g0 -> GetYaxis() -> SetLabelSize(0.025);
+    //     g0 -> GetYaxis() -> CenterTitle(true);
+    //     g0 -> SetMinimum(-300); // Setting y range;
+    //     g0 -> SetMaximum(300);  // Setting y range;
+    //     g0 -> GetYaxis() -> SetTitleOffset(0.8); 
+    //     g0 -> GetXaxis() -> SetTitleOffset(0.8); 
+    //     // g0 -> GetXaxis() -> SetLimits(0, 6000); // Setting x range;
+    //     g0 -> Draw("AP SAME");
 
-        gPad->SetGrid(5, 2); gPad->Update();
+    //     gPad->SetGrid(5, 2); gPad->Update();
 
-        TLine *line1 = new TLine(0, -16, 10000, -16);
-        line1->SetLineColor(kRed);
-        line1->SetLineWidth(2);
-        line1->Draw("same");  // Draw line on the same canvas
-        TLine *line2 = new TLine(0, 16, 10000, 16);
-        line2->SetLineColor(kRed);
-        line2->SetLineWidth(2);
-        line2->Draw("same");  // Draw line on the same canvas
-        TLegend *legend = new TLegend(0.4,0.8,0.9,0.9);
-        // legend->SetHeader("Legend","C"); // option "C" allows to center the header
-        legend->AddEntry(g0,"Segments expanded between [-8, 8]mm","f");
-        legend->SetTextSize(0.04);
-        legend->Draw("same");
-    }
-    else if (dim == "zVSdz") {
-        g1 -> SetMarkerStyle(29);
-        g1 -> SetMarkerSize(1);
-        g1 -> SetMarkerColor(kBlue - 7);
-        g1 -> SetLineWidth(3);
-        g1 -> SetLineColor(kWhite);
-        if (select == "zscanE") {
-            g1 -> SetTitle("Z Scan with Errors, |dEta| < 0.01 (for small N) or 0.001 (for large N), |dPhi| < 0.1");
-        } else if (select == "zscan") {
-            g1 -> SetTitle("Traditional Z Scan method, |dEta| < 0.01 (for small N) or 0.001 (for large N), |dPhi| < 0.1");
-        } else if (select == "e") {
-            g1 -> SetTitle("Nearest Z with Errors, |dPhi| < 0.1");
-        } 
-        else if (select == "zscanN") {
-            g1 -> SetTitle("Z Scan with Background Normalized");
-        }
-        else if (select == "DCA") {
-            g1 -> SetTitle(Form("DCA indicated by greatest bin, %lu events, |dPhi| < 0.01, closest distance cut = %1.2f", foundz.size(), DCA_cut));
-        }
-        else {
-            g1 -> SetTitle(Form("DCA indicated with Gaussian Fit, |dPhi| < 0.01, closest distance cut = %1.2f", DCA_cut));
-        }
+    //     TLine *line1 = new TLine(0, -16, 10000, -16);
+    //     line1->SetLineColor(kRed);
+    //     line1->SetLineWidth(2);
+    //     line1->Draw("same");  // Draw line on the same canvas
+    //     TLine *line2 = new TLine(0, 16, 10000, 16);
+    //     line2->SetLineColor(kRed);
+    //     line2->SetLineWidth(2);
+    //     line2->Draw("same");  // Draw line on the same canvas
+    //     TLegend *legend = new TLegend(0.4,0.8,0.9,0.9);
+    //     // legend->SetHeader("Legend","C"); // option "C" allows to center the header
+    //     legend->AddEntry(g0,"Segments expanded between [-8, 8]mm","f");
+    //     legend->SetTextSize(0.04);
+    //     legend->Draw("same");
+    // }
+    // else if (dim == "zVSdz") {
+    //     g1 -> SetMarkerStyle(29);
+    //     g1 -> SetMarkerSize(1);
+    //     g1 -> SetMarkerColor(kBlue - 7);
+    //     g1 -> SetLineWidth(3);
+    //     g1 -> SetLineColor(kWhite);
+    //     if (select == "zscanE") {
+    //         g1 -> SetTitle("Z Scan with Errors, |dEta| < 0.01 (for small N) or 0.001 (for large N), |dPhi| < 0.1");
+    //     } else if (select == "zscan") {
+    //         g1 -> SetTitle("Traditional Z Scan method, |dEta| < 0.01 (for small N) or 0.001 (for large N), |dPhi| < 0.1");
+    //     } else if (select == "e") {
+    //         g1 -> SetTitle("Nearest Z with Errors, |dPhi| < 0.1");
+    //     } 
+    //     else if (select == "zscanN") {
+    //         g1 -> SetTitle("Z Scan with Background Normalized");
+    //     }
+    //     else if (select == "DCA") {
+    //         g1 -> SetTitle(Form("DCA indicated by greatest bin, %lu events, |dPhi| < 0.01, closest distance cut = %1.2f", foundz.size(), DCA_cut));
+    //     }
+    //     else {
+    //         g1 -> SetTitle(Form("DCA indicated with Gaussian Fit, |dPhi| < 0.01, closest distance cut = %1.2f", DCA_cut));
+    //     }
         
-        gStyle -> SetTitleW(0.7);  //per cent of the pad width
-        gStyle -> SetTitleH(0.08); //per cent of the pad height
-        g1 -> GetXaxis() -> SetTitle("True Z Vertex [mm]");
-        g1 -> GetXaxis() -> SetTitleSize(0.06);
-        g1 -> GetXaxis() -> SetLabelSize(0.04);
-        g1 -> GetXaxis() -> CenterTitle(true);
-        g1 -> GetYaxis() -> SetTitle("Found_z - True_z [mm]");
-        g1 -> GetYaxis() -> SetTitleSize(0.06);
-        g1 -> GetYaxis() -> SetLabelSize(0.025);
-        g1 -> GetYaxis() -> CenterTitle(true);
-        g1 -> SetMinimum(-100); // Setting y range;
-        g1 -> SetMaximum(100);  // Setting y range;
-        g1 -> GetYaxis() -> SetTitleOffset(0.8); 
-        g1 -> GetXaxis() -> SetTitleOffset(0.8); 
-        // g1 -> GetXaxis() -> SetLimits(0, 6000); // Setting x range;
-        g1 -> Draw("AP SAME");
+    //     gStyle -> SetTitleW(0.7);  //per cent of the pad width
+    //     gStyle -> SetTitleH(0.08); //per cent of the pad height
+    //     g1 -> GetXaxis() -> SetTitle("True Z Vertex [mm]");
+    //     g1 -> GetXaxis() -> SetTitleSize(0.06);
+    //     g1 -> GetXaxis() -> SetLabelSize(0.04);
+    //     g1 -> GetXaxis() -> CenterTitle(true);
+    //     g1 -> GetYaxis() -> SetTitle("Found_z - True_z [mm]");
+    //     g1 -> GetYaxis() -> SetTitleSize(0.06);
+    //     g1 -> GetYaxis() -> SetLabelSize(0.025);
+    //     g1 -> GetYaxis() -> CenterTitle(true);
+    //     g1 -> SetMinimum(-100); // Setting y range;
+    //     g1 -> SetMaximum(100);  // Setting y range;
+    //     g1 -> GetYaxis() -> SetTitleOffset(0.8); 
+    //     g1 -> GetXaxis() -> SetTitleOffset(0.8); 
+    //     // g1 -> GetXaxis() -> SetLimits(0, 6000); // Setting x range;
+    //     g1 -> Draw("AP SAME");
 
-        gPad->SetGrid(5, 2); gPad->Update();
+    //     gPad->SetGrid(5, 2); gPad->Update();
 
-        TLine *line1 = new TLine(-500, 0, +500, 0);
-        line1->SetLineColor(kRed);
-        line1->SetLineWidth(2);
-        line1->Draw("same");  // Draw line on the same canvas
-        TLegend *legend = new TLegend(0.4,0.8,0.9,0.9);
-        // legend->SetHeader("Legend","C"); // option "C" allows to center the header
-        legend->AddEntry(g1,"Segments expanded between [0, 16] mm","f");
-        legend->SetTextSize(0.04);
-        legend->Draw("same");
-    }
-    else {
-        double ymin = g1->GetHistogram()->GetMinimum();
-        double ymax = g1->GetHistogram()->GetMaximum();
-        int nbins = 1000;
-        TH1F *h1 = new TH1F("ProjectionY", "Histogram of vtx_z_resolution vs vtx_z 1D projection;Found_z - True_z [mm];Entries", nbins, ymin, ymax);
-        int npoints = g1->GetN();
-        double x, y;
-        for (int i = 0; i < npoints; i++) {
-            g1->GetPoint(i, x, y);
-            h1->Fill(y);
-        }
-        h1->Draw();
-        h1 -> GetXaxis() -> CenterTitle(true);
-        h1 -> GetYaxis() -> CenterTitle(true);
-        h1 -> GetXaxis() -> SetRangeUser(-60, 60); // Setting x range;
-        h1 -> SetFillColor(kYellow - 7);
-        h1 -> SetLineWidth(1);
-        h1 -> SetFillStyle(1001);
-        static TLine *l1 = new TLine();
-        l1 -> SetLineColor(kRed);
-        l1 -> SetLineStyle(0);
-        l1 -> SetLineWidth(2);
-        l1 -> SetX1(0);   l1 -> SetY1(0);
-        l1 -> SetX2(0);   l1 -> SetY2(h1->GetMaximum());
-        l1 -> Draw("same");
-        gPad -> SetLogy();
-    }
+    //     TLine *line1 = new TLine(-500, 0, +500, 0);
+    //     line1->SetLineColor(kRed);
+    //     line1->SetLineWidth(2);
+    //     line1->Draw("same");  // Draw line on the same canvas
+    //     TLegend *legend = new TLegend(0.4,0.8,0.9,0.9);
+    //     // legend->SetHeader("Legend","C"); // option "C" allows to center the header
+    //     legend->AddEntry(g1,"Segments expanded between [0, 16] mm","f");
+    //     legend->SetTextSize(0.04);
+    //     legend->Draw("same");
+    // }
+    // else {
+    //     double ymin = g1->GetHistogram()->GetMinimum();
+    //     double ymax = g1->GetHistogram()->GetMaximum();
+    //     int nbins = 1000;
+    //     TH1F *h1 = new TH1F("ProjectionY", "Histogram of vtx_z_resolution vs vtx_z 1D projection;Found_z - True_z [mm];Entries", nbins, ymin, ymax);
+    //     int npoints = g1->GetN();
+    //     double x, y;
+    //     for (int i = 0; i < npoints; i++) {
+    //         g1->GetPoint(i, x, y);
+    //         h1->Fill(y);
+    //     }
+    //     h1->Draw();
+    //     h1 -> GetXaxis() -> CenterTitle(true);
+    //     h1 -> GetYaxis() -> CenterTitle(true);
+    //     h1 -> GetXaxis() -> SetRangeUser(-60, 60); // Setting x range;
+    //     h1 -> SetFillColor(kYellow - 7);
+    //     h1 -> SetLineWidth(1);
+    //     h1 -> SetFillStyle(1001);
+    //     static TLine *l1 = new TLine();
+    //     l1 -> SetLineColor(kRed);
+    //     l1 -> SetLineStyle(0);
+    //     l1 -> SetLineWidth(2);
+    //     l1 -> SetX1(0);   l1 -> SetY1(0);
+    //     l1 -> SetX2(0);   l1 -> SetY2(h1->GetMaximum());
+    //     l1 -> Draw("same");
+    //     gPad -> SetLogy();
+    // }
 }
 
 void foundZAnalysis (string filePath, string select = "zscan", string dim = "2D") {
@@ -993,7 +984,7 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
                     // h_dphi -> Fill(deltaPhi);
                 }
             }
-            histogramSinglePlot(h_dphi, method, target);
+            EtaPhiSinglePlot(h_dphi, method, target);
             // dPhiCheck(target, tracklet_layer_0, tracklet_layer_1);
         }
     } else if (method[1] == "all") {
@@ -1107,7 +1098,7 @@ void foundEtaPhiAnalysis (TTree *EventTree, string savePath, Int_t target, std::
                 }
                 tracklet_layer_0.clear();   tracklet_layer_1.clear();
             }
-            histogramSinglePlot(h_dPhi, method, target);
+            EtaPhiSinglePlot(h_dPhi, method, target);
         }
         else if (method[2] == "dR") {
             for (int i = 0; i < idx.size(); i++) {
@@ -1365,7 +1356,7 @@ void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<st
             }
         }
     }
-    // histogramSinglePlot(h_unmixed_dPhi, method, target);
+    // EtaPhiSinglePlot(h_unmixed_dPhi, method, target);
     // doublePlot(h_mixed_dPhi, h_unmixed_dPhi, method, target);
     // backgroundCancelling(h_mixed_dPhi, h_unmixed_dPhi, method, target);
     // /*

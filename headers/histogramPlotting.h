@@ -1,6 +1,75 @@
 #include "globalDefinitions.h"
 
-void histogramSinglePlot (TH1D* const histo, std::vector<std::string> method, Int_t const & target) {
+void ZResolutionSinglePlot (TH1D* const histo, std::vector<std::string> method) {
+    if (isInteger(method[1]))   int lowerRange = stoi(method[1]);
+    if (isInteger(method[2]))   int upperRange = stoi(method[2]);
+    int maxBin = histo->GetMaximumBin();
+    double maxBinCenter = histo->GetBinCenter(maxBin);
+    int maxEntry = histo -> GetBinContent(maxBin);
+    TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,1200);
+    histo -> Draw();
+    histo -> SetFillColor(kYellow - 7);
+    histo -> SetLineWidth(1);
+    histo -> SetFillStyle(1001);
+    histo -> GetXaxis() -> SetTitleSize(.05);
+    histo -> GetXaxis() -> SetLabelSize(.03);
+    histo -> GetXaxis() -> CenterTitle(true);
+    histo -> GetXaxis() -> SetNdivisions(31, 5, 0);
+    histo -> GetXaxis() -> SetTitleOffset(.8);
+    histo -> GetYaxis() -> SetTitleSize(.05);
+    histo -> GetYaxis() -> SetLabelSize(.03);
+    histo -> GetYaxis() -> SetTitleOffset(.8);
+    histo -> GetYaxis() -> CenterTitle(true);
+
+    TLine *l = new TLine(0, 0, 0, maxEntry);
+	l -> Draw("same"); 
+    l -> SetLineColor(kRed);
+    TLegend *lg = new TLegend(0.12, 0.8, 0.42, 0.9);
+    lg -> AddEntry(histo, "Fiducial cut as -250 < MBD_z_vtx < -50 mm", "f");
+    gStyle -> SetLegendTextSize(.03);
+    // gPad -> SetLogy();
+    can1 -> SaveAs(Form("../External/zFindingPlots/foundZResolution.png", 0));
+}
+
+void TGraphSinglePlot (TGraph* g0, const char *title) {
+    TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,1200);
+    g0 -> SetMarkerStyle(29);
+    g0 -> SetMarkerSize(2);
+    g0 -> SetMarkerColor(kBlue - 7);
+    g0 -> SetLineWidth(3);
+    g0 -> SetLineColor(kWhite);
+    gStyle -> SetTitleW(0.7);  //per cent of the pad width
+    gStyle -> SetTitleH(0.08); //per cent of the pad height
+    g0 -> SetTitle(title);
+    // g0 -> GetXaxis() -> SetTitle("# of hits");
+    g0 -> GetXaxis() -> SetTitle("MBD z vtx [mms]");
+    g0 -> GetXaxis() -> SetTitleSize(0.05);
+    g0 -> GetXaxis() -> SetLabelSize(0.04);
+    g0 -> GetXaxis() -> CenterTitle(true);
+    g0 -> GetYaxis() -> SetTitle("found z resolution [mm]");
+    g0 -> GetYaxis() -> SetTitleSize(0.05);
+    g0 -> GetYaxis() -> SetLabelSize(0.025);
+    g0 -> GetYaxis() -> CenterTitle(true);
+    g0 -> SetMinimum(-100); // Setting y range;
+    g0 -> SetMaximum(100);  // Setting y range;
+    g0 -> GetYaxis() -> SetTitleOffset(0.8); 
+    g0 -> GetXaxis() -> SetTitleOffset(0.8); 
+    // g0 -> GetXaxis() -> SetLimits(0, 6000); // Setting x range;
+    g0 -> Draw("AP SAME");
+    gPad->SetGrid(5, 2); gPad->Update();
+
+    // TLine *l = new TLine(0, 0, 8000, 0);
+    TLine *l = new TLine(-250, 0, -50, 0);
+	l -> Draw("same"); 
+    l -> SetLineColor(kRed);
+    TLegend *lg = new TLegend(0.65, 0.85, 0.9, 0.9);
+    lg -> AddEntry(g0, "Fiducial cut as -250 < MBD_z_vtx < -50 mm", "f");
+    gStyle -> SetLegendTextSize(.02);
+    lg->Draw("same");
+    can1 -> SaveAs(Form("../External/zFindingPlots/foundZResolution_vs_MBDZ.png", 0));
+}
+
+void EtaPhiSinglePlot (TH1D* const histo, std::vector<std::string> method, Int_t const & target) {
     if (isInteger(method[1]))   int lowerRange = stoi(method[1]);
     if (isInteger(method[2]))   int upperRange = stoi(method[2]);
     int maxBin = histo->GetMaximumBin();
