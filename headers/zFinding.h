@@ -126,15 +126,19 @@ double DCA_npeaks_fit (const int &evt, const std::vector<myTrackletMemberLite> &
     TH1D *h = new TH1D("", Form("Found Z of Event %d, NHits = %lu, #bf{DCA with fit};z position [cm];# of counts", evt, (t0.size()+t1.size())/33), bins, zmin - scanstep/2, zmax + scanstep/2);
     // Disable the storage of the sum of squares of weights; 
     // Save both memory and run time;
-    h->Sumw2(kFALSE);   
+    h->Sumw2(kFALSE);
+    std::pair<double, double> nearestZResults;
     for (int i = 0; i < t0.size(); i++) {
         for (int j = 0; j < t1.size(); j++) {
             double dPhi = t0[i].phi - t1[j].phi;
             if (dPhi >= phi_cut_low && dPhi <= phi_cut_high) {
                 myPoint3D P1 = {t0[i].x, t0[i].y, t0[i].z};
                 myPoint3D P2 = {t1[j].x, t1[j].y, t1[j].z};
-                double foundZ = nearestZ(P1, P2).first;
-                double nearest_d = nearestZ(P1, P2).second;
+                // double foundZ = nearestZ(P1, P2).first;
+                // double nearest_d = nearestZ(P1, P2).second;
+                nearestZResults = nearestZ(P1, P2);
+                double foundZ = nearestZResults.first;
+                double nearest_d = nearestZResults.second;
                 if (foundZ >= zmin && foundZ <= zmax && nearest_d <= DCA_cut) {
                     h -> Fill(foundZ);
                 }

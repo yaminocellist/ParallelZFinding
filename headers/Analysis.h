@@ -346,7 +346,7 @@ void foundZAnalysisLite (string filePath, std::vector<string> options) {
     TGraph *g_ZFunction = new TGraph();
     double z_resolution;
     for (int i = 0; i < index.size(); i++) {
-        if (foundZ[i] >= -250. && foundZ[i] <= -50.) {
+        if (foundZ[i] >= -250. && foundZ[i] <= -50. && MBD_centrality[i] <= 0.7) {
             z_resolution = foundZ[i] - MBD_z_vtx[i];
             h_resolution -> Fill(z_resolution);
             g_NFunction->SetPoint(g_NFunction->GetN(), NClus[i], z_resolution);
@@ -354,8 +354,8 @@ void foundZAnalysisLite (string filePath, std::vector<string> options) {
         }
     }
     ZResolutionSinglePlot(h_resolution, options);
-    // TGraphSinglePlot(g_NFunction, Form("INTT found z resolution of %lu events", index.size()));
-    TGraphSinglePlot(g_ZFunction, Form("INTT found z resolution of %lu events", index.size()));
+    // TGraphSinglePlot(g_NFunction, Form("INTT found z resolution of %d events", g_NFunction->GetN()), "# of Hits");
+    TGraphSinglePlot(g_ZFunction, Form("INTT found z resolution of %d events", g_ZFunction->GetN()), "MBD z vtx [mm]");
 
     // TCanvas *canvas = new TCanvas("c2","c2", 0, 0,1350,800);
     

@@ -130,7 +130,7 @@ void allEventZFinding (TTree *EventTree, Int_t target, std::vector<string> optio
         branch11->GetEntry(i);  branch12->GetEntry(i);  branch13->GetEntry(i);  branch14->GetEntry(i);
         branch15->GetEntry(i);  branch16->GetEntry(i);  branch17->GetEntry(i);
         branch30->GetEntry(i);  branch31->GetEntry(i);
-        if (MBD_z_vtx >= -25. & MBD_z_vtx <= -5.) {
+        if (MBD_z_vtx >= -25. & MBD_z_vtx <= -5. && MBD_centrality <= 0.7) {
             for (int j = 0; j < ClusX->size(); j++) {
                 if (ClusLayer->at(j) == 3 || ClusLayer->at(j) == 4) {
                     // std::cout << std::atan2(ClusY->at(i), ClusX->at(i)) - ClusPhi->at(i) << std::endl;

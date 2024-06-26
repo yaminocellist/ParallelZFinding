@@ -26,12 +26,13 @@ void ZResolutionSinglePlot (TH1D* const histo, std::vector<std::string> method) 
     l -> SetLineColor(kRed);
     TLegend *lg = new TLegend(0.12, 0.8, 0.42, 0.9);
     lg -> AddEntry(histo, "Fiducial cut as -250 < MBD_z_vtx < -50 mm", "f");
-    gStyle -> SetLegendTextSize(.03);
+    gStyle -> SetLegendTextSize(.02);
+    lg->Draw("same");
     // gPad -> SetLogy();
     can1 -> SaveAs(Form("../External/zFindingPlots/foundZResolution.png", 0));
 }
 
-void TGraphSinglePlot (TGraph* g0, const char *title) {
+void TGraphSinglePlot (TGraph* g0, const char *title, const char *Xtitle) {
     TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,1200);
     g0 -> SetMarkerStyle(29);
     g0 -> SetMarkerSize(2);
@@ -42,7 +43,7 @@ void TGraphSinglePlot (TGraph* g0, const char *title) {
     gStyle -> SetTitleH(0.08); //per cent of the pad height
     g0 -> SetTitle(title);
     // g0 -> GetXaxis() -> SetTitle("# of hits");
-    g0 -> GetXaxis() -> SetTitle("MBD z vtx [mms]");
+    g0 -> GetXaxis() -> SetTitle(Xtitle);
     g0 -> GetXaxis() -> SetTitleSize(0.05);
     g0 -> GetXaxis() -> SetLabelSize(0.04);
     g0 -> GetXaxis() -> CenterTitle(true);
