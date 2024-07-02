@@ -60,9 +60,6 @@ double singleEventZFinding (TTree *EventTree, Int_t target, std::vector<string> 
             }
         }
         found_z = DCA_npeaks_fit(event25, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_dPhi_cut, upper_dPhi_cut, MBD_z_vtx);
-
-
-
         tracklet_layer_0.clear();   tracklet_layer_1.clear();
     }
     else {
