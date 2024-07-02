@@ -161,12 +161,16 @@ root [1] EventTree->Print()
 #include "headers/globalDefinitions.h"
 #include "headers/histogramPlotting.h"
 
-void readTree(TTree * tree) {
+void sanityCheck(TTree * tree) {
     // Define the variables to hold the data
     int event0, event25, NClus;
+    float MBD_z_vtx;
     std::vector<float> *ClusX = nullptr;
     std::vector<float> *ClusY = nullptr;
     std::vector<float> *ClusZ = nullptr;
+    std::vector<float> *ClusR     = nullptr;    // FYI only;
+    std::vector<float> *ClusPhi   = nullptr;    // FYI only;
+    std::vector<float> *ClusEta   = nullptr;    // FYI only;
 
     // Get the branches directly by their indices
     TBranch *branch0  = (TBranch*)tree->GetListOfBranches()->At(0);
@@ -175,6 +179,10 @@ void readTree(TTree * tree) {
     TBranch *branch13 = (TBranch*)tree->GetListOfBranches()->At(13);
     TBranch *branch14 = (TBranch*)tree->GetListOfBranches()->At(14);
     TBranch *branch10 = (TBranch*)tree->GetListOfBranches()->At(10);
+    TBranch *branch15 = (TBranch*)tree->GetListOfBranches()->At(15);    // ClusR;
+    TBranch *branch16 = (TBranch*)tree->GetListOfBranches()->At(16);    // ClusPhi;
+    TBranch *branch17 = (TBranch*)tree->GetListOfBranches()->At(17);    // ClusEta;
+    TBranch *branch31 = (TBranch*)tree->GetListOfBranches()->At(31);    // MBD_z_vtx;
 
     if (!branch0 || !branch25 || !branch12) {
         std::cerr << "Error getting branches!" << std::endl;
@@ -188,26 +196,50 @@ void readTree(TTree * tree) {
     branch13->SetAddress(&ClusY);
     branch14->SetAddress(&ClusZ);
     branch10->SetAddress(&NClus);
+    branch15->SetAddress(&ClusR);
+    branch16->SetAddress(&ClusPhi);
+    branch17->SetAddress(&ClusEta);
+    branch31->SetAddress(&MBD_z_vtx);
 
     // Loop over the entries in the TTree and print the data
+    double dZ, RSquared, R, theta, eta;
     Long64_t nEntries = tree->GetEntries();
     for (Long64_t i = 0; i < nEntries; ++i) {
         branch0 ->GetEntry(i);  branch25->GetEntry(i);
         branch12->GetEntry(i);  branch13->GetEntry(i);  branch14->GetEntry(i);
         branch10->GetEntry(i);
+        branch15->GetEntry(i);  branch16->GetEntry(i);  branch17->GetEntry(i);
+        branch31->GetEntry(i);
 
-        std::cout << "Entry "   << i << ":" << std::endl;
+        // std::cout << "Entry " << i << ":" << std::endl;
         // std::cout << "event25: " << event25 << ", ";
         // std::cout << "ClusX size: " << ClusY->size() << std::endl;
         int size_of_X = ClusX->size();  int size_of_Y = ClusY->size();  int size_of_Z = ClusZ->size();
-        if (size_of_X == 0) {
-            std::cout << "Empty event at " << event0 << ", " << event25 << std::endl;
+        // if (size_of_X == 0) {
+            // std::cout << "Empty event at " << event0 << ", " << event25 << std::endl;
             // exit(1);
-        }
+        // }
         if (size_of_X != size_of_Y || size_of_X != size_of_Z || size_of_Y != size_of_Z ||
             size_of_X != NClus || size_of_Y != NClus || size_of_Z != NClus) {
             std::cout << red << "# of hit insanity at " << event0 << ", " << event25 << color_reset << std::endl;
-            exit(1);
+            // exit(1);
+        }
+
+        for (int j = 0; j < size_of_X; j++) {
+            // dZ       = ClusZ->at(j) - MBD_z_vtx;
+            dZ       = ClusZ->at(j);
+            RSquared = (ClusX->at(j))*(ClusX->at(j)) + (ClusY->at(j))*(ClusY->at(j));
+            R        = std::sqrt(RSquared);
+            theta    = std::atan2(ClusR->at(j), dZ);
+            if (dZ >= 0)    eta = -std::log(std::tan(theta/2));
+            if (dZ <  0)    eta = std::log(std::tan((M_PI - theta)/2));
+            if (eta - ClusEta->at(j) >= 5e-07) {
+                std::cout << red << "# of hit insanity at " << event0 << ", " << event25 << color_reset << std::endl;
+            }
+            // if (RSquared - (ClusR->at(j))*(ClusR->at(j)) >8e-05 ) {
+            //     std::cout << red << "# of hit insanity at " << event0 << ", " << event25 << color_reset << std::endl;
+            //     exit(1);
+            // }
         }
     }
 }
@@ -226,5 +258,5 @@ void RootFileChecker () {
         std::cerr << "Error getting TTree!" << std::endl;
         return;
     }
-    readTree(tree);
+    sanityCheck(tree);
 }

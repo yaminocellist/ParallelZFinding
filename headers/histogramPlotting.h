@@ -1,12 +1,80 @@
 #include "globalDefinitions.h"
 
-void ZResolutionSinglePlot (TH1D* const histo, std::vector<std::string> method) {
+void angularPlot1D (TH1D* const histo, std::vector<std::string> method, const std::string &fileTitle) {
     if (isInteger(method[1]))   int lowerRange = stoi(method[1]);
     if (isInteger(method[2]))   int upperRange = stoi(method[2]);
     int maxBin = histo->GetMaximumBin();
     double maxBinCenter = histo->GetBinCenter(maxBin);
     int maxEntry = histo -> GetBinContent(maxBin);
-    TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,1200);
+    TCanvas *can1 = new TCanvas("c1d","c1d",0,50,1800,1200);
+    histo -> Draw();
+    histo -> SetFillColor(kYellow - 7);
+    histo -> SetLineWidth(1);
+    histo -> SetFillStyle(1001);
+    histo -> GetXaxis() -> SetTitleSize(.05);
+    histo -> GetXaxis() -> SetLabelSize(.03);
+    histo -> GetXaxis() -> CenterTitle(true);
+    histo -> GetXaxis() -> SetNdivisions(31, 5, 0);
+    histo -> GetXaxis() -> SetTitleOffset(.8);
+    histo -> GetYaxis() -> SetTitleSize(.05);
+    histo -> GetYaxis() -> SetLabelSize(.03);
+    histo -> GetYaxis() -> SetTitleOffset(.8);
+    histo -> GetYaxis() -> CenterTitle(true);
+
+    double pi = TMath::Pi();
+    int bin_min = 1;                   // The first bin
+    int bin_max = histo->GetNbinsX();  // The last bin
+
+    // Calculate bin positions for each label
+    int bin_pi   = bin_max;
+    int bin_0    = bin_min + (bin_max - bin_min)/2;
+    int binPi_2  = bin_min + 3*(bin_max - bin_min)/4;
+    int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
+
+    // Set the labels at the calculated positions
+    histo->GetXaxis()->SetBinLabel(bin_0, "0");
+    histo->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
+    histo->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
+    // histo->GetXaxis()->SetBinLabel(bin_3pi_4, "#frac{3#pi}{4}");
+    histo->GetXaxis()->SetBinLabel(bin_pi, "#pi");
+    histo->GetXaxis()->SetBinLabel(bin_min, "-#pi");
+    histo->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+    // histo->GetXaxis()->SetBinLabel(bin_max - 3*(bin_max - bin_min)/4, "-#frac{3#pi}{4}");
+    // histo->GetXaxis()->SetBinLabel(bin_max - (bin_max - bin_min)/2, "-#frac{#pi}{2}");
+    // histo->GetXaxis()->SetBinLabel(bin_max - (bin_max - bin_min)/4, "-#frac{#pi}{4}");
+
+    // Ensure the custom labels are displayed by setting the number of divisions
+    histo->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
+    histo->GetXaxis()->SetLabelSize(0.04);
+
+    TLine *l = new TLine(0, 0, 0, maxEntry);
+	l -> Draw("same"); 
+    l -> SetLineColor(kRed);
+    TLegend *lg = new TLegend(0.12, 0.8, 0.43, 0.9);
+    lg -> AddEntry(histo, "Fiducial cut as -250 <= MBD_z_vtx <= -50 mm, MBD_centrality <= 0.70", "f");
+    gStyle -> SetLegendTextSize(.015);
+    lg->Draw("same");
+    // gPad -> SetLogy();
+    can1 -> SaveAs(Form("../External/zFindingPlots/%s.png", fileTitle.c_str()));
+}
+
+void angularPlot2D(TH2D *const h_dPhi_Z, std::vector<std::string> method, const std::string &fileTitle) {
+    TCanvas *can = new TCanvas("c2d","c2d",0,50,1800,1200);
+    h_dPhi_Z -> Draw("lego2");
+    h_dPhi_Z -> SetTitle(Form("All dPhi values (no event mixed) with %d bins of Z vtx", h_dPhi_Z->GetNbinsY()));
+    h_dPhi_Z -> GetXaxis() -> SetTitle("dPhi"); h_dPhi_Z -> GetXaxis() -> CenterTitle(true);
+    h_dPhi_Z -> GetYaxis() -> SetTitle("found z vtx position [mm]");   h_dPhi_Z -> GetYaxis() -> CenterTitle(true);
+    h_dPhi_Z -> GetXaxis() -> SetTitleOffset(1.8);   h_dPhi_Z -> GetYaxis() -> SetTitleOffset(1.8);
+    can -> SaveAs(Form("../External/zFindingPlots/%s.png", fileTitle.c_str()));
+}
+
+void ZResolutionSinglePlot (TH1D* const histo, std::vector<std::string> method, const std::string &fileTitle) {
+    if (isInteger(method[1]))   int lowerRange = stoi(method[1]);
+    if (isInteger(method[2]))   int upperRange = stoi(method[2]);
+    int maxBin = histo->GetMaximumBin();
+    double maxBinCenter = histo->GetBinCenter(maxBin);
+    int maxEntry = histo -> GetBinContent(maxBin);
+    TCanvas *can1 = new TCanvas("c1d","c1d",0,50,1800,1200);
     histo -> Draw();
     histo -> SetFillColor(kYellow - 7);
     histo -> SetLineWidth(1);
@@ -29,11 +97,11 @@ void ZResolutionSinglePlot (TH1D* const histo, std::vector<std::string> method) 
     gStyle -> SetLegendTextSize(.02);
     lg->Draw("same");
     // gPad -> SetLogy();
-    can1 -> SaveAs(Form("../External/zFindingPlots/foundZResolution.png", 0));
+    can1 -> SaveAs(Form("../External/zFindingPlots/%s.png", fileTitle.c_str()));
 }
 
-void TGraphSinglePlot (TGraph* g0, const char *title, const char *Xtitle) {
-    TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,1200);
+void TGraphSinglePlot (TGraph* g0, const char *title, const char *Xtitle, const std::string &fileTitle) {
+    TCanvas *can1 = new TCanvas("cg","cg",0,50,1800,1200);
     g0 -> SetMarkerStyle(29);
     g0 -> SetMarkerSize(2);
     g0 -> SetMarkerColor(kBlue - 7);
@@ -51,23 +119,22 @@ void TGraphSinglePlot (TGraph* g0, const char *title, const char *Xtitle) {
     g0 -> GetYaxis() -> SetTitleSize(0.05);
     g0 -> GetYaxis() -> SetLabelSize(0.025);
     g0 -> GetYaxis() -> CenterTitle(true);
-    g0 -> SetMinimum(-100); // Setting y range;
-    g0 -> SetMaximum(100);  // Setting y range;
+    g0 -> SetMinimum(-200); // Setting y range;
+    g0 -> SetMaximum(200);  // Setting y range;
     g0 -> GetYaxis() -> SetTitleOffset(0.8); 
     g0 -> GetXaxis() -> SetTitleOffset(0.8); 
     // g0 -> GetXaxis() -> SetLimits(0, 6000); // Setting x range;
     g0 -> Draw("AP SAME");
     gPad->SetGrid(5, 2); gPad->Update();
 
-    // TLine *l = new TLine(0, 0, 8000, 0);
-    TLine *l = new TLine(-250, 0, -50, 0);
+    TLine *l = new TLine(-250, 0, 8000, 0);
 	l -> Draw("same"); 
     l -> SetLineColor(kRed);
-    TLegend *lg = new TLegend(0.65, 0.85, 0.9, 0.9);
-    lg -> AddEntry(g0, "Fiducial cut as -250 < MBD_z_vtx < -50 mm", "f");
+    TLegend *lg = new TLegend(0.55, 0.85, 0.9, 0.9);
+    lg -> AddEntry(g0, "Fiducial cut as -250 < MBD_z_vtx < -50 mm, centrality <= 0.7", "f");
     gStyle -> SetLegendTextSize(.02);
     lg->Draw("same");
-    can1 -> SaveAs(Form("../External/zFindingPlots/foundZResolution_vs_MBDZ.png", 0));
+    can1 -> SaveAs(Form("../External/zFindingPlots/%s.png", fileTitle.c_str()));
 }
 
 void EtaPhiSinglePlot (TH1D* const histo, std::vector<std::string> method, Int_t const & target) {
