@@ -312,8 +312,9 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
     double range_min = -M_PI;
     double range_max = M_PI;
     double bin_width = (range_max - range_min) / N;
-    TH1D *h_unmixed_dPhi  = new TH1D("dPhi of unmixed", Form("dPhi of unmixed %lu events; dPhi value; # of counts", event.size()), N, range_min, range_max);
-    TH2D *h_dPhi_Z = new TH2D("dPhi of unmixed 2D", Form("dPhi of unmixed %lu events; dPhi value; # of counts", event.size()), N, range_min, range_max, 20, (-25 - 0.5)*10, (-5. + 0.5)*10);
+    TH1D *h_unmixed_dPhi = new TH1D("dPhi of unmixed", Form("dPhi of unmixed %lu events; dPhi value; # of counts", event.size()), N, range_min, range_max);
+    TH2D *h_dPhi_Z       = new TH2D("dPhi of unmixed 2D", Form("dPhi of unmixed %lu events; dPhi value; foundZ vtx [mm]", event.size()), N, range_min, range_max, 20, (-25 - 0.5)*10, (-5. + 0.5)*10);
+    TH2D *h_dPhi_cen     = new TH2D("dPhi of unmixed 2D", Form("dPhi of unmixed %lu events; dPhi value; MBD centrality", event.size()), N, range_min, range_max, 14, 0.0, 0.7);
     for (int i = 0; i < event.size(); i++) {
         std::cout << i << std::endl;
         branch25->GetEntry(index[i]);  branch10->GetEntry(index[i]);  branch11->GetEntry(index[i]);
@@ -335,20 +336,23 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
                 Phi1.push_back(phi);
             }
         }
-        double fz = foundZ[i];
+        double fz = foundZ[i], cen = MBD_cen[i];
         for (int k = 0; k < Phi0.size(); k++) {
             for (int l = 0; l < Phi1.size(); l++) {
                 dPhi = Phi0[k] - Phi1[l];
                 if (dPhi > M_PI)    dPhi = dPhi - 2*M_PI;
                 if (dPhi < -M_PI)   dPhi = dPhi + 2*M_PI;
-                h_unmixed_dPhi -> Fill(dPhi);
-                h_dPhi_Z -> Fill(dPhi, fz);
+                // h_unmixed_dPhi -> Fill(dPhi);
+                // h_dPhi_Z       -> Fill(dPhi, fz);
+                h_dPhi_cen     -> Fill(dPhi, cen);
             }
         }
         Phi0.clear();   Phi1.clear();
     }
     angularPlot1D(h_unmixed_dPhi, options, "dPhi of unmixed");
     angularPlot2D(h_dPhi_Z, options, "dPhi of unmixed vs Z");
+    angularPlot2D(h_dPhi_cen, options, "dPhi of unmixed vs MBD centrality");
+    angularPlot3D(h_dPhi_cen, options, "dPhi of unmixed vs MBD centrality 3D");
 }
 
 void ResultsAnalysis (std::string method) {
