@@ -66,6 +66,7 @@ double singleEventZFinding (TTree *EventTree, Int_t target, std::vector<string> 
         std::cout << "Event " << event25 << " is NOT the event we need." << std::endl;
         exit(1);
     }
+    std::cout << found_z << ",   " << MBD_z_vtx << std::endl;
     return found_z;
 }
 
@@ -143,7 +144,7 @@ void allEventZFinding (TTree *EventTree, Int_t target, std::vector<string> optio
                     }
                 }
             }
-            found_z = DCA_npeaks_fit(event25, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_dPhi_cut, upper_dPhi_cut, MBD_z_vtx);
+            found_z = DCA_npeaks_fitLite(event25, tracklet_layer_0, tracklet_layer_1, -0.001, 0.001, lower_dPhi_cut, upper_dPhi_cut, MBD_z_vtx);
             tracklet_layer_0.clear();   tracklet_layer_1.clear();
             outputFile << i << "," << event25 << "," << NClus << "," << found_z << "," << MBD_z_vtx << "," << MBD_centrality << std::endl;
         }

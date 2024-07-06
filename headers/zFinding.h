@@ -119,7 +119,7 @@ double nearest_z_method (const int &evt, const std::vector<myTrackletMemberLite>
 }
 
 //  DCA (Distance of Closest Approach) integrating npeaks.C tutorial:
-double DCA_npeaks_fit (const int &evt, const std::vector<myTrackletMemberLite> &t0, const std::vector<myTrackletMemberLite> &t1,
+double DCA_npeaks_fitLite (const int &evt, const std::vector<myTrackletMemberLite> &t0, const std::vector<myTrackletMemberLite> &t1,
                          const double &eta_cut_low, const double &eta_cut_high,
                          const double &phi_cut_low, const double &phi_cut_high, const double &trueZ) {
     // auto h = std::make_unique<TH1D>("", "", bins, zmin - scanstep/2, zmax + scanstep/2);
@@ -127,20 +127,18 @@ double DCA_npeaks_fit (const int &evt, const std::vector<myTrackletMemberLite> &
     // Disable the storage of the sum of squares of weights; 
     // Save both memory and run time;
     h->Sumw2(kFALSE);
-    std::pair<double, double> nearestZResults;
+    std::pair<double, double> nearestZResults_revised;
     for (int i = 0; i < t0.size(); i++) {
         for (int j = 0; j < t1.size(); j++) {
             double dPhi = t0[i].phi - t1[j].phi;
             if (dPhi >= phi_cut_low && dPhi <= phi_cut_high) {
                 myPoint3D P1 = {t0[i].x, t0[i].y, t0[i].z};
                 myPoint3D P2 = {t1[j].x, t1[j].y, t1[j].z};
-                // double foundZ = nearestZ(P1, P2).first;
-                // double nearest_d = nearestZ(P1, P2).second;
-                nearestZResults = nearestZ(P1, P2);
-                double foundZ = nearestZResults.first;
-                double nearest_d = nearestZResults.second;
-                if (foundZ >= zmin && foundZ <= zmax && nearest_d <= DCA_cut) {
-                    h -> Fill(foundZ);
+                nearestZResults_revised         = nearestZ_revised(P1, P2);
+                double foundZ_revised           = nearestZResults_revised.first;
+                double nearest_d_revisedSQUARED = nearestZResults_revised.second;
+                if (foundZ_revised >= zmin && foundZ_revised <= zmax && nearest_d_revisedSQUARED <= DCA_cutSQUARED) {
+                    h -> Fill(foundZ_revised);
                 }
             }
         }
@@ -156,44 +154,90 @@ double DCA_npeaks_fit (const int &evt, const std::vector<myTrackletMemberLite> &
     xpeaks = s->GetPositionX();
     double ctz = xpeaks[0];
     
-    // if (gPad) gPad->SetGrid(1, 1);
-    // // h -> DrawCopy("");
-    // bg -> Draw("SAME");
-    // c -> Update();
-    // h -> GetXaxis() -> CenterTitle(true);   h -> GetYaxis() -> CenterTitle(true);   
-    // h -> Draw("same");
-    // h -> SetFillColor(kYellow - 7);
-    // h -> SetLineWidth(1);
-    // h -> SetFillStyle(1001);
-
-    // static TLine *l1 = new TLine();
-    // l1 -> SetLineColor(kRed);
-    // l1 -> SetLineStyle(2);
-    // l1 -> SetLineWidth(4);
-    // static TLine *l2 = new TLine();
-    // l2 -> SetLineColor(kBlue);
-    // l2 -> SetLineStyle(1);
-    // l2 -> SetLineWidth(4);
-    // static TLegend *lg = new TLegend(0.12, 0.85, 0.46, 0.9);
-    // lg -> AddEntry(h, Form("%lu tracklets, found z = %fcm, true z = %fcm", t0.size() + t1.size(), ctz, trueZ), "f");
-    // lg -> SetTextSize(.02);
-    // int max_entry = h -> GetBinContent(h -> FindBin(ctz));
-    // // Update line positions and redraw
-    // l1->SetX1(ctz); l1->SetX2(ctz);
-    // l1->SetY1(0);   l1->SetY2(max_entry);
-    // l1->Draw("same");
-    // l2->SetX1(trueZ); l2->SetX2(trueZ);
-    // l2->SetY1(0);     l2->SetY2(max_entry);
-    // l2->Draw("same");
-
-    // // Clear and update the legend for the current event
-    // lg->Clear();
-    // lg->AddEntry(h, Form("%lu hits, found z = %fcm, true z = %fcm", t0.size() + t1.size(), ctz, trueZ), "f");
-    // lg->Draw("same");
-    // gPad -> SetGrid(1,1); gPad -> Update();
-    // c -> SaveAs(Form("zFindingPlots/DCA_npeaks_fit_%d.png", evt));
     delete c;   delete h;   delete bg;
     h = 0;  bg = 0;
+    return ctz;
+}
+
+double DCA_npeaks_fit (const int &evt, const std::vector<myTrackletMemberLite> &t0, const std::vector<myTrackletMemberLite> &t1,
+                         const double &eta_cut_low, const double &eta_cut_high,
+                         const double &phi_cut_low, const double &phi_cut_high, const double &trueZ) {
+    // auto h = std::make_unique<TH1D>("", "", bins, zmin - scanstep/2, zmax + scanstep/2);
+    TH1D *h = new TH1D("", Form("Found Z of Event %d, NHits = %lu, #bf{DCA with fit};z position [cm];# of counts", evt, (t0.size()+t1.size())/33), bins, zmin - scanstep/2, zmax + scanstep/2);
+    // Disable the storage of the sum of squares of weights; 
+    // Save both memory and run time;
+    h->Sumw2(kFALSE);
+    std::pair<double, double> nearestZResults, nearestZResults_revised;
+    for (int i = 0; i < t0.size(); i++) {
+        for (int j = 0; j < t1.size(); j++) {
+            double dPhi = t0[i].phi - t1[j].phi;
+            if (dPhi >= phi_cut_low && dPhi <= phi_cut_high) {
+                myPoint3D P1 = {t0[i].x, t0[i].y, t0[i].z};
+                myPoint3D P2 = {t1[j].x, t1[j].y, t1[j].z};
+                // double foundZ = nearestZ(P1, P2).first;
+                // double nearest_d = nearestZ(P1, P2).second;
+                nearestZResults  = nearestZ(P1, P2);
+                double foundZ    = nearestZResults.first;
+                double nearest_d = nearestZResults.second;
+                nearestZResults_revised  = nearestZ_revised(P1, P2);
+                double foundZ_revised    = nearestZResults_revised.first;
+                double nearest_d_revisedSQUARED = nearestZResults_revised.second;
+                if (std::abs(foundZ - foundZ_revised) > 1e-12 || std::abs(nearest_d*nearest_d - nearest_d_revisedSQUARED) > 1e-07)   std::cout << foundZ - foundZ_revised << ", " << nearest_d*nearest_d - nearest_d_revisedSQUARED << std::endl;
+                if (foundZ_revised >= zmin && foundZ_revised <= zmax && nearest_d_revisedSQUARED <= DCA_cutSQUARED) {
+                    h -> Fill(foundZ_revised);
+                }
+            }
+        }
+    }
+
+    TSpectrum *s = new TSpectrum();
+    TH1 *bg = s -> Background(h, 40, "nosmoothing"); 
+    bg -> SetLineColor(kRed);
+    TCanvas *c = new TCanvas("c", "c", 0,50,2000,1000);
+    h->Add(bg, -1.);
+    Int_t nfound = s->Search(h, 7., "", 0.001);
+    Double_t *xpeaks;
+    xpeaks = s->GetPositionX();
+    double ctz = xpeaks[0];
+    
+    if (gPad) gPad->SetGrid(1, 1);
+    // h -> DrawCopy("");
+    bg -> Draw("SAME");
+    c -> Update();
+    h -> GetXaxis() -> CenterTitle(true);   h -> GetYaxis() -> CenterTitle(true);   
+    h -> Draw("same");
+    h -> SetFillColor(kYellow - 7);
+    h -> SetLineWidth(1);
+    h -> SetFillStyle(1001);
+
+    static TLine *l1 = new TLine();
+    l1 -> SetLineColor(kRed);
+    l1 -> SetLineStyle(2);
+    l1 -> SetLineWidth(4);
+    static TLine *l2 = new TLine();
+    l2 -> SetLineColor(kBlue);
+    l2 -> SetLineStyle(1);
+    l2 -> SetLineWidth(4);
+    static TLegend *lg = new TLegend(0.12, 0.85, 0.46, 0.9);
+    lg -> AddEntry(h, Form("%lu tracklets, found z = %fcm, true z = %fcm", t0.size() + t1.size(), ctz, trueZ), "f");
+    lg -> SetTextSize(.02);
+    int max_entry = h -> GetBinContent(h -> FindBin(ctz));
+    // Update line positions and redraw
+    l1->SetX1(ctz); l1->SetX2(ctz);
+    l1->SetY1(0);   l1->SetY2(max_entry);
+    l1->Draw("same");
+    l2->SetX1(trueZ); l2->SetX2(trueZ);
+    l2->SetY1(0);     l2->SetY2(max_entry);
+    l2->Draw("same");
+
+    // Clear and update the legend for the current event
+    lg->Clear();
+    lg->AddEntry(h, Form("%lu hits, found z = %fcm, true z = %fcm", t0.size() + t1.size(), ctz, trueZ), "f");
+    lg->Draw("same");
+    gPad -> SetGrid(1,1); gPad -> Update();
+    c -> SaveAs(Form("zFindingPlots/DCA_npeaks_fit_%d.png", evt));
+    // delete c;   delete h;   delete bg;
+    // h = 0;  bg = 0;
 
 
     /*
