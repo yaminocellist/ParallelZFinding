@@ -160,6 +160,117 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
     angularPlot3D(h_dPhi_cen, options, "dPhi of unmixed vs MBD centrality 3D");
 }
 
+void INTTdEtaAnalysis (TTree *EventTree, string filePath, std::vector<string> options) {
+    ifstream myfile(filePath);
+    if (!myfile.is_open()){
+		std::cout << "Unable to open linelabel" << std::endl;
+		system("read -n 1 -s -p \"Press any key to continue...\" echo");
+		exit(1);
+ 	}
+
+    string line, value;
+    std::vector<int> index, event, NHits;
+    std::vector<double> foundZ, MBD_true_z, MBD_cen;
+
+    getline(myfile, line);
+    while (getline(myfile, line)) {
+        stringstream data(line);
+        getline(data, value, ',');  int i     = std::stoi(value);
+        getline(data, value, ',');  int e     = std::stoi(value);
+        getline(data, value, ',');  int N     = std::stoi(value);
+        getline(data, value, ',');  double f  = std::stod(value)*10;
+        getline(data, value, ',');  double Mz = std::stod(value)*10;
+        getline(data, value, ',');  double Mc = std::stod(value);
+
+        if (f >= -250. && f <= -50. && Mc <= 0.7) {
+            index.push_back(i);     event.push_back(e);         NHits.push_back(N);
+            foundZ.push_back(f);    MBD_true_z.push_back(Mz);   MBD_cen.push_back(Mc);
+        }
+    }
+
+    Long64_t nEntries = EventTree -> GetEntries();
+    int event25, NClus;
+    float MBD_centrality, MBD_z_vtx;
+    std::vector<float> *ClusX     = nullptr;
+    std::vector<float> *ClusY     = nullptr;
+    std::vector<float> *ClusZ     = nullptr;
+    std::vector<int>   *ClusLayer = nullptr;
+    std::vector<float> *ClusR     = nullptr;    // FYI only;
+    std::vector<float> *ClusPhi   = nullptr;    // FYI only;
+    std::vector<float> *ClusEta   = nullptr;    // FYI only;
+
+    TBranch *branch25 = (TBranch*)EventTree->GetListOfBranches()->At(25);    // event25;
+    TBranch *branch10 = (TBranch*)EventTree->GetListOfBranches()->At(10);    // NClus;
+    TBranch *branch11 = (TBranch*)EventTree->GetListOfBranches()->At(11);    // ClusLayer;
+    TBranch *branch12 = (TBranch*)EventTree->GetListOfBranches()->At(12);    // ClusX;
+    TBranch *branch13 = (TBranch*)EventTree->GetListOfBranches()->At(13);    // ClusY;
+    TBranch *branch14 = (TBranch*)EventTree->GetListOfBranches()->At(14);    // ClusZ;
+    TBranch *branch30 = (TBranch*)EventTree->GetListOfBranches()->At(30);    // MBD_centrality;
+    TBranch *branch31 = (TBranch*)EventTree->GetListOfBranches()->At(31);    // MBD_z_vtx;
+    TBranch *branch15 = (TBranch*)EventTree->GetListOfBranches()->At(15);    // ClusR;
+    TBranch *branch16 = (TBranch*)EventTree->GetListOfBranches()->At(16);    // ClusPhi;
+    TBranch *branch17 = (TBranch*)EventTree->GetListOfBranches()->At(17);    // ClusEta;
+    
+    branch25->SetAddress(&event25);
+    branch10->SetAddress(&NClus);
+    branch11->SetAddress(&ClusLayer);
+    branch12->SetAddress(&ClusX);
+    branch13->SetAddress(&ClusY);
+    branch14->SetAddress(&ClusZ);
+    branch15->SetAddress(&ClusR);
+    branch16->SetAddress(&ClusPhi);
+    branch17->SetAddress(&ClusEta);
+    branch30->SetAddress(&MBD_centrality);
+    branch31->SetAddress(&MBD_z_vtx);
+
+    double dZ, theta, eta, dEta;
+    std::vector<double> Eta0, Eta1;
+    int N = 2000;
+    double range_min = -2*M_PI;
+    double range_max = 2*M_PI;
+    double bin_width = (range_max - range_min) / N;
+    TH1D *h_unmixed_dEta = new TH1D("dPhi of unmixed", Form("dPhi of unmixed %lu events; dPhi value; # of counts", event.size()), N, range_min, range_max);
+    // TH2D *h_dPhi_Z       = new TH2D("dPhi of unmixed 2D", Form("dPhi of unmixed %lu events; dPhi value; foundZ vtx [mm]", event.size()), N, range_min, range_max, 20, (-25 - 0.5)*10, (-5. + 0.5)*10);
+    // TH2D *h_dPhi_cen     = new TH2D("dPhi of unmixed 2D", Form("dPhi of unmixed %lu events; dPhi value; MBD centrality", event.size()), N, range_min, range_max, 14, 0.0, 0.7);
+    for (int i = 0; i < event.size(); i++) {
+        std::cout << i << std::endl;
+        branch25->GetEntry(index[i]);  branch10->GetEntry(index[i]);  branch11->GetEntry(index[i]);
+        branch12->GetEntry(index[i]);  branch13->GetEntry(index[i]);  branch14->GetEntry(index[i]);
+        branch15->GetEntry(index[i]);  branch16->GetEntry(index[i]);  branch17->GetEntry(index[i]);
+        branch30->GetEntry(index[i]);  branch31->GetEntry(index[i]);
+
+        double fz = foundZ[i], cen = MBD_cen[i];
+        for (int j = 0; j < ClusX->size(); j++) {
+            dZ       = ClusZ->at(j) - fz;
+            // RSquared = (ClusX->at(j))*(ClusX->at(j)) + (ClusY->at(j))*(ClusY->at(j));
+            // R        = std::sqrt(RSquared);
+            theta    = std::atan2(ClusR->at(j), dZ);
+            if (dZ >= 0)    eta = -std::log(std::tan(theta/2));
+            if (dZ <  0)    eta = std::log(std::tan((M_PI - theta)/2));
+            if (ClusLayer->at(j) == 3 || ClusLayer->at(j) == 4) {
+                Eta0.push_back(eta);
+            }
+            else {
+                Eta1.push_back(eta);
+            }
+        }
+        
+        for (int k = 0; k < Eta0.size(); k++) {
+            for (int l = 0; l < Eta1.size(); l++) {
+                dEta = Eta0[k] - Eta1[l];
+                h_unmixed_dEta -> Fill(dEta);
+                // h_dPhi_Z       -> Fill(dPhi, fz);
+                // h_dPhi_cen     -> Fill(dPhi, cen);
+            }
+        }
+        Eta0.clear();   Eta1.clear();
+    }
+    angularPlot1D(h_unmixed_dEta, options, "dEta of unmixed");
+    // angularPlot2D(h_dPhi_Z, options, "dPhi of unmixed vs Z");
+    // angularPlot2D(h_dPhi_cen, options, "dPhi of unmixed vs MBD centrality");
+    // angularPlot3D(h_dPhi_cen, options, "dPhi of unmixed vs MBD centrality 3D");
+}
+
 void ResultsAnalysis (std::string method) {
     // Open the ROOT file
     TFile *file = TFile::Open("../External/Data_CombinedNtuple_Run20869_HotDead_BCO_ADC_Survey.root");
@@ -186,4 +297,5 @@ void ResultsAnalysis (std::string method) {
 
     if (sub_options[0] == "foundz") INTTZAnalysisLite(filePath, sub_options);
     if (sub_options[0] == "dPhi")   INTTdPhiAnalysis(tree, filePath, sub_options);
+    if (sub_options[0] == "dEta")   INTTdEtaAnalysis(tree, filePath, sub_options);
 }
