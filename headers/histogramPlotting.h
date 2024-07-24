@@ -31,28 +31,28 @@ void angularPlot1D (TH1D* const histo, std::vector<std::string> method, const st
     int binPi_2  = bin_min + 3*(bin_max - bin_min)/4;
     int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
 
-    // Set the labels at the calculated positions
-    histo->GetXaxis()->SetBinLabel(bin_0, "0");
-    histo->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
-    histo->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
-    // histo->GetXaxis()->SetBinLabel(bin_3pi_4, "#frac{3#pi}{4}");
-    histo->GetXaxis()->SetBinLabel(bin_pi, "#pi");
-    histo->GetXaxis()->SetBinLabel(bin_min, "-#pi");
-    histo->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
-    // histo->GetXaxis()->SetBinLabel(bin_max - 3*(bin_max - bin_min)/4, "-#frac{3#pi}{4}");
-    // histo->GetXaxis()->SetBinLabel(bin_max - (bin_max - bin_min)/2, "-#frac{#pi}{2}");
-    // histo->GetXaxis()->SetBinLabel(bin_max - (bin_max - bin_min)/4, "-#frac{#pi}{4}");
+    // // Set the labels at the calculated positions
+    // histo->GetXaxis()->SetBinLabel(bin_0, "0");
+    // histo->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
+    // histo->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
+    // // histo->GetXaxis()->SetBinLabel(bin_3pi_4, "#frac{3#pi}{4}");
+    // histo->GetXaxis()->SetBinLabel(bin_pi, "#pi");
+    // histo->GetXaxis()->SetBinLabel(bin_min, "-#pi");
+    // histo->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+    // // histo->GetXaxis()->SetBinLabel(bin_max - 3*(bin_max - bin_min)/4, "-#frac{3#pi}{4}");
+    // // histo->GetXaxis()->SetBinLabel(bin_max - (bin_max - bin_min)/2, "-#frac{#pi}{2}");
+    // // histo->GetXaxis()->SetBinLabel(bin_max - (bin_max - bin_min)/4, "-#frac{#pi}{4}");
 
-    // Ensure the custom labels are displayed by setting the number of divisions
-    histo->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
-    histo->GetXaxis()->SetLabelSize(0.04);
+    // // Ensure the custom labels are displayed by setting the number of divisions
+    // histo->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
+    // histo->GetXaxis()->SetLabelSize(0.04);
 
     TLine *l = new TLine(0, 0, 0, maxEntry);
 	l -> Draw("same"); 
     l -> SetLineColor(kRed);
     TLegend *lg = new TLegend(0.12, 0.8, 0.43, 0.9);
-    lg -> AddEntry(histo, "Fiducial cut as -250 <= MBD_z_vtx <= -50 mm, MBD_centrality <= 0.70", "f");
-    gStyle -> SetLegendTextSize(.015);
+    lg -> AddEntry(histo, "-250 <= MBD_z_vtx <= -50 mm, MBD_centrality <= 0.70", "f");
+    gStyle -> SetLegendTextSize(.019);
     lg->Draw("same");
     // gPad -> SetLogy();
     can1 -> SaveAs(Form("../External/zFindingPlots/%s.png", fileTitle.c_str()));
