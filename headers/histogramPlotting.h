@@ -310,3 +310,26 @@ void backgroundCancelling (TH1D* const hBackground, TH1D* const hSignal, std::ve
 	l -> Draw("same"); 
     l -> SetLineColor(kGreen);
 }
+
+void ArrayPlot1D (const std::vector<TH1D*>& h, std::vector<std::string> method, const std::string &fileTitle) {
+    double entries = 0;
+    for (int i = 0; i < h.size(); i++) {
+        entries += h[i] -> GetEntries();
+    }
+    entries /= 14;
+    // h[0] -> Scale(1.0 / entries);
+    // h[0]->SetFillStyle(3025);
+
+    TCanvas *can1 = new TCanvas("c1d","c1d",0,50,2100,1200);
+    h[0] -> Draw();
+    for (int d = 1; d < h.size(); d++) {
+        // entries = h[d] -> GetEntries();
+        // h[d] -> Scale(1.0 / entries);
+        // h[d]->SetLineColor(d + 1); // ROOT colors start from 1 (0 is white)
+        // h[d]->SetFillColor(d + 1);
+        // h[d]->SetFillStyle(3001 + d); 
+        h[d] -> Draw("SAME");
+    }
+    h[0] -> GetYaxis() -> SetRangeUser(1, h[1]->GetEntries()/2e2); // Setting x range;
+    gPad -> SetLogy(1);
+}

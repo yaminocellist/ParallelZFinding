@@ -168,11 +168,12 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
     }
     else if (options[1] == "perCenOnOne") {
         std::vector<double> Phi0, Phi1;
-        TH1 *h_onOne[14];
+        TH1D *h_onOne[14];
         for (int i = 0; i < 14; i++) {
             h_onOne[i] = new TH1D(Form("dPhi of %f to %f", static_cast<double>(i)*0.05, static_cast<double>(i + 1)*0.05), Form("dPhi of %f to %f", static_cast<double>(i)*0.05, static_cast<double>(i + 1)*0.05), N, range_min, range_max);
         }
         for (int i = 0; i < 100; i++) {
+            // std::cout << i << std::endl;
             branch16->GetEntry(index[i]);   // ClusPhi;
             branch11->GetEntry(index[i]);   // ClusLayer;
             branch30->GetEntry(index[i]);   // MBD_centrality;
@@ -204,12 +205,8 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
             }
             
         }
-        h_onOne[0] -> Draw();
-        for (int d = 1; d < 14; d++) {
-            h_onOne[d] -> Draw("SAME");
-        }
-        h_onOne[0] -> GetYaxis() -> SetRangeUser(1, 70000); // Setting x range;
-        gPad -> SetLogy(1);
+        std::vector<TH1D*> h(h_onOne, h_onOne + 14);
+        ArrayPlot1D(h, options, "Hi");
     }
     
 }
