@@ -60,26 +60,27 @@ void angularPlot1D (TH1D* const histo, std::vector<std::string> method, const st
 
 void angularPlot2D(TH2D *const h_dPhi_Z, std::vector<std::string> method, const std::string &fileTitle) {
     TCanvas *can = new TCanvas("c2d","c2d",0,50,1800,1200);
-    h_dPhi_Z -> Draw("colz");
     h_dPhi_Z -> SetTitle(Form("All dPhi values (no event mixed) with %d bins of Z vtx", h_dPhi_Z->GetNbinsY()));
-    // h_dPhi_Z -> GetXaxis() -> SetTitle("dPhi"); 
+    h_dPhi_Z -> Draw("colz");
     h_dPhi_Z -> GetXaxis() -> CenterTitle(true);
-    // h_dPhi_Z -> GetYaxis() -> SetTitle("found z vtx position [mm]");   
     h_dPhi_Z -> GetYaxis() -> CenterTitle(true);
-    h_dPhi_Z -> GetXaxis() -> SetTitleOffset(1.8);   h_dPhi_Z -> GetYaxis() -> SetTitleOffset(1.8);
+    h_dPhi_Z -> GetXaxis() -> SetTitleOffset(1.4);   h_dPhi_Z -> GetYaxis() -> SetTitleOffset(1.4);
+    can -> Modified();
+    can -> Update();
     can -> SaveAs(Form("../External/zFindingPlots/%s.png", fileTitle.c_str()));
 }
 
-void angularPlot3D(TH2D *const h_dPhi_Z, std::vector<std::string> method, const std::string &fileTitle) {
-    TCanvas *can = new TCanvas("c3d","c3d",0,50,1800,1200);
-    h_dPhi_Z -> Draw("lego2");
+void angularPlot3D(TH2D * h_dPhi_Z, std::vector<std::string> method, const std::string &fileTitle) {
+    TCanvas *can1 = new TCanvas("c3d","c3d",0,50,1800,1200);
     h_dPhi_Z -> SetTitle(Form("All dPhi values (no event mixed) with %d bins of Z vtx", h_dPhi_Z->GetNbinsY()));
-    // h_dPhi_Z -> GetXaxis() -> SetTitle("dPhi"); 
+    h_dPhi_Z -> Draw("lego2");
     h_dPhi_Z -> GetXaxis() -> CenterTitle(true);
-    // h_dPhi_Z -> GetYaxis() -> SetTitle("found z vtx position [mm]");   
     h_dPhi_Z -> GetYaxis() -> CenterTitle(true);
     h_dPhi_Z -> GetXaxis() -> SetTitleOffset(1.8);   h_dPhi_Z -> GetYaxis() -> SetTitleOffset(1.8);
-    can -> SaveAs(Form("../External/zFindingPlots/%s.png", fileTitle.c_str()));
+    can1 -> Modified();
+    can1 -> Update();
+
+    can1 -> SaveAs(Form("../External/zFindingPlots/%s.png", fileTitle.c_str()));
 }
 
 void ZResolutionSinglePlot (TH1D* const histo, std::vector<std::string> method, const std::string &fileTitle) {
