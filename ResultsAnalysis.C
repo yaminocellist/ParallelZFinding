@@ -177,12 +177,12 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
             // std::cout << i << std::endl;
             branch16->GetEntry(index[i]);   // ClusPhi;
             branch11->GetEntry(index[i]);   // ClusLayer;
-            branch30->GetEntry(index[i]);   // MBD_centrality;
+            // branch30->GetEntry(index[i]);   // MBD_centrality;
             // if (std::abs(MBD_centrality - MBD_cen[i]) > 1e-07) {
             //     std::cout << MBD_centrality - MBD_cen[i] << ", " << MBD_cen[i] << std::endl;
             // }
             for (int n = 0; n < 14; n++) {
-                if (MBD_centrality >= static_cast<double>(n)*0.05 && MBD_centrality <= static_cast<double>(n + 1)*0.05) {
+                if (MBD_cen[i] >= static_cast<double>(n)*0.05 && MBD_cen[i] <= static_cast<double>(n + 1)*0.05) {
                     for (int j = 0; j < ClusPhi->size(); j++) {
                         // double phi = std::atan2(ClusY->at(j), ClusX->at(j));
                         double phi = ClusPhi->at(j);
@@ -215,11 +215,11 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
         for (int i = 0; i < 16; i++) {
             h_onOne[i] = new TH1D(Form("dPhi of %1.0f to %1.0f", -5 - static_cast<double>(i), -6 - static_cast<double>(i)), Form("dPhi of %1.0f to %1.0f;dPhi;# of counts", -5 - static_cast<double>(i), -6 - static_cast<double>(i)), N, range_min, range_max);
         }
-        h_onOne[16] = new TH1D("dPhi of different Z vertex", "dPhi of different Z vertex;dPhi;# of counts", N, range_min, range_max);
+        h_onOne[16] = new TH1D("dPhis of different Z vertex", "dPhis of different Z vertex;dPhi;# of counts", N, range_min, range_max);
         for (int i = 17; i < 20; i++) {
             h_onOne[i] = new TH1D(Form("dPhi of %1.0f to %1.0f", -5 - static_cast<double>(i), -6 - static_cast<double>(i)), Form("dPhi of %1.0f to %1.0f;dPhi;# of counts", -5 - static_cast<double>(i), -6 - static_cast<double>(i)), N, range_min, range_max);
         }
-        for (int i = 0; i < 1e4; i++) {
+        for (int i = 0; i < event.size(); i++) {
             // std::cout << i << std::endl;
             branch16->GetEntry(index[i]);   // ClusPhi;
             branch11->GetEntry(index[i]);   // ClusLayer;

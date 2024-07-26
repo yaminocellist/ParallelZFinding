@@ -409,7 +409,7 @@ void ArrayPlot1D_ver2 (const std::vector<TH1D*>& h, std::vector<std::string> met
         // std::cout << h[i] -> GetEntries() << std::endl;
         h[i] -> Draw("SAME");
         h[i] -> SetLineWidth(3);
-        h[i] -> GetYaxis() -> SetRangeUser(5e3, h[16]->GetEntries()/5e2);
+        h[i] -> GetYaxis() -> SetRangeUser(1e5, h[16]->GetEntries()/5e2);
         h[i] -> GetXaxis() -> CenterTitle(true);    h[i] -> GetYaxis() -> CenterTitle(true);
     }
     gPad -> SetLogy(1);
