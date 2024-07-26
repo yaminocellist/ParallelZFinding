@@ -321,6 +321,8 @@ void ArrayPlot1D (const std::vector<TH1D*>& h, std::vector<std::string> method, 
     // h[0]->SetFillStyle(3025);
 
     TCanvas *can1 = new TCanvas("c1d","c1d",0,50,2100,1200);
+    h[0] -> SetLineWidth(3);
+    h[0] -> SetLineColor(2);
     h[0] -> Draw();
     for (int d = 1; d < h.size(); d++) {
         // entries = h[d] -> GetEntries();
@@ -328,8 +330,87 @@ void ArrayPlot1D (const std::vector<TH1D*>& h, std::vector<std::string> method, 
         // h[d]->SetLineColor(d + 1); // ROOT colors start from 1 (0 is white)
         // h[d]->SetFillColor(d + 1);
         // h[d]->SetFillStyle(3001 + d); 
+        h[d] -> SetLineWidth(3);
         h[d] -> Draw("SAME");
     }
-    h[0] -> GetYaxis() -> SetRangeUser(1, h[1]->GetEntries()/2e2); // Setting x range;
+    h[0] -> GetYaxis() -> SetRangeUser(5e4, h[1]->GetEntries()/2e2); // Setting x range;
+    h[0] -> GetXaxis() -> CenterTitle(true);    h[0] -> GetYaxis() -> CenterTitle(true);
+
+    double pi = TMath::Pi();
+    int bin_min  = 1;  // The first bin
+    int bin_max  = h[0]->GetNbinsX();  // The last bin
+    // Calculate bin positions for each label
+    int bin_pi   = bin_max;
+    int bin_0    = bin_min + (bin_max - bin_min)/2;
+    int binPi_2  = bin_min + 3*(bin_max - bin_min)/4;
+    int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
+    // Set the labels at the calculated positions
+    h[0]->GetXaxis()->SetBinLabel(bin_0, "0");
+    h[0]->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
+    h[0]->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
+    h[0]->GetXaxis()->SetBinLabel(bin_pi, "#pi");
+    h[0]->GetXaxis()->SetBinLabel(bin_min, "-#pi");
+    // Ensure the custom labels are displayed by setting the number of divisions
+    h[0]->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
+    h[0]->GetXaxis()->SetLabelSize(0.04);
+    // Update histogram to refresh the axis
+    // h[0]->Draw("HIST");
+    h[0]->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+
+    gPad -> SetLogy(1);
+    can1 -> SaveAs(Form("../External/zFindingPlots/%s.png", fileTitle.c_str()));
+}
+
+void ArrayPlot1D_ver2 (const std::vector<TH1D*>& h, std::vector<std::string> method, const std::string &fileTitle) {
+    TCanvas *can1 = new TCanvas("c1d","c1d",0,50,2100,1200);
+    // h[0] -> Draw();
+    // h[1] -> Draw("SAME");
+    // h[2] -> Draw("SAME");
+    // h[3] -> Draw("SAME");
+    // h[4] -> Draw("SAME");
+    // h[5] -> Draw("SAME");
+    // h[6] -> Draw("SAME");
+    // h[7] -> Draw("SAME");
+    // h[8] -> Draw("SAME");
+    // h[9] -> Draw("SAME");
+    // h[10] -> Draw("SAME");
+    // h[11] -> Draw("SAME");
+    // h[12] -> Draw("SAME");
+    // h[13] -> Draw("SAME");
+    // h[14] -> Draw("SAME");
+    // h[15] -> Draw("SAME");
+    // h[16] -> Draw("SAME");
+    // h[17] -> Draw("SAME");
+    // h[18] -> Draw("SAME");
+    // h[19] -> Draw("SAME");
+
+    double pi = TMath::Pi();
+    int bin_min  = 1;  // The first bin
+    int bin_max  = h[16]->GetNbinsX();  // The last bin
+    // Calculate bin positions for each label
+    int bin_pi   = bin_max;
+    int bin_0    = bin_min + (bin_max - bin_min)/2;
+    int binPi_2  = bin_min + 3*(bin_max - bin_min)/4;
+    int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
+    // Set the labels at the calculated positions
+    h[16]->GetXaxis()->SetBinLabel(bin_0, "0");
+    h[16]->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
+    h[16]->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
+    h[16]->GetXaxis()->SetBinLabel(bin_pi, "#pi");
+    h[16]->GetXaxis()->SetBinLabel(bin_min, "-#pi");
+    // Ensure the custom labels are displayed by setting the number of divisions
+    h[16]->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
+    h[16]->GetXaxis()->SetLabelSize(0.04);
+    // Update histogram to refresh the axis
+    h[16]->Draw("HIST");
+    h[16]->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+
+    for (int i = 0; i < h.size(); i++) {
+        // std::cout << h[i] -> GetEntries() << std::endl;
+        h[i] -> Draw("SAME");
+        h[i] -> SetLineWidth(3);
+        h[i] -> GetYaxis() -> SetRangeUser(5e3, h[16]->GetEntries()/5e2);
+        h[i] -> GetXaxis() -> CenterTitle(true);    h[i] -> GetYaxis() -> CenterTitle(true);
+    }
     gPad -> SetLogy(1);
 }

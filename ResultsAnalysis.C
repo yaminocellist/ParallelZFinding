@@ -169,10 +169,11 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
     else if (options[1] == "perCenOnOne") {
         std::vector<double> Phi0, Phi1;
         TH1D *h_onOne[14];
-        for (int i = 0; i < 14; i++) {
-            h_onOne[i] = new TH1D(Form("dPhi of %f to %f", static_cast<double>(i)*0.05, static_cast<double>(i + 1)*0.05), Form("dPhi of %f to %f", static_cast<double>(i)*0.05, static_cast<double>(i + 1)*0.05), N, range_min, range_max);
+        h_onOne[0] = new TH1D("dPhi of different centralities", "dPhi of different centralities;dPhi;# of counts", N, range_min, range_max);
+        for (int i = 1; i < 14; i++) {
+            h_onOne[i] = new TH1D(Form("dPhi of %f to %f", static_cast<double>(i)*0.05, static_cast<double>(i + 1)*0.05), Form("dPhi of %f to %f;dPhi;# of counts", static_cast<double>(i)*0.05, static_cast<double>(i + 1)*0.05), N, range_min, range_max);
         }
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < event.size(); i++) {
             // std::cout << i << std::endl;
             branch16->GetEntry(index[i]);   // ClusPhi;
             branch11->GetEntry(index[i]);   // ClusLayer;
@@ -206,10 +207,55 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
             
         }
         std::vector<TH1D*> h(h_onOne, h_onOne + 14);
-        ArrayPlot1D(h, options, "Hi");
+        ArrayPlot1D(h, options, "dPhi_per_centralities");
     }
-    
+    else if (options[1] == "perZOnOne") {
+        std::vector<double> Phi0, Phi1;
+        TH1D *h_onOne[20];
+        for (int i = 0; i < 16; i++) {
+            h_onOne[i] = new TH1D(Form("dPhi of %1.0f to %1.0f", -5 - static_cast<double>(i), -6 - static_cast<double>(i)), Form("dPhi of %1.0f to %1.0f;dPhi;# of counts", -5 - static_cast<double>(i), -6 - static_cast<double>(i)), N, range_min, range_max);
+        }
+        h_onOne[16] = new TH1D("dPhi of different Z vertex", "dPhi of different Z vertex;dPhi;# of counts", N, range_min, range_max);
+        for (int i = 17; i < 20; i++) {
+            h_onOne[i] = new TH1D(Form("dPhi of %1.0f to %1.0f", -5 - static_cast<double>(i), -6 - static_cast<double>(i)), Form("dPhi of %1.0f to %1.0f;dPhi;# of counts", -5 - static_cast<double>(i), -6 - static_cast<double>(i)), N, range_min, range_max);
+        }
+        for (int i = 0; i < 1e4; i++) {
+            // std::cout << i << std::endl;
+            branch16->GetEntry(index[i]);   // ClusPhi;
+            branch11->GetEntry(index[i]);   // ClusLayer;
+
+            for (int n = 0; n < 20; n++) {
+                // std::cout << foundZ[i] << ", " << -60. - static_cast<double>(n)*10 << ", " << -50. - static_cast<double>(n)*10 << std::endl;
+                if (foundZ[i] >= -60. - static_cast<double>(n)*10 && foundZ[i] <= -50. - static_cast<double>(n)*10) {
+                    // std::cout << foundZ[i] << std::endl;
+                    for (int j = 0; j < ClusPhi->size(); j++) {
+                        // double phi = std::atan2(ClusY->at(j), ClusX->at(j));
+                        double phi = ClusPhi->at(j);
+                        if (ClusLayer->at(j) == 3 || ClusLayer->at(j) == 4) {
+                            Phi0.push_back(phi);
+                        }
+                        else {
+                            Phi1.push_back(phi);
+                        }
+                    }
+                    for (int k = 0; k < Phi0.size(); k++) {
+                        for (int l = 0; l < Phi1.size(); l++) {
+                            dPhi = Phi0[k] - Phi1[l];
+                            if (dPhi > M_PI)    dPhi = dPhi - 2*M_PI;
+                            if (dPhi < -M_PI)   dPhi = dPhi + 2*M_PI;
+                            h_onOne[n] -> Fill(dPhi);
+                        }
+                    }
+                    Phi0.clear();   Phi1.clear();
+                }
+            }
+        }
+        std::vector<TH1D*> h(h_onOne, h_onOne + 20);
+        ArrayPlot1D_ver2(h, options, "dPhi_per_Zvtx");
+    }
 }
+
+
 
 void INTTdEtaAnalysis (TTree *EventTree, string filePath, std::vector<string> options) {
     ifstream myfile(filePath);
