@@ -1137,7 +1137,6 @@ void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<st
     int binIndex = 1; // Example bin index
     double binWidth = h_foundz->GetBinWidth(binIndex);
     std::cout << "Width of bin " << binIndex << " is " << binWidth << std::endl;
-
     for (int i = 1; i <= h_foundz->GetNbinsX(); i++) {
         if (h_foundz->GetBinContent(i) == 0) {
             // Get the center of the bin
@@ -1279,3 +1278,16 @@ void dPhiInZVtx (TTree *EventTree, string savePath, Int_t target, std::vector<st
 
 
 // }
+// Analyze and determine found Z vertex range for mixing events for dPhi:
+void foundZSlicer (TH1D* const h) {
+    int binIndex = 1; // Example bin index
+    double binWidth = h->GetBinWidth(binIndex);
+    std::cout << "Width of bin " << binIndex << " is " << binWidth << std::endl;
+    for (int i = 1; i <= h->GetNbinsX(); i++) {
+        if (h->GetBinContent(i) == 0) {
+            // Get the center of the bin
+            double binCenter = h->GetBinCenter(i);
+            std::cout << "Empty bin at x = " << std::setprecision(8) << binCenter/10. << std::endl;
+        }
+    }
+}

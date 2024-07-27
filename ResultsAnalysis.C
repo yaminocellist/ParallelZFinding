@@ -49,6 +49,169 @@ void INTTZAnalysisLite (string filePath, std::vector<string> options) {
     // TCanvas *canvas = new TCanvas("c2","c2", 0, 0,1350,800);
 }
 
+void INTTMixingEvent (TTree *EventTree, string filePath, std::vector<string> options) {
+    ifstream myfile(filePath);
+    if (!myfile.is_open()){
+		std::cout << "Unable to open linelabel" << std::endl;
+		system("read -n 1 -s -p \"Press any key to continue...\" echo");
+		exit(1);
+ 	}
+    string line, value;
+    std::vector<int>    index, event, NHits;
+    std::vector<double> foundZ, MBD_true_z, MBD_cen;
+    getline(myfile, line);
+    while (getline(myfile, line)) {
+        stringstream data(line);
+        getline(data, value, ',');  int i     = std::stoi(value);
+        getline(data, value, ',');  int e     = std::stoi(value);
+        getline(data, value, ',');  int N     = std::stoi(value);
+        getline(data, value, ',');  double f  = std::stod(value);
+        getline(data, value, ',');  double Mz = std::stod(value);
+        getline(data, value, ',');  double Mc = std::stod(value);
+
+        if (f >= -21.05 && f <= -20.85 && Mc <= 0.7) {
+            index.push_back(i);     event.push_back(e);         NHits.push_back(N);
+            foundZ.push_back(f);    MBD_true_z.push_back(Mz);   MBD_cen.push_back(Mc);
+        }
+    }
+    // std::cout << event.size() << std::endl;
+
+    Long64_t nEntries = EventTree -> GetEntries();
+    int event25, NClus;
+    float MBD_centrality, MBD_z_vtx;
+    std::vector<float> *ClusX     = nullptr;
+    std::vector<float> *ClusY     = nullptr;
+    std::vector<float> *ClusZ     = nullptr;
+    std::vector<int>   *ClusLayer = nullptr;
+    std::vector<float> *ClusR     = nullptr;    // FYI only;
+    std::vector<float> *ClusPhi   = nullptr;    // FYI only;
+    std::vector<float> *ClusEta   = nullptr;    // FYI only;
+
+    TBranch *branch25 = (TBranch*)EventTree->GetListOfBranches()->At(25);    // event25;
+    TBranch *branch10 = (TBranch*)EventTree->GetListOfBranches()->At(10);    // NClus;
+    TBranch *branch11 = (TBranch*)EventTree->GetListOfBranches()->At(11);    // ClusLayer;
+    TBranch *branch12 = (TBranch*)EventTree->GetListOfBranches()->At(12);    // ClusX;
+    TBranch *branch13 = (TBranch*)EventTree->GetListOfBranches()->At(13);    // ClusY;
+    TBranch *branch14 = (TBranch*)EventTree->GetListOfBranches()->At(14);    // ClusZ;
+    TBranch *branch30 = (TBranch*)EventTree->GetListOfBranches()->At(30);    // MBD_centrality;
+    TBranch *branch31 = (TBranch*)EventTree->GetListOfBranches()->At(31);    // MBD_z_vtx;
+    TBranch *branch15 = (TBranch*)EventTree->GetListOfBranches()->At(15);    // ClusR;
+    TBranch *branch16 = (TBranch*)EventTree->GetListOfBranches()->At(16);    // ClusPhi;
+    TBranch *branch17 = (TBranch*)EventTree->GetListOfBranches()->At(17);    // ClusEta;
+    
+    branch25->SetAddress(&event25);
+    branch10->SetAddress(&NClus);
+    branch11->SetAddress(&ClusLayer);
+    branch12->SetAddress(&ClusX);
+    branch13->SetAddress(&ClusY);
+    branch14->SetAddress(&ClusZ);
+    branch15->SetAddress(&ClusR);
+    branch16->SetAddress(&ClusPhi);
+    branch17->SetAddress(&ClusEta);
+    branch30->SetAddress(&MBD_centrality);
+    branch31->SetAddress(&MBD_z_vtx);
+
+    double phi, dPhi, phi_0, phi_1;
+    std::vector<double> Phi0, Phi1, mixed_Phi0, mixed_Phi1;
+    std::vector<std::vector <double>> event_Phi0, event_Phi1;
+    int N = 1000, clus_layer;
+    double range_min = -M_PI;
+    double range_max = M_PI;
+    double bin_width = (range_max - range_min) / N;
+    TH1D *h_unmixed_dPhi = new TH1D("dPhi of unmixed", Form("dPhi of unmixed %lu events;dPhi value;# of counts", event.size()), N, range_min, range_max);
+    TH1D *h_mixed_dPhi   = new TH1D("dPhi of mixed", Form("dPhi of %lu mixed events;dPhi value;# of counts", event.size()), N, range_min, range_max);
+
+    // dPhi of unmixed events:
+    for (int i = 0; i < 300; i++) {
+        branch16->GetEntry(index[i]);   branch11->GetEntry(index[i]);
+        event_Phi0.push_back(std::vector <double>());   event_Phi1.push_back(std::vector <double>());
+        for (int j = 0; j < ClusPhi->size(); j++) {
+            phi        = ClusPhi->at(j);
+            clus_layer = ClusLayer->at(j);
+            if (clus_layer == 3 || clus_layer == 4) {
+                Phi0.push_back(phi);
+                event_Phi0[i].push_back(phi);
+            }
+            else {
+                Phi1.push_back(phi);
+                event_Phi1[i].push_back(phi);
+            }
+        }
+        for (int k = 0; k < Phi0.size(); k++) {
+            for (int l = 0; l < Phi1.size(); l++) {
+                dPhi = Phi0[k] - Phi1[l];
+                if (dPhi > M_PI)    dPhi = dPhi - 2*M_PI;
+                if (dPhi < -M_PI)   dPhi = dPhi + 2*M_PI;
+                h_unmixed_dPhi -> Fill(dPhi);
+            }
+        }
+        Phi0.clear();   Phi1.clear();
+    }
+
+    // std::cout << event_Phi0.size() << ", " << event_Phi1.size() << std::endl;
+    // dPhi of all events mixed up (one pair another, not mixing them all up):
+    // for (int i = 0; i < event_Phi0.size(); i++) {
+    //     std::cout << i << std::endl;
+    //     for (int j = i; j < event_Phi1.size(); j++) {
+    //         mixed_Phi0.insert(mixed_Phi0.end(), event_Phi0[i].begin(), event_Phi0[i].end());
+    //         mixed_Phi0.insert(mixed_Phi0.end(), event_Phi0[j].begin(), event_Phi0[j].end());
+    //         mixed_Phi1.insert(mixed_Phi1.end(), event_Phi1[i].begin(), event_Phi1[i].end());
+    //         mixed_Phi1.insert(mixed_Phi1.end(), event_Phi1[j].begin(), event_Phi1[j].end());
+    //         // std::cout << "  ---  " << event_Phi0[i].size() << ", " << event_Phi0[j].size() << ", " << event_Phi1[i].size() << ", " << event_Phi1[j].size() << ", " << mixed_Phi0.size() << ", " << mixed_Phi1.size() << std::endl;
+    //         for (int k = 0; k < mixed_Phi0.size(); k++) {
+    //             for (int l = 0; l < mixed_Phi1.size(); l++) {
+    //                 dPhi = mixed_Phi0[k] - mixed_Phi1[l];
+    //                 if (dPhi > M_PI)    dPhi = dPhi - 2*M_PI;
+    //                 if (dPhi < -M_PI)   dPhi = dPhi + 2*M_PI;
+    //                 h_mixed_dPhi -> Fill(dPhi);
+    //             }
+    //         }
+    //         mixed_Phi0.clear(); mixed_Phi1.clear();
+    //     }
+    // }
+
+    for (int i = 0; i < event_Phi0.size(); i++) {
+        std::cout << i << std::endl;
+        for (int j = i; j < event_Phi1.size(); j++) {
+            // Process pairs from event_Phi0[i] and event_Phi1[j]
+            for (double phi0 : event_Phi0[i]) {
+                for (double phi1 : event_Phi1[j]) {
+                    dPhi = phi0 - phi1;
+                    if (dPhi > M_PI) dPhi -= 2 * M_PI;
+                    if (dPhi < -M_PI) dPhi += 2 * M_PI;
+                    h_mixed_dPhi->Fill(dPhi);
+                }
+            }
+            // Process pairs from event_Phi0[j] and event_Phi1[i] to ensure symmetry
+            for (double phi0 : event_Phi0[j]) {
+                for (double phi1 : event_Phi1[i]) {
+                    dPhi = phi0 - phi1;
+                    if (dPhi > M_PI) dPhi -= 2 * M_PI;
+                    if (dPhi < -M_PI) dPhi += 2 * M_PI;
+                    h_mixed_dPhi->Fill(dPhi);
+                }
+            }
+        }
+    }
+    
+    double max_unmixed = h_unmixed_dPhi->GetBinContent(h_unmixed_dPhi->GetMaximumBin());
+    double max_mixed   = h_mixed_dPhi->GetBinContent(h_mixed_dPhi->GetMaximumBin());
+    h_unmixed_dPhi -> Add(h_unmixed_dPhi, max_mixed/max_unmixed + 2);
+    h_unmixed_dPhi -> Draw("SAME");
+    max_unmixed = h_unmixed_dPhi->GetBinContent(h_unmixed_dPhi->GetMaximumBin());
+    std::cout << h_unmixed_dPhi->GetBinContent(h_unmixed_dPhi->GetMaximumBin()) << ", " << h_mixed_dPhi->GetBinContent(h_mixed_dPhi->GetMaximumBin())  << std::endl;
+    if (max_unmixed > max_mixed) {
+        h_unmixed_dPhi -> GetYaxis() -> SetRangeUser(1e7, max_unmixed*1.2);
+        h_mixed_dPhi -> GetYaxis() -> SetRangeUser(1e7, max_unmixed*1.2);
+    }   
+    else {
+        h_unmixed_dPhi -> GetYaxis() -> SetRangeUser(1e7, max_mixed*1.2);
+        h_mixed_dPhi -> GetYaxis() -> SetRangeUser(1e7, max_mixed*1.2);
+    }                      
+    h_mixed_dPhi -> Draw("SAME");
+    h_mixed_dPhi -> SetLineColor(2);
+}
+
 void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> options) {
     ifstream myfile(filePath);
     if (!myfile.is_open()){
@@ -123,6 +286,30 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
     TH2D *h_dPhi_cen     = new TH2D("dPhi of unmixed v.s. MBD centrality 2D", Form("dPhi of unmixed %lu events; dPhi value; MBD centrality", event.size()), N, range_min, range_max, 14, 0.0, 0.7);
 
     // std::cout << options[1] << std::endl;
+    if (options[1] == "fzStrips") {
+        TCanvas *can1 = new TCanvas("c1d","c1d",0,50,2100,1200);
+        TH1D *h_all_foundz = new TH1D("", "INTT found z v.s. MBD Z;Z Vertex Position [mm];# of counts", 200, -250., -50.);
+        TH1D *h_all_MBD_Z  = new TH1D("", "INTT found z v.s. MBD Z;Z Vertex Position [mm];# of counts", 100, -250., -50.);
+        for (int i = 0; i < event.size(); i++) {
+            h_all_foundz -> Fill(foundZ[i]);
+            h_all_MBD_Z  -> Fill(MBD_true_z[i]);
+        }
+        h_all_foundz -> Draw();
+        h_all_foundz -> SetLineWidth(3);
+        h_all_foundz -> GetXaxis() -> CenterTitle(true);   h_all_foundz -> GetYaxis() -> CenterTitle(true);
+        h_all_MBD_Z  -> GetXaxis() -> CenterTitle(true);    h_all_MBD_Z -> GetYaxis() -> CenterTitle(true);
+        h_all_MBD_Z  -> Draw("SAME");
+        h_all_MBD_Z  -> SetLineColor(2);
+        h_all_MBD_Z  -> SetLineWidth(5);
+        TLegend *lg = new TLegend(0.62, 0.8, 0.73, 0.9);
+        lg -> AddEntry(h_all_foundz, "INTT found Z", "l");
+        lg -> AddEntry(h_all_MBD_Z, "MBD Z vertex", "l");
+        gStyle -> SetLegendTextSize(.028);
+        lg->Draw("same");
+        can1 -> SaveAs("../External/zFindingPlots/INTT_MBD_Z_comparison.png");
+
+        foundZSlicer(h_all_foundz);
+    }
     if (options[1] == "nomix") {
         for (int i = 0; i < 10; i++) {
             // std::cout << i << std::endl;
@@ -253,6 +440,7 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
         std::vector<TH1D*> h(h_onOne, h_onOne + 20);
         ArrayPlot1D_ver2(h, options, "dPhi_per_Zvtx");
     }
+
 }
 
 
@@ -403,9 +591,10 @@ void ResultsAnalysis (std::string method) {
         sub_options.push_back("");
     }
 
-    if (sub_options[0] == "foundz") INTTZAnalysisLite(filePath, sub_options);
-    if (sub_options[0] == "dPhi")   INTTdPhiAnalysis(tree, filePath, sub_options);
-    if (sub_options[0] == "dEta")   INTTdEtaAnalysis(tree, filePath, sub_options);
+    if (sub_options[0] == "foundz")      INTTZAnalysisLite(filePath, sub_options);
+    if (sub_options[0] == "dPhi")        INTTdPhiAnalysis(tree, filePath, sub_options);
+    if (sub_options[0] == "dPhiMix")     INTTMixingEvent(tree, filePath, sub_options);
+    if (sub_options[0] == "dEta")        INTTdEtaAnalysis(tree, filePath, sub_options);
 
     // Stop the stopwatch and print the runtime
     timer.Stop();
