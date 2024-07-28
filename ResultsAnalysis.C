@@ -122,7 +122,8 @@ void INTTMixingEvent (TTree *EventTree, string filePath, std::vector<string> opt
     TH1D *h_mixed_dPhi   = new TH1D("dPhi of mixed", Form("dPhi of %lu mixed events;dPhi value;# of counts", event.size()), N, range_min, range_max);
 
     // dPhi of unmixed events:
-    for (int i = 0; i < 300; i++) {
+    int target = std::stoi(options[1]);
+    for (int i = 0; i < target; i++) {
         branch16->GetEntry(index[i]);   branch11->GetEntry(index[i]);
         event_Phi0.push_back(std::vector <double>());   event_Phi1.push_back(std::vector <double>());
         for (int j = 0; j < ClusPhi->size(); j++) {
@@ -194,10 +195,19 @@ void INTTMixingEvent (TTree *EventTree, string filePath, std::vector<string> opt
         }
     }
     
-    double max_unmixed = h_unmixed_dPhi->GetBinContent(h_unmixed_dPhi->GetMaximumBin());
-    double max_mixed   = h_mixed_dPhi->GetBinContent(h_mixed_dPhi->GetMaximumBin());
-    h_unmixed_dPhi -> Add(h_unmixed_dPhi, max_mixed/max_unmixed + 2);
+    double phi_range_low = -2.4, phi_range_high = -1.8;
+    int bin_range_low = h_mixed_dPhi->FindBin(phi_range_low), bin_range_high = h_mixed_dPhi->FindBin(phi_range_high);
+    double max_unmixed = -1, max_mixed = -1, current_binContent;
+    for (int bin = bin_range_low; bin <= bin_range_high; bin++) {
+        current_binContent = h_unmixed_dPhi->GetBinContent(bin);
+        if (max_unmixed < current_binContent)  max_unmixed = current_binContent;
+        current_binContent = h_mixed_dPhi->GetBinContent(bin);
+        if (max_mixed < current_binContent)  max_mixed = current_binContent;
+    }
+    h_unmixed_dPhi -> Add(h_unmixed_dPhi, max_mixed/max_unmixed - 1);
     h_unmixed_dPhi -> Draw("SAME");
+
+    max_mixed   = h_mixed_dPhi->GetBinContent(h_mixed_dPhi->GetMaximumBin());
     max_unmixed = h_unmixed_dPhi->GetBinContent(h_unmixed_dPhi->GetMaximumBin());
     std::cout << h_unmixed_dPhi->GetBinContent(h_unmixed_dPhi->GetMaximumBin()) << ", " << h_mixed_dPhi->GetBinContent(h_mixed_dPhi->GetMaximumBin())  << std::endl;
     if (max_unmixed > max_mixed) {
