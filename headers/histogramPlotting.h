@@ -311,7 +311,7 @@ void backgroundCancelling (TH1D* const hBackground, TH1D* const hSignal, std::ve
     l -> SetLineColor(kGreen);
 }
 
-void ArrayPlot1D (const std::vector<TH1D*>& h, std::vector<std::string> method, const std::string &fileTitle) {
+void ArrayPlot1D_Logy (const std::vector<TH1D*>& h, std::vector<std::string> method, const std::string &fileTitle) {
     double entries = 0;
     for (int i = 0; i < h.size(); i++) {
         entries += h[i] -> GetEntries();
@@ -361,7 +361,7 @@ void ArrayPlot1D (const std::vector<TH1D*>& h, std::vector<std::string> method, 
     can1 -> SaveAs(Form("../External/zFindingPlots/%s.png", fileTitle.c_str()));
 }
 
-void ArrayPlot1D_ver2 (const std::vector<TH1D*>& h, std::vector<std::string> method, const std::string &fileTitle) {
+void ArrayPlot1D_Logy_ver2 (const std::vector<TH1D*>& h, std::vector<std::string> method, const std::string &fileTitle) {
     TCanvas *can1 = new TCanvas("c1d","c1d",0,50,2100,1200);
     // h[0] -> Draw();
     // h[1] -> Draw("SAME");
@@ -413,4 +413,90 @@ void ArrayPlot1D_ver2 (const std::vector<TH1D*>& h, std::vector<std::string> met
         h[i] -> GetXaxis() -> CenterTitle(true);    h[i] -> GetYaxis() -> CenterTitle(true);
     }
     gPad -> SetLogy(1);
+}
+
+void ArrayPlot1D_Rescale (const std::vector<TH1D*>& h, std::vector<std::string> method, const std::string &fileTitle) {
+    std::vector<double> max_entries;
+    for (int i = 0; i < h.size(); i++) {
+        max_entries.push_back(h[i]->GetBinContent(h[i]->GetMaximumBin()));
+        h[i] -> Add(h[i], 1/(max_entries[i]+1) - 1);
+        h[i] -> GetYaxis() -> SetRangeUser(0.6, 1.1);
+    }
+
+    TCanvas *can1 = new TCanvas("c1d","c1d",0,50,2100,1200);
+    h[0] -> SetLineWidth(2);
+    h[0] -> SetLineColor(2);
+    h[0] -> Draw();
+    for (int d = 1; d < h.size(); d++) {
+        // entries = h[d] -> GetEntries();
+        // h[d] -> Scale(1.0 / entries);
+        // h[d]->SetLineColor(d + 1); // ROOT colors start from 1 (0 is white)
+        // h[d]->SetFillColor(d + 1);
+        // h[d]->SetFillStyle(3001 + d); 
+        h[d] -> SetLineWidth(2);
+        h[d] -> Draw("SAME");
+    }
+    // h[0] -> GetYaxis() -> SetRangeUser(5e4, h[1]->GetEntries()/2e2); // Setting x range;
+    h[0] -> GetXaxis() -> CenterTitle(true);    h[0] -> GetYaxis() -> CenterTitle(true);
+
+    double pi = TMath::Pi();
+    int bin_min  = 1;  // The first bin
+    int bin_max  = h[0]->GetNbinsX();  // The last bin
+    // Calculate bin positions for each label
+    int bin_pi   = bin_max;
+    int bin_0    = bin_min + (bin_max - bin_min)/2;
+    int binPi_2  = bin_min + 3*(bin_max - bin_min)/4;
+    int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
+    // Set the labels at the calculated positions
+    h[0]->GetXaxis()->SetBinLabel(bin_0, "0");
+    h[0]->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
+    h[0]->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
+    h[0]->GetXaxis()->SetBinLabel(bin_pi, "#pi");
+    h[0]->GetXaxis()->SetBinLabel(bin_min, "-#pi");
+    // Ensure the custom labels are displayed by setting the number of divisions
+    h[0]->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
+    h[0]->GetXaxis()->SetLabelSize(0.04);
+    // Update histogram to refresh the axis
+    // h[0]->Draw("HIST");
+    h[0]->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+
+    can1 -> SaveAs(Form("../External/zFindingPlots/%s.png", fileTitle.c_str()));
+}
+
+void ArrayPlot1D_Rescale_ver2 (const std::vector<TH1D*>& h, std::vector<std::string> method, const std::string &fileTitle) {
+    TCanvas *can1 = new TCanvas("c1d","c1d",0,50,2100,1200);
+    std::vector<double> max_entries;
+    h[16] -> Draw();
+    for (int i = 0; i < h.size(); i++) {
+        max_entries.push_back(h[i]->GetBinContent(h[i]->GetMaximumBin()));
+        h[i] -> Add(h[i], 1/(max_entries[i]+1) - 1);
+        h[i] -> GetYaxis() -> SetRangeUser(0.8, 1.05);
+        h[i] -> GetXaxis() -> CenterTitle(true);    h[i] -> GetYaxis() -> CenterTitle(true);
+        h[i] -> SetLineWidth(2);
+        h[i] -> Draw("SAME");
+    }
+
+    h[16] -> SetLineColor(2);
+    double pi = TMath::Pi();
+    int bin_min  = 1;  // The first bin
+    int bin_max  = h[0]->GetNbinsX();  // The last bin
+    // Calculate bin positions for each label
+    int bin_pi   = bin_max;
+    int bin_0    = bin_min + (bin_max - bin_min)/2;
+    int binPi_2  = bin_min + 3*(bin_max - bin_min)/4;
+    int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
+    // Set the labels at the calculated positions
+    h[16]->GetXaxis()->SetBinLabel(bin_0, "0");
+    h[16]->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
+    h[16]->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
+    h[16]->GetXaxis()->SetBinLabel(bin_pi, "#pi");
+    h[16]->GetXaxis()->SetBinLabel(bin_min, "-#pi");
+    // Ensure the custom labels are displayed by setting the number of divisions
+    h[16]->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
+    h[16]->GetXaxis()->SetLabelSize(0.04);
+    // Update histogram to refresh the axis
+    // h[0]->Draw("HIST");
+    h[16]->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+
+    can1 -> SaveAs(Form("../External/zFindingPlots/%s.png", fileTitle.c_str()));
 }

@@ -69,10 +69,19 @@ void INTTMixingEvent (TTree *EventTree, string filePath, std::vector<string> opt
         getline(data, value, ',');  double Mz = std::stod(value);
         getline(data, value, ',');  double Mc = std::stod(value);
 
-        if (f >= -21.05 && f <= -20.85 && Mc <= 0.7) {
-            index.push_back(i);     event.push_back(e);         NHits.push_back(N);
-            foundZ.push_back(f);    MBD_true_z.push_back(Mz);   MBD_cen.push_back(Mc);
+        if (options[1] == "Z") {
+            if (f >= -21.05 && f <= -20.85 && Mc <= 0.7) {
+                index.push_back(i);     event.push_back(e);         NHits.push_back(N);
+                foundZ.push_back(f);    MBD_true_z.push_back(Mz);   MBD_cen.push_back(Mc);
+            }
         }
+        else if (options[1] == "cen") {
+            if (f >= -15.05 && f <= -14.85 && Mc <= 0.1 && Mc >= 0.05) {
+                index.push_back(i);     event.push_back(e);         NHits.push_back(N);
+                foundZ.push_back(f);    MBD_true_z.push_back(Mz);   MBD_cen.push_back(Mc);
+            }
+        }
+        
     }
     // std::cout << event.size() << std::endl;
 
@@ -111,6 +120,7 @@ void INTTMixingEvent (TTree *EventTree, string filePath, std::vector<string> opt
     branch30->SetAddress(&MBD_centrality);
     branch31->SetAddress(&MBD_z_vtx);
 
+    int target = std::stoi(options[2]) > event.size() ? event.size() : std::stoi(options[2]);
     double phi, dPhi, phi_0, phi_1;
     std::vector<double> Phi0, Phi1, mixed_Phi0, mixed_Phi1;
     std::vector<std::vector <double>> event_Phi0, event_Phi1;
@@ -118,11 +128,11 @@ void INTTMixingEvent (TTree *EventTree, string filePath, std::vector<string> opt
     double range_min = -M_PI;
     double range_max = M_PI;
     double bin_width = (range_max - range_min) / N;
-    TH1D *h_unmixed_dPhi = new TH1D("dPhi of unmixed", Form("dPhi of unmixed %lu events;dPhi value;# of counts", event.size()), N, range_min, range_max);
-    TH1D *h_mixed_dPhi   = new TH1D("dPhi of mixed", Form("dPhi of %lu mixed events;dPhi value;# of counts", event.size()), N, range_min, range_max);
+    TH1D *h_unmixed_dPhi = new TH1D("dPhi of unmixed", Form("dPhi of unmixed %d events;dPhi value;# of counts", target), N, range_min, range_max);
+    TH1D *h_mixed_dPhi   = new TH1D("dPhi of mixed", Form("dPhi of %d mixed events;dPhi value;# of counts", target), N, range_min, range_max);
 
     // dPhi of unmixed events:
-    int target = std::stoi(options[1]);
+    
     for (int i = 0; i < target; i++) {
         branch16->GetEntry(index[i]);   branch11->GetEntry(index[i]);
         event_Phi0.push_back(std::vector <double>());   event_Phi1.push_back(std::vector <double>());
@@ -195,6 +205,7 @@ void INTTMixingEvent (TTree *EventTree, string filePath, std::vector<string> opt
         }
     }
     
+    TCanvas *can1 = new TCanvas("c1d","c1d",0,50,2100,1200);
     double phi_range_low = -2.4, phi_range_high = -1.8;
     int bin_range_low = h_mixed_dPhi->FindBin(phi_range_low), bin_range_high = h_mixed_dPhi->FindBin(phi_range_high);
     double max_unmixed = -1, max_mixed = -1, current_binContent;
@@ -220,6 +231,47 @@ void INTTMixingEvent (TTree *EventTree, string filePath, std::vector<string> opt
     }                      
     h_mixed_dPhi -> Draw("SAME");
     h_mixed_dPhi -> SetLineColor(2);
+
+    double pi = TMath::Pi();
+    int bin_min  = 1;  // The first bin
+    int bin_max  = h_unmixed_dPhi->GetNbinsX();  // The last bin
+    // Calculate bin positions for each label
+    int bin_pi   = bin_max;
+    int bin_0    = bin_min + (bin_max - bin_min)/2;
+    int binPi_2  = bin_min + 3*(bin_max - bin_min)/4;
+    int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
+    // Set the labels at the calculated positions
+    h_mixed_dPhi->GetXaxis()->SetBinLabel(bin_0, "0");
+    h_mixed_dPhi->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
+    h_mixed_dPhi->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
+    h_mixed_dPhi->GetXaxis()->SetBinLabel(bin_pi, "#pi");
+    h_mixed_dPhi->GetXaxis()->SetBinLabel(bin_min, "-#pi");
+    // Ensure the custom labels are displayed by setting the number of divisions
+    h_mixed_dPhi->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
+    h_mixed_dPhi->GetXaxis()->SetLabelSize(0.04);
+    // Update histogram to refresh the axis
+    // h[0]->Draw("HIST");
+    h_mixed_dPhi->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+
+    h_unmixed_dPhi->GetXaxis()->SetBinLabel(bin_0, "0");
+    h_unmixed_dPhi->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
+    h_unmixed_dPhi->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
+    h_unmixed_dPhi->GetXaxis()->SetBinLabel(bin_pi, "#pi");
+    h_unmixed_dPhi->GetXaxis()->SetBinLabel(bin_min, "-#pi");
+    // Ensure the custom labels are displayed by setting the number of divisions
+    h_unmixed_dPhi->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
+    h_unmixed_dPhi->GetXaxis()->SetLabelSize(0.04);
+    // Update histogram to refresh the axis
+    // h[0]->Draw("HIST");
+    h_unmixed_dPhi->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+
+    h_unmixed_dPhi -> GetXaxis() -> CenterTitle(true);
+    h_unmixed_dPhi -> GetYaxis() -> CenterTitle(true);
+    h_mixed_dPhi -> GetXaxis() -> CenterTitle(true);
+    h_mixed_dPhi -> GetYaxis() -> CenterTitle(true);
+    
+    if (options[1] == "Z")     can1 -> SaveAs("../External/zFindingPlots/dPhi_mixed_Z.png");
+    if (options[1] == "cen")   can1 -> SaveAs("../External/zFindingPlots/dPhi_mixed_centrality.png");
 }
 
 void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> options) {
@@ -307,7 +359,7 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
         h_all_foundz -> Draw();
         h_all_foundz -> SetLineWidth(3);
         h_all_foundz -> GetXaxis() -> CenterTitle(true);   h_all_foundz -> GetYaxis() -> CenterTitle(true);
-        h_all_MBD_Z  -> GetXaxis() -> CenterTitle(true);    h_all_MBD_Z -> GetYaxis() -> CenterTitle(true);
+        h_all_MBD_Z  -> GetXaxis() -> CenterTitle(true);   h_all_MBD_Z  -> GetYaxis() -> CenterTitle(true);
         h_all_MBD_Z  -> Draw("SAME");
         h_all_MBD_Z  -> SetLineColor(2);
         h_all_MBD_Z  -> SetLineWidth(5);
@@ -319,6 +371,24 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
         can1 -> SaveAs("../External/zFindingPlots/INTT_MBD_Z_comparison.png");
 
         foundZSlicer(h_all_foundz);
+    }
+    if (options[1] == "fCenStrips") {
+        TCanvas *can1 = new TCanvas("c1d","c1d",0,50,2100,1200);
+        TH2D *h_Z_cen = new TH2D("", "Found Z vertex in bins of centrality;Z Vertex Position [mm];MBD centrality", 200, -250., -50., 14, 0.0, 0.7);
+        for (int i = 0; i < event.size(); i++) {
+            h_Z_cen -> Fill(foundZ[i], MBD_cen[i]);
+        }
+        h_Z_cen -> Draw("lego2");
+        // h_Z_cen -> SetLineWidth(3);
+        h_Z_cen -> GetXaxis() -> CenterTitle(true);   h_Z_cen -> GetYaxis() -> CenterTitle(true);
+        h_Z_cen -> GetXaxis() -> SetTitleOffset(2);
+        h_Z_cen -> GetYaxis() -> SetTitleOffset(2);
+        // TLegend *lg = new TLegend(0.62, 0.8, 0.73, 0.9);
+        // lg -> AddEntry(h_all_foundz, "INTT found Z", "l");
+        // lg -> AddEntry(h_all_MBD_Z, "MBD Z vertex", "l");
+        // gStyle -> SetLegendTextSize(.028);
+        // lg->Draw("same");
+        can1 -> SaveAs("../External/zFindingPlots/foundZ_vs_MBD_centrality.png");
     }
     if (options[1] == "nomix") {
         for (int i = 0; i < 10; i++) {
@@ -370,7 +440,8 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
         for (int i = 1; i < 14; i++) {
             h_onOne[i] = new TH1D(Form("dPhi of %f to %f", static_cast<double>(i)*0.05, static_cast<double>(i + 1)*0.05), Form("dPhi of %f to %f;dPhi;# of counts", static_cast<double>(i)*0.05, static_cast<double>(i + 1)*0.05), N, range_min, range_max);
         }
-        for (int i = 0; i < event.size(); i++) {
+        int target = std::stoi(options[2]) > event.size() ? event.size() : std::stoi(options[2]);
+        for (int i = 0; i < target; i++) {
             // std::cout << i << std::endl;
             branch16->GetEntry(index[i]);   // ClusPhi;
             branch11->GetEntry(index[i]);   // ClusLayer;
@@ -404,7 +475,8 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
             
         }
         std::vector<TH1D*> h(h_onOne, h_onOne + 14);
-        ArrayPlot1D(h, options, "dPhi_per_centralities");
+        // ArrayPlot1D_Logy(h, options, "dPhi_per_centralities");
+        ArrayPlot1D_Rescale(h, options, "dPhi_per_centralities_rescale");
     }
     else if (options[1] == "perZOnOne") {
         std::vector<double> Phi0, Phi1;
@@ -416,7 +488,8 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
         for (int i = 17; i < 20; i++) {
             h_onOne[i] = new TH1D(Form("dPhi of %1.0f to %1.0f", -5 - static_cast<double>(i), -6 - static_cast<double>(i)), Form("dPhi of %1.0f to %1.0f;dPhi;# of counts", -5 - static_cast<double>(i), -6 - static_cast<double>(i)), N, range_min, range_max);
         }
-        for (int i = 0; i < event.size(); i++) {
+        int target = std::stoi(options[2]) > event.size() ? event.size() : std::stoi(options[2]);
+        for (int i = 0; i < target; i++) {
             // std::cout << i << std::endl;
             branch16->GetEntry(index[i]);   // ClusPhi;
             branch11->GetEntry(index[i]);   // ClusLayer;
@@ -448,7 +521,8 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
             }
         }
         std::vector<TH1D*> h(h_onOne, h_onOne + 20);
-        ArrayPlot1D_ver2(h, options, "dPhi_per_Zvtx");
+        // ArrayPlot1D_Logy_ver2(h, options, "dPhi_per_Zvtx");
+        ArrayPlot1D_Rescale_ver2(h, options, "dPhi_per_Zvtx_rescale");
     }
 
 }
