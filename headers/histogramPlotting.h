@@ -116,9 +116,9 @@ void ZResolutionSinglePlot (TH1D* const histo, std::vector<std::string> method, 
 }
 
 void TGraphSinglePlot (TGraph* g0, const char *title, const char *Xtitle, const std::string &fileTitle) {
-    TCanvas *can1 = new TCanvas("cg","cg",0,50,1800,1200);
+    TCanvas *can1 = new TCanvas("cg","cg",0,50,1200,1200);
     g0 -> SetMarkerStyle(29);
-    g0 -> SetMarkerSize(2);
+    g0 -> SetMarkerSize(1.1);
     g0 -> SetMarkerColor(kBlue - 7);
     g0 -> SetLineWidth(3);
     g0 -> SetLineColor(kWhite);
@@ -134,8 +134,8 @@ void TGraphSinglePlot (TGraph* g0, const char *title, const char *Xtitle, const 
     g0 -> GetYaxis() -> SetTitleSize(0.05);
     g0 -> GetYaxis() -> SetLabelSize(0.025);
     g0 -> GetYaxis() -> CenterTitle(true);
-    g0 -> SetMinimum(-200); // Setting y range;
-    g0 -> SetMaximum(200);  // Setting y range;
+    // g0 -> SetMinimum(-200); // Setting y range;
+    // g0 -> SetMaximum(200);  // Setting y range;
     g0 -> GetYaxis() -> SetTitleOffset(0.8); 
     g0 -> GetXaxis() -> SetTitleOffset(0.8); 
     // g0 -> GetXaxis() -> SetLimits(0, 6000); // Setting x range;

@@ -23,28 +23,35 @@ void INTTZAnalysisLite (string filePath, std::vector<string> options) {
         getline(data, value, ',');  double Mz = std::stod(value)*10;
         getline(data, value, ',');  double Mc = std::stod(value);
 
-        if (f >= -250. && f <= -50. && Mc <= 0.7) {
+        if (Mz >= -250. && Mz <= -50. && f >= -250. && f <= -50. && Mc <= 0.7) {
+        // if ((Mz >= -250. && Mz <= -180. && Mc <= 0.7) || (Mz >= -160. && Mz <= -50. && Mc <= 0.7)) {
             index.push_back(i);     event.push_back(e);         NClus.push_back(N);
             foundZ.push_back(f);    MBD_z_vtx.push_back(Mz);    MBD_centrality.push_back(Mc);
         }
     }
     
     TH1D *h_resolution = new TH1D("found z resolution", Form("INTT found z resolution of %lu events;dZ [mm];# of counts", index.size()), 151, -1e2, 1e2);
+    TH2D *h = new TH2D("", "", 100, -250, -50, 100, -250, -50);
     TGraph *g_NFunction = new TGraph();
     TGraph *g_ZFunction = new TGraph();
     TGraph *g_CFunction = new TGraph();
+    TGraph *g           = new TGraph();
     double z_resolution;
     for (int i = 0; i < index.size(); i++) {
+        h -> Fill(foundZ[i], MBD_z_vtx[i]);
         z_resolution = foundZ[i] - MBD_z_vtx[i];
         h_resolution -> Fill(z_resolution);
         g_NFunction  -> SetPoint(g_NFunction->GetN(), NClus[i], z_resolution);
         g_ZFunction  -> SetPoint(g_ZFunction->GetN(), MBD_z_vtx[i], z_resolution);
         g_CFunction  -> SetPoint(g_CFunction->GetN(), MBD_centrality[i], z_resolution);
+        g            -> SetPoint(g          ->GetN(), foundZ[i], MBD_z_vtx[i]);
     }
+    h->Draw("lego2");
     ZResolutionSinglePlot(h_resolution, options, "foundZResolution_1D");
     TGraphSinglePlot(g_NFunction, Form("INTT found z resolution of %d events", g_NFunction->GetN()), "# of Hits", "foundZResolution_vs_NClus");
     TGraphSinglePlot(g_ZFunction, Form("INTT found z resolution of %d events", g_ZFunction->GetN()), "MBD z vtx [mm]", "foundZResolution_vs_MBDZ");
     TGraphSinglePlot(g_CFunction, Form("INTT found z resolution of %d events", g_CFunction->GetN()), "MBD centrality", "foundZResolution_vs_MBC");
+    TGraphSinglePlot(g          , Form("INTT found z resolution of %d events", g->GetN()), "MBD z vtx [mm]", "foundZ_vs_MBZ");
 
     // TCanvas *canvas = new TCanvas("c2","c2", 0, 0,1350,800);
 }
@@ -56,6 +63,10 @@ void INTTMixingEvent (TTree *EventTree, string filePath, std::vector<string> opt
 		system("read -n 1 -s -p \"Press any key to continue...\" echo");
 		exit(1);
  	}
+    double z_lower_range = 24.05;
+    double z_upper_range = 23.85;
+    double c_lower_range = 24.05;
+    double c_upper_range = 23.85;
     string line, value;
     std::vector<int>    index, event, NHits;
     std::vector<double> foundZ, MBD_true_z, MBD_cen;
@@ -70,7 +81,8 @@ void INTTMixingEvent (TTree *EventTree, string filePath, std::vector<string> opt
         getline(data, value, ',');  double Mc = std::stod(value);
 
         if (options[1] == "Z") {
-            if (f >= -21.05 && f <= -20.85 && Mc <= 0.7) {
+            // if (f >= -21.05 && f <= -20.85 && Mc <= 0.7) {
+            if (f >= -z_lower_range && f <= -z_upper_range && Mc <= 0.7) {
                 index.push_back(i);     event.push_back(e);         NHits.push_back(N);
                 foundZ.push_back(f);    MBD_true_z.push_back(Mz);   MBD_cen.push_back(Mc);
             }
@@ -269,6 +281,11 @@ void INTTMixingEvent (TTree *EventTree, string filePath, std::vector<string> opt
     h_unmixed_dPhi -> GetYaxis() -> CenterTitle(true);
     h_mixed_dPhi -> GetXaxis() -> CenterTitle(true);
     h_mixed_dPhi -> GetYaxis() -> CenterTitle(true);
+
+    TLegend *lg = new TLegend(0.12, 0.8, 0.33, 0.9);
+    lg -> AddEntry(h_mixed_dPhi, Form("z_vtx between %2.2f and %2.2f", z_lower_range, z_upper_range), "l");
+    gStyle -> SetLegendTextSize(.023);
+    lg->Draw("same");
     
     if (options[1] == "Z")     can1 -> SaveAs("../External/zFindingPlots/dPhi_mixed_Z.png");
     if (options[1] == "cen")   can1 -> SaveAs("../External/zFindingPlots/dPhi_mixed_centrality.png");
@@ -296,7 +313,7 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
         getline(data, value, ',');  double Mz = std::stod(value)*10;
         getline(data, value, ',');  double Mc = std::stod(value);
 
-        if (f >= -250. && f <= -50. && Mc <= 0.7) {
+        if (Mz >= -250. && Mz <= -50. && Mc <= 0.7) {
             index.push_back(i);     event.push_back(e);         NHits.push_back(N);
             foundZ.push_back(f);    MBD_true_z.push_back(Mz);   MBD_cen.push_back(Mc);
         }
@@ -391,7 +408,7 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
         can1 -> SaveAs("../External/zFindingPlots/foundZ_vs_MBD_centrality.png");
     }
     if (options[1] == "nomix") {
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < event.size(); i++) {
             // std::cout << i << std::endl;
             // branch25->GetEntry(index[i]);  branch10->GetEntry(index[i]);  branch11->GetEntry(index[i]);
             // branch12->GetEntry(index[i]);  branch13->GetEntry(index[i]);  branch14->GetEntry(index[i]);
@@ -428,7 +445,7 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
             Phi0.clear();   Phi1.clear();
         }
         // angularPlot1D(h_unmixed_dPhi, options, "dPhi of unmixed");
-        angularPlot2D(h_dPhi_Z, options, "dPhi of unmixed vs Z");
+        // angularPlot2D(h_dPhi_Z, options, "dPhi of unmixed vs Z");
         // angularPlot2D(h_dPhi_cen, options, "dPhi of unmixed vs MBD centrality");
         // angularPlot3D(h_dPhi_cen, options, "dPhi of unmixed vs MBD centrality 3D");
         angularPlot3D(h_dPhi_Z, options, "dPhi of unmixed vs Z");
