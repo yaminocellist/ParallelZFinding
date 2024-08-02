@@ -116,7 +116,7 @@ void ZResolutionSinglePlot (TH1D* const histo, std::vector<std::string> method, 
 }
 
 void TGraphSinglePlot (TGraph* g0, const char *title, const char *Xtitle, const std::string &fileTitle) {
-    TCanvas *can1 = new TCanvas("cg","cg",0,50,1200,1200);
+    TCanvas *can1 = new TCanvas("cg","cg",0,50,2100,1200);
     g0 -> SetMarkerStyle(29);
     g0 -> SetMarkerSize(1.1);
     g0 -> SetMarkerColor(kBlue - 7);
@@ -149,6 +149,86 @@ void TGraphSinglePlot (TGraph* g0, const char *title, const char *Xtitle, const 
     lg -> AddEntry(g0, "Fiducial cut as -250 < MBD_z_vtx < -50 mm, centrality <= 0.7", "f");
     gStyle -> SetLegendTextSize(.02);
     lg->Draw("same");
+    can1 -> SaveAs(Form("../External/zFindingPlots/%s.png", fileTitle.c_str()));
+}
+
+void TGraphSinglePlot_Squared (TGraph* g0, const char *title, const char *Xtitle, const char *Ytitle, const std::string &fileTitle) {
+    TCanvas *can1 = new TCanvas("cgs","cgs",0,50,1200,1200);
+    g0 -> SetMarkerStyle(29);
+    g0 -> SetMarkerSize(1.1);
+    g0 -> SetMarkerColor(kBlue - 7);
+    g0 -> SetLineWidth(3);
+    g0 -> SetLineColor(kWhite);
+    gStyle -> SetTitleW(0.7);  //per cent of the pad width
+    gStyle -> SetTitleH(0.08); //per cent of the pad height
+    g0 -> SetTitle(title);
+    g0 -> GetXaxis() -> SetTitle(Xtitle);   g0 -> GetYaxis() -> SetTitle(Ytitle);
+    g0 -> GetXaxis() -> SetTitleSize(0.05);
+    g0 -> GetXaxis() -> SetLabelSize(0.04);
+    g0 -> GetXaxis() -> CenterTitle(true);
+    g0 -> GetYaxis() -> SetTitleSize(0.05);
+    g0 -> GetYaxis() -> SetLabelSize(0.025);
+    g0 -> GetYaxis() -> CenterTitle(true);
+    // g0 -> SetMinimum(-200); // Setting y range;
+    // g0 -> SetMaximum(200);  // Setting y range;
+    g0 -> GetYaxis() -> SetTitleOffset(0.8); 
+    g0 -> GetXaxis() -> SetTitleOffset(0.8); 
+    // g0 -> GetXaxis() -> SetLimits(0, 6000); // Setting x range;
+    g0 -> Draw("AP SAME");
+    gPad->SetGrid(5, 2); gPad->Update();
+
+    TLine *l = new TLine(-250, -250, -50, -50);
+	l -> Draw("same"); 
+    l -> SetLineColor(kRed);
+    TLegend *lg = new TLegend(0.36, 0.85, 0.9, 0.9);
+    lg -> AddEntry(g0, "Fiducial cut as -250 < MBD_z_vtx < -50 mm, centrality <= 0.7", "p");
+    gStyle -> SetLegendTextSize(.02);
+    lg->Draw("same");
+    can1 -> SaveAs(Form("../External/zFindingPlots/%s.png", fileTitle.c_str()));
+}
+
+void TGraphMultiPlot (TMultiGraph *mg, const char *title, const char *Xtitle, const char *Ytitle, const std::string &fileTitle) {
+    TList *graphs = mg->GetListOfGraphs();
+    int nGraphs = graphs->GetSize();    // number of graphs;
+    TIter next(graphs);
+    TGraph *graph;
+    for (int i = 0; i < nGraphs; i++) {
+        graph = (TGraph *)next();
+        graph -> SetMarkerStyle(29);
+        graph -> SetMarkerSize(1.1);
+        graph -> SetMarkerColor(kBlue - 7);
+        if (i == 1)     graph -> SetMarkerColor(2);
+        graph -> SetLineWidth(3);
+        graph -> SetLineColor(kWhite);
+        graph -> GetXaxis() -> SetTitleSize(0.05);
+        graph -> GetXaxis() -> SetLabelSize(0.04);
+        graph -> GetXaxis() -> CenterTitle(true);
+        graph -> GetYaxis() -> SetTitleSize(0.05);
+        graph -> GetYaxis() -> SetLabelSize(0.025);
+        graph -> GetYaxis() -> CenterTitle(true);
+        // graph -> SetMinimum(-200); // Setting y range;
+        // graph -> SetMaximum(200);  // Setting y range;
+        graph -> GetYaxis() -> SetTitleOffset(0.8); 
+        graph -> GetXaxis() -> SetTitleOffset(0.8); 
+    }
+
+    // Use "xdpyinfo | grep dimensions" in terminal to get your display's max size;
+    TCanvas *can1 = new TCanvas("cgm","cgm",0,50,1056,1056);
+    mg->SetTitle(title);
+    mg->GetXaxis()->SetTitle(Xtitle);
+    mg->GetYaxis()->SetTitle(Ytitle);
+    mg -> Draw("AP SAME");
+    gStyle -> SetTitleW(0.7);  //per cent of the pad width
+    gStyle -> SetTitleH(0.08); //per cent of the pad height
+    gPad->SetGrid(5, 2); gPad->Update();
+
+    // TLine *l = new TLine(-250, -250, -50, -50);
+	// l -> Draw("same"); 
+    // l -> SetLineColor(kRed);
+        // TLegend *lg = new TLegend(0.36, 0.85, 0.9, 0.9);
+        // lg -> AddEntry(graphs[0], "Fiducial cut as -250 < MBD_z_vtx < -50 mm, centrality <= 0.7", "p");
+        // gStyle -> SetLegendTextSize(.02);
+        // lg->Draw("same");
     can1 -> SaveAs(Form("../External/zFindingPlots/%s.png", fileTitle.c_str()));
 }
 

@@ -31,27 +31,38 @@ void INTTZAnalysisLite (string filePath, std::vector<string> options) {
     }
     
     TH1D *h_resolution = new TH1D("found z resolution", Form("INTT found z resolution of %lu events;dZ [mm];# of counts", index.size()), 151, -1e2, 1e2);
-    TH2D *h = new TH2D("", "", 100, -250, -50, 100, -250, -50);
-    TGraph *g_NFunction = new TGraph();
-    TGraph *g_ZFunction = new TGraph();
-    TGraph *g_CFunction = new TGraph();
-    TGraph *g           = new TGraph();
+    TH2D *h = new TH2D("", ";MBD Z;INTT found Z", 100, -250, -50, 100, -250, -50);
+    TGraph *g_NFunction    = new TGraph();
+    TGraph *g_ZFunction    = new TGraph();
+    TGraph *g_CFunction    = new TGraph();
+    TGraph *g_ZCorrelation = new TGraph();
+    TGraph *g_Calibration  = new TGraph();
     double z_resolution;
     for (int i = 0; i < index.size(); i++) {
-        h -> Fill(foundZ[i], MBD_z_vtx[i]);
+        h -> Fill(MBD_z_vtx[i], foundZ[i]);
         z_resolution = foundZ[i] - MBD_z_vtx[i];
         h_resolution -> Fill(z_resolution);
         g_NFunction  -> SetPoint(g_NFunction->GetN(), NClus[i], z_resolution);
         g_ZFunction  -> SetPoint(g_ZFunction->GetN(), MBD_z_vtx[i], z_resolution);
         g_CFunction  -> SetPoint(g_CFunction->GetN(), MBD_centrality[i], z_resolution);
-        g            -> SetPoint(g          ->GetN(), foundZ[i], MBD_z_vtx[i]);
+        g_ZCorrelation -> SetPoint(g_ZCorrelation->GetN(), foundZ[i], MBD_z_vtx[i]);
+        g_Calibration -> SetPoint(g_Calibration->GetN(), MBD_z_vtx[i], MBD_z_vtx[i]);
     }
     h->Draw("lego2");
-    ZResolutionSinglePlot(h_resolution, options, "foundZResolution_1D");
-    TGraphSinglePlot(g_NFunction, Form("INTT found z resolution of %d events", g_NFunction->GetN()), "# of Hits", "foundZResolution_vs_NClus");
-    TGraphSinglePlot(g_ZFunction, Form("INTT found z resolution of %d events", g_ZFunction->GetN()), "MBD z vtx [mm]", "foundZResolution_vs_MBDZ");
-    TGraphSinglePlot(g_CFunction, Form("INTT found z resolution of %d events", g_CFunction->GetN()), "MBD centrality", "foundZResolution_vs_MBC");
-    TGraphSinglePlot(g          , Form("INTT found z resolution of %d events", g->GetN()), "MBD z vtx [mm]", "foundZ_vs_MBZ");
+    // TH1D *h_projX = h->ProjectionX("projX", h->GetXaxis()->FindBin(-250), h->GetXaxis()->FindBin(-50));
+    // h_projX -> Draw();
+    // TH1D *h_projY = h->ProjectionY("projY", h->GetYaxis()->FindBin(-250), h->GetYaxis()->FindBin(-50));
+    // h_projY -> Draw("same");
+    // h_projY -> SetLineColor(2);
+    // ZResolutionSinglePlot(h_resolution, options, "foundZResolution_1D");
+    // TGraphSinglePlot(g_NFunction, Form("INTT found z resolution of %d events", g_NFunction->GetN()), "# of Hits", "foundZResolution_vs_NClus");
+    // TGraphSinglePlot(g_ZFunction, Form("INTT found z resolution of %d events", g_ZFunction->GetN()), "MBD z vtx [mm]", "foundZResolution_vs_MBDZ");
+    // TGraphSinglePlot(g_CFunction, Form("INTT found z resolution of %d events", g_CFunction->GetN()), "MBD centrality", "foundZResolution_vs_MBC");
+    // TGraphSinglePlot_Squared(g_ZCorrelation, Form("INTT found z resolution of %d events", g_ZCorrelation->GetN()), "INTT found z [mm]", "MBD z vtx [mm]", "foundZ_vs_MBZ");
+    TMultiGraph *mg = new TMultiGraph();
+    mg -> Add(g_ZCorrelation);
+    mg -> Add(g_Calibration);
+    // TGraphMultiPlot(mg, Form("INTT found z resolution of %d events", g_ZCorrelation->GetN()), "INTT found z [mm]", "MBD z vtx [mm]", "foundZ_vs_MBZ_with_Cal");
 
     // TCanvas *canvas = new TCanvas("c2","c2", 0, 0,1350,800);
 }

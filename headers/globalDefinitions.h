@@ -12,6 +12,7 @@
 #include <TAxis.h>
 #include <TFile.h>
 #include <TTree.h>
+#include <TMultiGraph.h>
 #include <iostream>
 /*********************************************************************
  *                      GLOBAL VARIABLES;
