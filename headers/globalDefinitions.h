@@ -4,8 +4,11 @@
 #include <cmath>
 #include <string>
 #include <memory>
+#include <iostream>
+#include <fstream>
 #include <TH1.h>
 #include <TH2F.h>
+#include <TF1.h>
 #include <TCanvas.h>
 #include <TGraph.h>
 #include <TPolyMarker.h>
@@ -13,7 +16,7 @@
 #include <TFile.h>
 #include <TTree.h>
 #include <TMultiGraph.h>
-#include <iostream>
+
 /*********************************************************************
  *                      GLOBAL VARIABLES;
  * ******************************************************************/

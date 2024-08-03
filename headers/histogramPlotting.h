@@ -1,4 +1,7 @@
 #include "globalDefinitions.h"
+#include "TLine.h"
+#include "TLegend.h"
+#include "TStyle.h"
 
 void angularPlot1D (TH1D* const histo, std::vector<std::string> method, const std::string &fileTitle) {
     if (isInteger(method[1]))   int lowerRange = stoi(method[1]);
@@ -6,7 +9,7 @@ void angularPlot1D (TH1D* const histo, std::vector<std::string> method, const st
     int maxBin = histo->GetMaximumBin();
     double maxBinCenter = histo->GetBinCenter(maxBin);
     int maxEntry = histo -> GetBinContent(maxBin);
-    TCanvas *can1 = new TCanvas("c1d","c1d",0,50,1800,1200);
+    TCanvas *can1 = new TCanvas("c1d","c1d",0,50,1920,1056);
     histo -> Draw();
     histo -> SetFillColor(kYellow - 7);
     histo -> SetLineWidth(1);
@@ -59,7 +62,7 @@ void angularPlot1D (TH1D* const histo, std::vector<std::string> method, const st
 }
 
 void angularPlot2D(TH2D *const h_dPhi_Z, std::vector<std::string> method, const std::string &fileTitle) {
-    TCanvas *can = new TCanvas("c2d","c2d",0,50,1800,1200);
+    TCanvas *can = new TCanvas("c2d","c2d",0,50,1920,1056);
     h_dPhi_Z -> SetTitle(Form("All dPhi values (no event mixed) with %d bins of Z vtx", h_dPhi_Z->GetNbinsY()));
     h_dPhi_Z -> Draw("colz");
     h_dPhi_Z -> GetXaxis() -> CenterTitle(true);
@@ -71,7 +74,7 @@ void angularPlot2D(TH2D *const h_dPhi_Z, std::vector<std::string> method, const 
 }
 
 void angularPlot3D(TH2D * h_dPhi_Z, std::vector<std::string> method, const std::string &fileTitle) {
-    TCanvas *can1 = new TCanvas("c3d","c3d",0,50,1800,1200);
+    TCanvas *can1 = new TCanvas("c3d","c3d",0,50,1920,1056);
     h_dPhi_Z -> SetTitle(Form("All dPhi values (no event mixed) with %d bins of Z vtx", h_dPhi_Z->GetNbinsY()));
     h_dPhi_Z -> Draw("lego2");
     h_dPhi_Z -> GetXaxis() -> CenterTitle(true);
@@ -89,7 +92,7 @@ void ZResolutionSinglePlot (TH1D* const histo, std::vector<std::string> method, 
     int maxBin = histo->GetMaximumBin();
     double maxBinCenter = histo->GetBinCenter(maxBin);
     int maxEntry = histo -> GetBinContent(maxBin);
-    TCanvas *can1 = new TCanvas("c1d","c1d",0,50,1800,1200);
+    TCanvas *can1 = new TCanvas("c1d","c1d",0,50,1920,1056);
     histo -> Draw();
     histo -> SetFillColor(kYellow - 7);
     histo -> SetLineWidth(1);
@@ -237,7 +240,7 @@ void EtaPhiSinglePlot (TH1D* const histo, std::vector<std::string> method, Int_t
     if (isInteger(method[2]))   int upperRange = stoi(method[2]);
     int maxBin = histo->GetMaximumBin();
     double maxBinCenter = histo->GetBinCenter(maxBin);
-    TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,1200);
+    TCanvas *can1 = new TCanvas("c1","c1",0,50,1920,1056);
     histo -> Draw();
     histo -> SetFillColor(kYellow - 7);
     histo -> SetLineWidth(1);
@@ -293,7 +296,7 @@ void doublePlot (TH1D* const hBackground, TH1D* const hSignal, std::vector<std::
     int lowerRange = stoi(method[1]);
     int maxBin = hBackground->GetMaximumBin();
     double maxBinCenter = hBackground->GetBinCenter(maxBin);
-    TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,1200);
+    TCanvas *can1 = new TCanvas("c1","c1",0,50,1920,1056);
 
     // Draw the first histogram
     hBackground -> Draw();
@@ -325,7 +328,7 @@ void doublePlot (TH1D* const hBackground, TH1D* const hSignal, std::vector<std::
 }
 
 void backgroundCancelling (TH1D* const hBackground, TH1D* const hSignal, std::vector<std::string> method, Int_t const & target) {
-    TCanvas *can1 = new TCanvas("c1","c1",0,50,1800,1200);
+    TCanvas *can1 = new TCanvas("c1","c1",0,50,1920,1056);
     can1 -> Divide(1, 2);
     can1 -> cd(1);
     hBackground -> Draw();

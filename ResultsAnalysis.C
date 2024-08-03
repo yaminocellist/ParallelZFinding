@@ -48,9 +48,9 @@ void INTTZAnalysisLite (string filePath, std::vector<string> options) {
         g_ZCorrelation -> SetPoint(g_ZCorrelation->GetN(), foundZ[i], MBD_z_vtx[i]);
         g_Calibration -> SetPoint(g_Calibration->GetN(), MBD_z_vtx[i], MBD_z_vtx[i]);
     }
-    h->Draw("lego2");
-    // TH1D *h_projX = h->ProjectionX("projX", h->GetXaxis()->FindBin(-250), h->GetXaxis()->FindBin(-50));
-    // h_projX -> Draw();
+    // h->Draw("lego2");
+    TH1D *h_projX = h->ProjectionX("projX", h->GetXaxis()->FindBin(-250), h->GetXaxis()->FindBin(-50));
+    h_projX -> Draw();
     // TH1D *h_projY = h->ProjectionY("projY", h->GetYaxis()->FindBin(-250), h->GetYaxis()->FindBin(-50));
     // h_projY -> Draw("same");
     // h_projY -> SetLineColor(2);
@@ -376,6 +376,7 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
     TH2D *h_dPhi_cen     = new TH2D("dPhi of unmixed v.s. MBD centrality 2D", Form("dPhi of unmixed %lu events; dPhi value; MBD centrality", event.size()), N, range_min, range_max, 14, 0.0, 0.7);
 
     // std::cout << options[1] << std::endl;
+    int target = std::stoi(options[2]) > event.size() ? event.size() : std::stoi(options[2]);
     if (options[1] == "fzStrips") {
         TCanvas *can1 = new TCanvas("c1d","c1d",0,50,2100,1200);
         TH1D *h_all_foundz = new TH1D("", "INTT found z v.s. MBD Z;Z Vertex Position [mm];# of counts", 200, -250., -50.);
@@ -419,7 +420,7 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
         can1 -> SaveAs("../External/zFindingPlots/foundZ_vs_MBD_centrality.png");
     }
     if (options[1] == "nomix") {
-        for (int i = 0; i < event.size(); i++) {
+        for (int i = 0; i < target; i++) {
             // std::cout << i << std::endl;
             // branch25->GetEntry(index[i]);  branch10->GetEntry(index[i]);  branch11->GetEntry(index[i]);
             // branch12->GetEntry(index[i]);  branch13->GetEntry(index[i]);  branch14->GetEntry(index[i]);
@@ -448,18 +449,18 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
                     dPhi = Phi0[k] - Phi1[l];
                     if (dPhi > M_PI)    dPhi = dPhi - 2*M_PI;
                     if (dPhi < -M_PI)   dPhi = dPhi + 2*M_PI;
-                    // h_unmixed_dPhi -> Fill(dPhi);
-                    h_dPhi_Z       -> Fill(dPhi, fz);
+                    h_unmixed_dPhi -> Fill(dPhi);
+                    // h_dPhi_Z       -> Fill(dPhi, fz);
                     // h_dPhi_cen     -> Fill(dPhi, cen);
                 }
             }
             Phi0.clear();   Phi1.clear();
         }
-        // angularPlot1D(h_unmixed_dPhi, options, "dPhi of unmixed");
+        angularPlot1D(h_unmixed_dPhi, options, "dPhi of unmixed");
         // angularPlot2D(h_dPhi_Z, options, "dPhi of unmixed vs Z");
         // angularPlot2D(h_dPhi_cen, options, "dPhi of unmixed vs MBD centrality");
         // angularPlot3D(h_dPhi_cen, options, "dPhi of unmixed vs MBD centrality 3D");
-        angularPlot3D(h_dPhi_Z, options, "dPhi of unmixed vs Z");
+        // angularPlot3D(h_dPhi_Z, options, "dPhi of unmixed vs Z");
     }
     else if (options[1] == "perCenOnOne") {
         std::vector<double> Phi0, Phi1;
@@ -468,7 +469,6 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
         for (int i = 1; i < 14; i++) {
             h_onOne[i] = new TH1D(Form("dPhi of %f to %f", static_cast<double>(i)*0.05, static_cast<double>(i + 1)*0.05), Form("dPhi of %f to %f;dPhi;# of counts", static_cast<double>(i)*0.05, static_cast<double>(i + 1)*0.05), N, range_min, range_max);
         }
-        int target = std::stoi(options[2]) > event.size() ? event.size() : std::stoi(options[2]);
         for (int i = 0; i < target; i++) {
             // std::cout << i << std::endl;
             branch16->GetEntry(index[i]);   // ClusPhi;
@@ -516,16 +516,13 @@ void INTTdPhiAnalysis (TTree *EventTree, string filePath, std::vector<string> op
         for (int i = 17; i < 20; i++) {
             h_onOne[i] = new TH1D(Form("dPhi of %1.0f to %1.0f", -5 - static_cast<double>(i), -6 - static_cast<double>(i)), Form("dPhi of %1.0f to %1.0f;dPhi;# of counts", -5 - static_cast<double>(i), -6 - static_cast<double>(i)), N, range_min, range_max);
         }
-        int target = std::stoi(options[2]) > event.size() ? event.size() : std::stoi(options[2]);
         for (int i = 0; i < target; i++) {
             // std::cout << i << std::endl;
             branch16->GetEntry(index[i]);   // ClusPhi;
             branch11->GetEntry(index[i]);   // ClusLayer;
 
             for (int n = 0; n < 20; n++) {
-                // std::cout << foundZ[i] << ", " << -60. - static_cast<double>(n)*10 << ", " << -50. - static_cast<double>(n)*10 << std::endl;
                 if (foundZ[i] >= -60. - static_cast<double>(n)*10 && foundZ[i] <= -50. - static_cast<double>(n)*10) {
-                    // std::cout << foundZ[i] << std::endl;
                     for (int j = 0; j < ClusPhi->size(); j++) {
                         // double phi = std::atan2(ClusY->at(j), ClusX->at(j));
                         double phi = ClusPhi->at(j);
