@@ -58,7 +58,7 @@ void angularPlot1D (TH1D* const histo, std::vector<std::string> method, const st
     gStyle -> SetLegendTextSize(.019);
     lg->Draw("same");
     // gPad -> SetLogy();
-    can1 -> SaveAs(Form("../External/zFindingPlots/%s.png", fileTitle.c_str()));
+    can1 -> SaveAs(Form("../../External/zFindingPlots/%s.png", fileTitle.c_str()));
 }
 
 void angularPlot2D(TH2D *const h_dPhi_Z, std::vector<std::string> method, const std::string &fileTitle) {

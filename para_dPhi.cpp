@@ -15,7 +15,7 @@
 TH1 *h[100];
 TH1D *h_ZonOne[20];
 std::mutex m_mutex;
-int batch_number = 1000;   // 28147*8 = 
+int batch_number = 28147;   // 28147*8 = 225176
 int N = 1000;
 double range_min = -M_PI;
 double range_max = M_PI;
