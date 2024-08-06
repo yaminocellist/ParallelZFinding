@@ -14,13 +14,14 @@
 
 TH1 *h[100];
 TH1D *h_ZonOne[20];
+TH1D *h_CenonOne[14];
 std::mutex m_mutex;
-int batch_number = 28147;   // 28147*8 = 225176
+int batch_number = 50;   // 28147*8 = 225176
 int N = 1000;
 double range_min = -M_PI;
 double range_max = M_PI;
 double bin_width = (range_max - range_min) / N;
-TH1D *h_all_dPhi = new TH1D("", "", N, range_min, range_max);
+TH1D *h_dPhi_nomix = new TH1D("", "", N, range_min, range_max);
 
 void dPhiAccumulator (int id, std::vector<int> index, std::vector<double> MBD_true_z, std::vector<double> MBD_cen, TBranch *branch11, TBranch* branch16, std::vector<float>* ClusPhi, std::vector<int>* ClusLayer) {
     double phi, dPhi, phi_0, phi_1;
@@ -49,12 +50,16 @@ void dPhiAccumulator (int id, std::vector<int> index, std::vector<double> MBD_tr
                 dPhi = Phi0[k] - Phi1[l];
                 if (dPhi > M_PI)    dPhi -= 2 * M_PI;
                 if (dPhi < -M_PI)   dPhi += 2 * M_PI;
-                h_all_dPhi->Fill(dPhi);
+                h_dPhi_nomix->Fill(dPhi);
             }
         }
         Phi0.clear();   Phi1.clear();
     }
     lock.unlock();
+}
+
+void dPhi_in_bins_of_Centrality_ver1 () {
+
 }
 
 void testFitter_ver2 (int id) {
@@ -175,14 +180,23 @@ int main(int argc, char* argv[]) {
 
     ROOT::EnableThreadSafety();
     // Use 'sysctl -n hw.logicalcpu' to determine max number of threads:
-    std::thread thsafe[8];
-    std::cout<<"multi-thready safe:"<<std::endl;
-    for(int i = 0; i < 8; ++i)     thsafe[i]= std::thread(dPhiAccumulator,i,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch16,ClusPhi,ClusLayer);
-    for(int i = 0; i < 8; ++i)     thsafe[i].join();
+    if (method == "nomix") {
+        std::thread thsafe[8];
+        std::cout<<"multi-thready safe:"<<std::endl;
+        for(int i = 0; i < 8; ++i)     thsafe[i]= std::thread(dPhiAccumulator,i,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch16,ClusPhi,ClusLayer);
+        for(int i = 0; i < 8; ++i)     thsafe[i].join();
+        angularPlot1D(h_dPhi_nomix, sub_options, "dPhi of unmixed");
 
-    angularPlot1D(h_all_dPhi, sub_options, "dPhi of unmixed");
+        TFile* file = TFile::Open("dPhi.root", "UPDATE");
+        if (!file || file -> IsZombie()) {
+            std::cerr << "You messed up!" << std::endl;
+            exit(1);
+        }
+        h_dPhi_nomix -> Write("nomix", TObject::kOverwrite);
+    }
+
     // TCanvas *c1 = new TCanvas("c1", "dPhi Histogram", 1920, 1056);
-    // h_all_dPhi -> Draw();
+    // h_dPhi_nomix -> Draw();
     // c1->Update();    c1->Modified();
 
     // Stop the stopwatch and print the runtime:
