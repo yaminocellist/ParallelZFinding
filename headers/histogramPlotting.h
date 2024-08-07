@@ -543,7 +543,7 @@ void ArrayPlot1D_Rescale (const std::vector<TH1D*>& h, std::vector<std::string> 
     // h[0]->Draw("HIST");
     h[0]->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
 
-    can1 -> SaveAs(Form("../External/zFindingPlots/%s.png", fileTitle.c_str()));
+    can1 -> SaveAs(Form("../../External/zFindingPlots/%s.png", fileTitle.c_str()));
 }
 
 void ArrayPlot1D_Rescale_ver2 (const std::vector<TH1D*>& h, std::vector<std::string> method, const std::string &fileTitle) {

@@ -23,11 +23,10 @@ double range_max = M_PI;
 double bin_width = (range_max - range_min) / N;
 TH1D *h_dPhi_nomix = new TH1D("", "", N, range_min, range_max);
 
-void dPhiAccumulator (int id, std::vector<int> index, std::vector<double> MBD_true_z, std::vector<double> MBD_cen, TBranch *branch11, TBranch* branch16, std::vector<float>* ClusPhi, std::vector<int>* ClusLayer) {
+void dPhiAccumulator (int id, std::vector<int> index, std::vector<double> MBD_cen, TBranch *branch11, TBranch* branch16, std::vector<float>* ClusPhi, std::vector<int>* ClusLayer) {
     double phi, dPhi, phi_0, phi_1;
     std::vector<double> Phi0, Phi1;
-    Phi0.reserve(ClusPhi->size());
-    Phi1.reserve(ClusPhi->size());
+    
     int local_index;
     std::unique_lock<std::mutex> lock(m_mutex);
     for (int i = 0; i < batch_number; i++) {
@@ -36,6 +35,8 @@ void dPhiAccumulator (int id, std::vector<int> index, std::vector<double> MBD_tr
         // std::cout << MBD_true_z[local_index] << std::endl;
         // std::cout << id << ", " << local_index << std::endl;
         // std::cout << id << ", " << local_index << ", " << index[local_index] << ", " << MBD_true_z[local_index] << ", " << MBD_cen[local_index] << ", " << ClusPhi->size() << ", " << ClusLayer->size() << std::endl;
+        Phi0.reserve(ClusPhi->size());
+        Phi1.reserve(ClusPhi->size());
         for (int j = 0; j < ClusPhi->size(); j++) {
             phi = ClusPhi->at(j);
             if (ClusLayer->at(j) == 3 || ClusLayer->at(j) == 4) {
@@ -58,8 +59,43 @@ void dPhiAccumulator (int id, std::vector<int> index, std::vector<double> MBD_tr
     lock.unlock();
 }
 
-void dPhi_in_bins_of_Centrality_ver1 () {
+void dPhi_in_bins_of_Centrality_ver1 (int id, int target, std::vector<int> index, std::vector<double> MBD_true_z, std::vector<double> MBD_cen, TBranch *branch11, TBranch* branch16, std::vector<float>* ClusPhi, std::vector<int>* ClusLayer) {
+    h_CenonOne[id] = new TH1D(Form("dPhi of %f to %f", static_cast<double>(id)*0.05, static_cast<double>(id + 1)*0.05), Form("dPhi of %f to %f;dPhi;# of counts", static_cast<double>(id)*0.05, static_cast<double>(id + 1)*0.05), N, range_min, range_max);
+    double phi, dPhi, phi_0, phi_1;
+    std::vector<double> Phi0, Phi1;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    double cen_lower_range  = static_cast<double>(id)*0.05;
+    double cen_higher_range = static_cast<double>(id+1)*0.05;
+    for (int i = 0; i < target; i++) {
+        if (MBD_cen[i] >= cen_lower_range && MBD_cen[i] <= cen_higher_range) {
+            branch16->GetEntry(index[i]);   // ClusPhi;
+            branch11->GetEntry(index[i]);   // ClusLayer;
+            Phi0.reserve(ClusPhi->size());  Phi1.reserve(ClusPhi->size());
+            for (int j = 0; j < ClusPhi->size(); j++) {
+                double phi = ClusPhi->at(j);
+                if (ClusLayer->at(j) == 3 || ClusLayer->at(j) == 4) {
+                    Phi0.push_back(phi);
+                }
+                else {
+                    Phi1.push_back(phi);
+                }
+            }
 
+            for (int k = 0; k < Phi0.size(); k++) {
+                for (int l = 0; l < Phi1.size(); l++) {
+                    dPhi = Phi0[k] - Phi1[l];
+                    if (dPhi > M_PI)    dPhi = dPhi - 2*M_PI;
+                    if (dPhi < -M_PI)   dPhi = dPhi + 2*M_PI;
+                    h_CenonOne[id] -> Fill(dPhi);
+                }
+            }
+
+            Phi0.clear();   Phi1.clear();
+        }
+    
+        
+    }
+    lock.unlock();
 }
 
 void testFitter_ver2 (int id) {
@@ -178,12 +214,13 @@ int main(int argc, char* argv[]) {
     // if (sub_options[0] == "dPhiMix")     INTTMixingEvent(tree, filePath, sub_options);
     // if (sub_options[0] == "dEta")        INTTdEtaAnalysis(tree, filePath, sub_options);
 
+    int target = std::stoi(sub_options[1]) > event.size() ? event.size() : std::stoi(sub_options[1]);
     ROOT::EnableThreadSafety();
     // Use 'sysctl -n hw.logicalcpu' to determine max number of threads:
     if (method == "nomix") {
         std::thread thsafe[8];
         std::cout<<"multi-thready safe:"<<std::endl;
-        for(int i = 0; i < 8; ++i)     thsafe[i]= std::thread(dPhiAccumulator,i,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch16,ClusPhi,ClusLayer);
+        for(int i = 0; i < 8; ++i)     thsafe[i]= std::thread(dPhiAccumulator,i,std::cref(index),std::cref(MBD_cen),branch11,branch16,ClusPhi,ClusLayer);
         for(int i = 0; i < 8; ++i)     thsafe[i].join();
         angularPlot1D(h_dPhi_nomix, sub_options, "dPhi of unmixed");
 
@@ -194,7 +231,18 @@ int main(int argc, char* argv[]) {
         }
         h_dPhi_nomix -> Write("nomix", TObject::kOverwrite);
     }
+    else if (sub_options[0] == "perCen") {
+        std::thread thsafe[14];
+        std::cout << "safe dPhi of different centralities" << std::endl;
+        for (int i = 0; i < 14; i++)
+            thsafe[i] = std::thread(dPhi_in_bins_of_Centrality_ver1,i,target,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch16,ClusPhi,ClusLayer);
 
+        for (int i = 0; i < 14; i++)
+            thsafe[i].join();
+
+        std::vector<TH1D*> h(h_CenonOne, h_CenonOne + 14);
+        ArrayPlot1D_Rescale(h, sub_options, "dPhi_per_centralities_rescale");
+    }
     // TCanvas *c1 = new TCanvas("c1", "dPhi Histogram", 1920, 1056);
     // h_dPhi_nomix -> Draw();
     // c1->Update();    c1->Modified();
