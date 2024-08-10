@@ -92,8 +92,44 @@ void dPhi_in_bins_of_Centrality_ver1 (int id, int target, std::vector<int> index
 
             Phi0.clear();   Phi1.clear();
         }
-    
-        
+    }
+    lock.unlock();
+}
+
+void dPhi_in_bins_of_Z_vtx_ver1 (int id, int target, std::vector<int> index, std::vector<double> MBD_true_z, std::vector<double> MBD_cen, TBranch *branch11, TBranch* branch16, std::vector<float>* ClusPhi, std::vector<int>* ClusLayer) {
+    h_ZonOne[id] = new TH1D(Form("dPhi of %f to %f", static_cast<double>(id)*0.05, static_cast<double>(id + 1)*0.05), Form("dPhi of %f to %f;dPhi;# of counts", static_cast<double>(id)*0.05, static_cast<double>(id + 1)*0.05), N, range_min, range_max);
+    double phi, dPhi, phi_0, phi_1;
+    std::vector<double> Phi0, Phi1;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    double z_lower_range  = -6 - static_cast<double>(id);
+    double z_higher_range = -5 - static_cast<double>(id);
+    h_ZonOne[id] = new TH1D(Form("dPhi of %1.0f to %1.0f", z_lower_range, z_higher_range), Form("dPhi of %1.0f to %1.0f;dPhi;# of counts", z_lower_range, z_higher_range), N, range_min, range_max);
+    for (int i = 0; i < target; i++) {
+        if (MBD_true_z[i] >= z_lower_range && MBD_true_z[i] <= z_higher_range) {
+            branch16->GetEntry(index[i]);   // ClusPhi;
+            branch11->GetEntry(index[i]);   // ClusLayer;
+            Phi0.reserve(ClusPhi->size());  Phi1.reserve(ClusPhi->size());
+            for (int j = 0; j < ClusPhi->size(); j++) {
+                double phi = ClusPhi->at(j);
+                if (ClusLayer->at(j) == 3 || ClusLayer->at(j) == 4) {
+                    Phi0.push_back(phi);
+                }
+                else {
+                    Phi1.push_back(phi);
+                }
+            }
+
+            for (int k = 0; k < Phi0.size(); k++) {
+                for (int l = 0; l < Phi1.size(); l++) {
+                    dPhi = Phi0[k] - Phi1[l];
+                    if (dPhi > M_PI)    dPhi = dPhi - 2*M_PI;
+                    if (dPhi < -M_PI)   dPhi = dPhi + 2*M_PI;
+                    h_ZonOne[id] -> Fill(dPhi);
+                }
+            }
+
+            Phi0.clear();   Phi1.clear();
+        }
     }
     lock.unlock();
 }
@@ -242,6 +278,18 @@ int main(int argc, char* argv[]) {
 
         std::vector<TH1D*> h(h_CenonOne, h_CenonOne + 14);
         ArrayPlot1D_Rescale(h, sub_options, "dPhi_per_centralities_rescale");
+    }
+    else if (sub_options[0] == "perZ") {
+        std::thread thsafe[20];
+        std::cout << "safe dPhi of different centralities" << std::endl;
+        for (int i = 0; i < 20; i++)
+            thsafe[i] = std::thread(dPhi_in_bins_of_Z_vtx_ver1,i,target,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch16,ClusPhi,ClusLayer);
+
+        for (int i = 0; i < 20; i++)
+            thsafe[i].join();
+
+        std::vector<TH1D*> h(h_ZonOne, h_ZonOne + 20);
+        ArrayPlot1D_Rescale_ver2(h, sub_options, "dPhi_per_Z_vtx_rescale");
     }
     // TCanvas *c1 = new TCanvas("c1", "dPhi Histogram", 1920, 1056);
     // h_dPhi_nomix -> Draw();
