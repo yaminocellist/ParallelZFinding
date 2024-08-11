@@ -11,6 +11,7 @@
 #include "TApplication.h"
 #include <thread>
 #include <mutex>
+#include <chrono>
 
 TH1 *h[100];
 TH1D *h_ZonOne[20];
@@ -184,6 +185,10 @@ void testFitter_ver2 (int id) {
 int main(int argc, char* argv[]) {
     // Start the stopwatch:
     TStopwatch timer;   timer.Start();
+    // Get and print the current PC time
+    auto now = std::chrono::system_clock::now();
+    auto now_c = std::chrono::system_clock::to_time_t(now);
+    std::cout << "Run started at: " << std::put_time(std::localtime(&now_c), "%Y-%m-%d %H:%M:%S") << std::endl;
     TApplication theApp("App", &argc, argv);
     std::vector<std::string> method;
     // <METHOD> <TARGET> <CEN_LOW> <CEN_HIGH> <Z_LOW> <Z_HIGH>

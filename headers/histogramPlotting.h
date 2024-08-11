@@ -418,12 +418,12 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     max_unmixed = hSignal->GetBinContent(hSignal->GetMaximumBin());
 
     if (max_unmixed > max_mixed) {
-        hSignal -> GetYaxis() -> SetRangeUser(max_unmixed*0.9, max_unmixed*1.1);
-        hBackground -> GetYaxis() -> SetRangeUser(max_unmixed*0.9, max_unmixed*1.1);
+        hSignal -> GetYaxis() -> SetRangeUser(max_unmixed*0.85, max_unmixed*1.1);
+        hBackground -> GetYaxis() -> SetRangeUser(max_unmixed*0.85, max_unmixed*1.1);
     }   
     else {
-        hSignal -> GetYaxis() -> SetRangeUser(max_mixed*0.9, max_mixed*1.1);
-        hBackground -> GetYaxis() -> SetRangeUser(max_mixed*0.9, max_mixed*1.1);
+        hSignal -> GetYaxis() -> SetRangeUser(max_mixed*0.85, max_mixed*1.1);
+        hBackground -> GetYaxis() -> SetRangeUser(max_mixed*0.85, max_mixed*1.1);
     }                      
     hBackground -> Draw("SAME");
     hBackground -> SetLineColor(2);
