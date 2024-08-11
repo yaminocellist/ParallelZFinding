@@ -155,7 +155,6 @@ void INTTMixingEvent (TTree *EventTree, string filePath, std::vector<string> opt
     TH1D *h_mixed_dPhi   = new TH1D("dPhi of mixed", Form("dPhi of %d mixed events;dPhi value;# of counts", target), N, range_min, range_max);
 
     // dPhi of unmixed events:
-    
     for (int i = 0; i < target; i++) {
         branch16->GetEntry(index[i]);   branch11->GetEntry(index[i]);
         event_Phi0.push_back(std::vector <double>());   event_Phi1.push_back(std::vector <double>());

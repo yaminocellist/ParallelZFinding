@@ -328,7 +328,7 @@ void doublePlot (TH1D* const hBackground, TH1D* const hSignal, std::vector<std::
 }
 
 void backgroundCancelling (TH1D* const hBackground, TH1D* const hSignal, std::vector<std::string> method, Int_t const & target) {
-    TCanvas *can1 = new TCanvas("c1","c1",0,50,1920,1056);
+    TCanvas *can1 = new TCanvas("csub","csub",0,50,1920,1056);
     can1 -> Divide(1, 2);
     can1 -> cd(1);
     hBackground -> Draw();
@@ -381,7 +381,7 @@ void backgroundCancelling (TH1D* const hBackground, TH1D* const hSignal, std::ve
     // double Ratio = peak/events;
     
     // hDiff -> SetTitle(Form("Subtracted Signal for %5.0f Events", events));
-    hDiff -> SetTitle("Background Subtraced dPhi");
+    hDiff -> SetTitle("Background Subtracted dPhi");
     gStyle->SetEndErrorSize(6);
     gStyle->SetErrorX(0.5);
     
@@ -392,6 +392,86 @@ void backgroundCancelling (TH1D* const hBackground, TH1D* const hSignal, std::ve
     TLine *l = new TLine(-2,0,2,0);
 	l -> Draw("same"); 
     l -> SetLineColor(kGreen);
+
+    can1 -> SaveAs("../../External/zFindingPlots/dPhi_subtraction.png");
+}
+
+void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, std::vector<std::string> method, Int_t const & target) {
+    TCanvas *can1 = new TCanvas("csub","csub",0,50,1920,1056);
+    can1 -> Divide(1, 2);
+    can1 -> cd(1);
+    double phi_range_low = -2.4, phi_range_high = -1.8;
+    int bin_range_low = hBackground->FindBin(phi_range_low), bin_range_high = hBackground->FindBin(phi_range_high);
+    double max_unmixed = -1, max_mixed = -1, current_binContent;
+    for (int bin = bin_range_low; bin <= bin_range_high; bin++) {
+        current_binContent = hSignal->GetBinContent(bin);
+        if (max_unmixed < current_binContent)  max_unmixed = current_binContent;
+        current_binContent = hBackground->GetBinContent(bin);
+        if (max_mixed < current_binContent)  max_mixed = current_binContent;
+    }
+    hSignal -> Add(hSignal, max_mixed/max_unmixed - 1);
+    hSignal -> Draw("SAME");
+    hSignal -> GetXaxis()->SetLabelSize(0.06);
+    hSignal -> SetTitle(Form("%d events, -%2.2fcm < z vtx < -%2.2fcm, %1.2f < centrality < %1.2f", target, std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
+
+    max_mixed   = hBackground->GetBinContent(hBackground->GetMaximumBin());
+    max_unmixed = hSignal->GetBinContent(hSignal->GetMaximumBin());
+
+    if (max_unmixed > max_mixed) {
+        hSignal -> GetYaxis() -> SetRangeUser(max_unmixed*0.9, max_unmixed*1.1);
+        hBackground -> GetYaxis() -> SetRangeUser(max_unmixed*0.9, max_unmixed*1.1);
+    }   
+    else {
+        hSignal -> GetYaxis() -> SetRangeUser(max_mixed*0.9, max_mixed*1.1);
+        hBackground -> GetYaxis() -> SetRangeUser(max_mixed*0.9, max_mixed*1.1);
+    }                      
+    hBackground -> Draw("SAME");
+    hBackground -> SetLineColor(2);
+
+    TLegend *lg = new TLegend(0.12, 0.8, 0.33, 0.9);
+    lg -> AddEntry(hSignal, "Unmixed Events' dPhi", "l");
+    lg -> AddEntry(hBackground, "Mixed Events' dPhi", "l");
+    gStyle -> SetLegendTextSize(.043);
+    lg->Draw("same");
+    can1 -> cd(2);
+    double centralPeak = 0.05;
+    double N1 = hBackground -> Integral(hBackground->FindFixBin(-M_PI), hBackground->FindFixBin(-centralPeak), "") + 
+                hBackground -> Integral(hBackground->FindFixBin(centralPeak), hBackground->FindFixBin(M_PI), "");
+    double N2 = hSignal -> Integral(hSignal->FindFixBin(-M_PI), hSignal->FindFixBin(-centralPeak), "") + 
+                hSignal -> Integral(hSignal->FindFixBin(centralPeak), hSignal->FindFixBin(M_PI), "");
+    double N  = N2/N1;
+
+    TH1D* hNormalized = (TH1D*) hBackground->Clone("Normalized hBackground");
+    hNormalized -> Add(hBackground, N-1);
+    TH1D* hDiff = (TH1D*) hSignal->Clone("Background Subtracted Signal");
+    hDiff -> Add(hNormalized, -1);
+    hDiff -> Sumw2();
+    hDiff -> Draw("HIST SAME");
+    hDiff -> Draw("e1psame");
+    hDiff -> GetXaxis() -> SetTitle("dPhi");
+    hDiff -> GetXaxis() -> CenterTitle(true);
+    hDiff -> GetXaxis() -> SetTitleSize(.05);
+    hDiff->GetXaxis()->SetLabelSize(0.06);
+    hDiff -> SetFillColor(kYellow - 7);
+    hDiff -> SetFillStyle(1001);
+    //hDiff -> GetXaxis() -> SetRange(hDiff -> FindFixBin(-0.5),hDiff -> FindFixBin(0.5));
+    double peak  = hDiff -> Integral(hDiff->FindFixBin(-centralPeak), hDiff->FindFixBin(centralPeak), "");
+    // double Ratio = peak/events;
+    
+    // hDiff -> SetTitle(Form("Subtracted Signal for %5.0f Events", events));
+    hDiff -> SetTitle("Background Subtracted dPhi");
+    gStyle->SetEndErrorSize(6);
+    gStyle->SetErrorX(0.5);
+    
+    gStyle -> SetTitleFont(100,"t");
+    gStyle -> SetTitleSize(0.065,"t");
+
+    //gPad -> SetLogy(1);
+    TLine *l = new TLine(-2,0,2,0);
+	l -> Draw("same"); 
+    l -> SetLineColor(kGreen);
+
+    can1 -> SaveAs(Form("../../External/zFindingPlots/dPhi_mixedsubtract_%2.2f_%2.2f_%1.2f_%1.2f.png", std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
 }
 
 void ArrayPlot1D_Logy (const std::vector<TH1D*>& h, std::vector<std::string> method, const std::string &fileTitle) {
