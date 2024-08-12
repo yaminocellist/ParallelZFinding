@@ -397,7 +397,8 @@ void backgroundCancelling (TH1D* const hBackground, TH1D* const hSignal, std::ve
 }
 
 void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, std::vector<std::string> method, Int_t const & target) {
-    TCanvas *can1 = new TCanvas("csub","csub",0,50,1920,1056);
+    // TCanvas *can1 = new TCanvas("csub","csub",0,50,1920,1056);
+    TCanvas *can1 = new TCanvas("csub","csub",0,50,2560,1440);
     can1 -> Divide(1, 2);
     can1 -> cd(1);
     double phi_range_low = -2.4, phi_range_high = -1.8;
@@ -418,12 +419,12 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     max_unmixed = hSignal->GetBinContent(hSignal->GetMaximumBin());
 
     if (max_unmixed > max_mixed) {
-        hSignal -> GetYaxis() -> SetRangeUser(max_unmixed*0.85, max_unmixed*1.1);
-        hBackground -> GetYaxis() -> SetRangeUser(max_unmixed*0.85, max_unmixed*1.1);
+        hSignal -> GetYaxis() -> SetRangeUser(max_unmixed*0.8, max_unmixed*1.1);
+        hBackground -> GetYaxis() -> SetRangeUser(max_unmixed*0.8, max_unmixed*1.1);
     }   
     else {
-        hSignal -> GetYaxis() -> SetRangeUser(max_mixed*0.85, max_mixed*1.1);
-        hBackground -> GetYaxis() -> SetRangeUser(max_mixed*0.85, max_mixed*1.1);
+        hSignal -> GetYaxis() -> SetRangeUser(max_mixed*0.8, max_mixed*1.1);
+        hBackground -> GetYaxis() -> SetRangeUser(max_mixed*0.8, max_mixed*1.1);
     }                      
     hBackground -> Draw("SAME");
     hBackground -> SetLineColor(2);

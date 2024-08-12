@@ -656,13 +656,6 @@ void INTTdEtaAnalysis (TTree *EventTree, string filePath, std::vector<string> op
                 // h_dPhi_cen     -> Fill(dPhi, cen);
             }
         }
-
-        // for (int k = 0; k < Eta0.size(); k++) {
-        //     if (Eta0[k] < 2)    h_unmixed_dEta -> Fill(Eta0[k]);
-        // }
-        // for (int l = 0; l < Eta1.size(); l++) {
-        //     if (Eta1[l] < 2)    h_unmixed_dEta -> Fill(Eta1[l]);
-        // }
         Eta0.clear();   Eta1.clear();
     }
     angularPlot1D(h_unmixed_dEta, options, "dEta of unmixed");
