@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(Para_dPhi)
+project(Para_Project)
 
 find_package(nlohmann_json 3.11.3 REQUIRED)
 find_package(ROOT REQUIRED)
@@ -21,7 +21,15 @@ target_compile_options(Para_dPhi PUBLIC
     -stdlib=libc++
 )
 
-
+add_executable(Para_dEta para_dEta.cpp)
+target_link_libraries(Para_dEta PUBLIC ${ROOT_LIBRARIES})
+target_include_directories(Para_dEta PUBLIC ${ROOT_INCLUDE_DIRS})
+target_compile_options(Para_dEta PUBLIC
+    -std=c++17
+    -m64
+    -pthread
+    -stdlib=libc++
+)
 
 # root-config --libs
 # root-config --cflags

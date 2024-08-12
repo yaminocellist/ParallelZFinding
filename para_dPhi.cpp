@@ -26,7 +26,7 @@ TH1D *h_dPhi_nomix = new TH1D("", "", N, range_min, range_max);
 TH1D *h_Background_dPhi = new TH1D("", "", N, range_min, range_max);
 
 void dPhiAccumulator (int id, std::vector<int> index, std::vector<double> MBD_cen, TBranch *branch11, TBranch* branch16, std::vector<float>* ClusPhi, std::vector<int>* ClusLayer) {
-    double phi, dPhi, phi_0, phi_1;
+    double phi, dPhi;
     std::vector<double> Phi0, Phi1;
     
     int local_index;
@@ -136,12 +136,12 @@ void dPhi_in_bins_of_Z_vtx_ver1 (int id, int target, std::vector<int> index, std
     lock.unlock();
 }
 
-void dPhi_mixing (int id, int batch_size, const std::vector<std::vector<double>>& event_Phi0, const std::vector<std::vector<double>>& event_Phi1) {
+void dPhi_mixing (int id, int chunck_size, const std::vector<std::vector<double>>& event_Phi0, const std::vector<std::vector<double>>& event_Phi1) {
     int local_index;
     double dPhi;
     std::unique_lock<std::mutex> lock(m_mutex);
-    for (int i = 0; i < batch_size; i++) {
-        local_index = i + batch_size*id;
+    for (int i = 0; i < chunck_size; i++) {
+        local_index = i + chunck_size*id;
         for (int j = local_index; j < event_Phi1.size(); j++) {
             // Process pairs from event_Phi0[i] and event_Phi1[j]
             for (double phi0 : event_Phi0[local_index]) {
