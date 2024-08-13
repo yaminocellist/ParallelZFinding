@@ -4,8 +4,7 @@
 #include "TStyle.h"
 
 void angularPlot1D (TH1D* const histo, std::vector<std::string> method, const std::string &fileTitle) {
-    if (isInteger(method[1]))   int lowerRange = stoi(method[1]);
-    if (isInteger(method[2]))   int upperRange = stoi(method[2]);
+    std::cout << histo->GetXaxis()->GetXmin() << std::endl;
     int maxBin = histo->GetMaximumBin();
     double maxBinCenter = histo->GetBinCenter(maxBin);
     int maxEntry = histo -> GetBinContent(maxBin);
@@ -24,53 +23,132 @@ void angularPlot1D (TH1D* const histo, std::vector<std::string> method, const st
     histo -> GetYaxis() -> SetTitleOffset(.8);
     histo -> GetYaxis() -> CenterTitle(true);
 
-    double pi = TMath::Pi();
-    int bin_min = 1;                   // The first bin
-    int bin_max = histo->GetNbinsX();  // The last bin
+    if (histo->GetXaxis()->GetXmin() < -M_PI) {
+        double two_pi = TMath::Pi()*2;
+        int bin_min = 1;                   // The first bin
+        int bin_max = histo->GetNbinsX();  // The last bin
 
-    // Calculate bin positions for each label
-    int bin_pi   = bin_max;
-    int bin_0    = bin_min + (bin_max - bin_min)/2;
-    int binPi_2  = bin_min + 3*(bin_max - bin_min)/4;
-    int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
+        // Calculate bin positions for each label
+        int bin_pi   = bin_max;
+        int bin_0    = bin_min + (bin_max - bin_min)/2;
+        int binPi_2  = bin_min + 3*(bin_max - bin_min)/4;
+        int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
 
-    // // Set the labels at the calculated positions
-    // histo->GetXaxis()->SetBinLabel(bin_0, "0");
-    // histo->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
-    // histo->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
-    // // histo->GetXaxis()->SetBinLabel(bin_3pi_4, "#frac{3#pi}{4}");
-    // histo->GetXaxis()->SetBinLabel(bin_pi, "#pi");
-    // histo->GetXaxis()->SetBinLabel(bin_min, "-#pi");
-    // histo->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
-    // // histo->GetXaxis()->SetBinLabel(bin_max - 3*(bin_max - bin_min)/4, "-#frac{3#pi}{4}");
-    // // histo->GetXaxis()->SetBinLabel(bin_max - (bin_max - bin_min)/2, "-#frac{#pi}{2}");
-    // // histo->GetXaxis()->SetBinLabel(bin_max - (bin_max - bin_min)/4, "-#frac{#pi}{4}");
+        // Set the labels at the calculated positions
+        histo->GetXaxis()->SetBinLabel(bin_0, "0");
+        histo->GetXaxis()->SetBinLabel(bin_pi_2, "-#pi");
+        histo->GetXaxis()->SetBinLabel(binPi_2, "#pi");
+        histo->GetXaxis()->SetBinLabel(bin_pi, "2#pi");
+        histo->GetXaxis()->SetBinLabel(bin_min, "-2#pi");
+        histo->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
 
-    // // Ensure the custom labels are displayed by setting the number of divisions
-    // histo->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
-    // histo->GetXaxis()->SetLabelSize(0.04);
+        // Ensure the custom labels are displayed by setting the number of divisions
+        histo->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
+        histo->GetXaxis()->SetLabelSize(0.04);
+    }
+    else {
+        double pi = TMath::Pi();
+        int bin_min = 1;                   // The first bin
+        int bin_max = histo->GetNbinsX();  // The last bin
+
+        // Calculate bin positions for each label
+        int bin_pi   = bin_max;
+        int bin_0    = bin_min + (bin_max - bin_min)/2;
+        int binPi_2  = bin_min + 3*(bin_max - bin_min)/4;
+        int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
+
+        // Set the labels at the calculated positions
+        histo->GetXaxis()->SetBinLabel(bin_0, "0");
+        histo->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
+        histo->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
+        // histo->GetXaxis()->SetBinLabel(bin_3pi_4, "#frac{3#pi}{4}");
+        histo->GetXaxis()->SetBinLabel(bin_pi, "#pi");
+        histo->GetXaxis()->SetBinLabel(bin_min, "-#pi");
+        histo->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+        // histo->GetXaxis()->SetBinLabel(bin_max - 3*(bin_max - bin_min)/4, "-#frac{3#pi}{4}");
+        // histo->GetXaxis()->SetBinLabel(bin_max - (bin_max - bin_min)/2, "-#frac{#pi}{2}");
+        // histo->GetXaxis()->SetBinLabel(bin_max - (bin_max - bin_min)/4, "-#frac{#pi}{4}");
+
+        // Ensure the custom labels are displayed by setting the number of divisions
+        histo->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
+        histo->GetXaxis()->SetLabelSize(0.04);
+    }
+    
 
     TLine *l = new TLine(0, 0, 0, maxEntry);
 	l -> Draw("same"); 
     l -> SetLineColor(kRed);
-    TLegend *lg = new TLegend(0.12, 0.8, 0.43, 0.9);
+    TLegend *lg = new TLegend(0.12, 0.82, 0.46, 0.9);
     lg -> AddEntry(histo, "-250 <= MBD_z_vtx <= -50 mm, MBD_centrality <= 0.70", "f");
-    gStyle -> SetLegendTextSize(.019);
+    gStyle -> SetLegendTextSize(.022);
     lg->Draw("same");
     // gPad -> SetLogy();
     can1 -> SaveAs(Form("../../External/zFindingPlots/%s.png", fileTitle.c_str()));
 }
 
-void angularPlot2D(TH2D *const h_dPhi_Z, std::vector<std::string> method, const std::string &fileTitle) {
+void angularPlot2D(TH2D *const h2D, std::vector<std::string> method, const std::string &fileTitle) {
     TCanvas *can = new TCanvas("c2d","c2d",0,50,1920,1056);
-    h_dPhi_Z -> SetTitle(Form("All dPhi values (no event mixed) with %d bins of Z vtx", h_dPhi_Z->GetNbinsY()));
-    h_dPhi_Z -> Draw("colz");
-    h_dPhi_Z -> GetXaxis() -> CenterTitle(true);
-    h_dPhi_Z -> GetYaxis() -> CenterTitle(true);
-    h_dPhi_Z -> GetXaxis() -> SetTitleOffset(1.4);   h_dPhi_Z -> GetYaxis() -> SetTitleOffset(1.4);
+    // h2D -> SetTitle(Form("All dPhi values (no event mixed) with %d bins of Z vtx", h2D->GetNbinsY()));
+    // h2D -> Draw("lego2");
+
+    if (h2D->GetXaxis()->GetXmin() < -M_PI) {
+        double two_pi = TMath::Pi()*2;
+        int bin_min = 1;                   // The first bin
+        int bin_max = h2D->GetNbinsX();  // The last bin
+
+        // Calculate bin positions for each label
+        int bin_pi   = bin_max;
+        int bin_0    = bin_min + (bin_max - bin_min)/2;
+        int binPi_2  = bin_min + 3*(bin_max - bin_min)/4;
+        int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
+
+        // Set the labels at the calculated positions
+        h2D->GetXaxis()->SetBinLabel(bin_0, "0");
+        h2D->GetXaxis()->SetBinLabel(bin_pi_2, "-#pi");
+        h2D->GetXaxis()->SetBinLabel(binPi_2, "#pi");
+        h2D->GetXaxis()->SetBinLabel(bin_pi, "2#pi");
+        h2D->GetXaxis()->SetBinLabel(bin_min, "-2#pi");
+        h2D->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+
+        // Ensure the custom labels are displayed by setting the number of divisions
+        h2D->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
+        h2D->GetXaxis()->SetLabelSize(0.04);
+    }
+    else {
+        double pi = TMath::Pi();
+        int bin_min = 1;                   // The first bin
+        int bin_max = h2D->GetNbinsX();  // The last bin
+
+        // Calculate bin positions for each label
+        int bin_pi   = bin_max;
+        int bin_0    = bin_min + (bin_max - bin_min)/2;
+        int binPi_2  = bin_min + 3*(bin_max - bin_min)/4;
+        int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
+
+        // Set the labels at the calculated positions
+        h2D->GetXaxis()->SetBinLabel(bin_0, "0");
+        h2D->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
+        h2D->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
+        // h2D->GetXaxis()->SetBinLabel(bin_3pi_4, "#frac{3#pi}{4}");
+        h2D->GetXaxis()->SetBinLabel(bin_pi, "#pi");
+        h2D->GetXaxis()->SetBinLabel(bin_min, "-#pi");
+        h2D->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+        // h2D->GetXaxis()->SetBinLabel(bin_max - 3*(bin_max - bin_min)/4, "-#frac{3#pi}{4}");
+        // h2D->GetXaxis()->SetBinLabel(bin_max - (bin_max - bin_min)/2, "-#frac{#pi}{2}");
+        // h2D->GetXaxis()->SetBinLabel(bin_max - (bin_max - bin_min)/4, "-#frac{#pi}{4}");
+
+        // Ensure the custom labels are displayed by setting the number of divisions
+        h2D->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
+        h2D->GetXaxis()->SetLabelSize(0.04);
+    }
+
+    h2D -> Draw("colz");
+    h2D -> GetXaxis() -> CenterTitle(true);
+    h2D -> GetYaxis() -> CenterTitle(true);
+    h2D -> GetXaxis() -> SetTitleOffset(1.4);   h2D -> GetYaxis() -> SetTitleOffset(1.4);
     can -> Modified();
     can -> Update();
-    can -> SaveAs(Form("../External/zFindingPlots/%s.png", fileTitle.c_str()));
+    can -> SaveAs(Form("../../External/zFindingPlots/%s.png", fileTitle.c_str()));
 }
 
 void angularPlot3D(TH2D * h_dPhi_Z, std::vector<std::string> method, const std::string &fileTitle) {

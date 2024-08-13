@@ -16,11 +16,14 @@ double range_min = -2*M_PI;
 double range_max = 2*M_PI;
 
 double bin_width = (range_max - range_min) / N;
-TH1D *h_dEta_nomix = new TH1D("", "", N, range_min, range_max);
+TH1D *h_dEta_nomix = new TH1D("dEta of no-mixing events", ";dEta;# of counts", N, range_min, range_max);
+TH2D *h_Eta_Z = new TH2D("Eta v.s. Z", "Eta distributions of all events;Eta Value;MBD Z VTX [cm]", N, range_min, range_max, 20, -25., -5.);
+TH2D *h_dEta_Z = new TH2D("dEta v.s. Z", ";dEta Value;MBD Z VTX [cm]", N, range_min, range_max, 20, -25., -5.);
+TH2D *h_dEta_cen = new TH2D("dEta v.s. centrality", ";dEta Value;Centrality", N, range_min, range_max, 14, .0, .7);
 TH1D *h_Background_dEta = new TH1D("", "", N, range_min, range_max);
 
-void dEtaNoMix (int id, int chunck_size, std::vector<int> index, std::vector<double> MBD_true_z, TBranch *branch11, TBranch* branch14,TBranch* branch15, std::vector<int>* ClusLayer, std::vector<float>* ClusZ, std::vector<float>* ClusR) {
-    double z_vtx, dZ, R, theta, eta, dEta;
+void dEtaNoMix (int id, int chunck_size, std::vector<int> index, std::vector<double> MBD_true_z, std::vector<double> MBD_cen, TBranch *branch11, TBranch* branch14,TBranch* branch15, std::vector<int>* ClusLayer, std::vector<float>* ClusZ, std::vector<float>* ClusR) {
+    double z_vtx, cen, dZ, R, theta, eta, dEta;
     std::vector<double> Eta0, Eta1;
     int local_index;
     // std::cout << chunck_size << std::endl;
@@ -32,12 +35,14 @@ void dEtaNoMix (int id, int chunck_size, std::vector<int> index, std::vector<dou
         branch14->GetEntry(index[local_index]);   // ClusZ;
         branch15->GetEntry(index[local_index]);   // ClusR;
         z_vtx = MBD_true_z[local_index];
+        cen = MBD_cen[local_index];
         for (int j = 0; j < ClusZ->size(); j++) {
             dZ       = ClusZ->at(j) - z_vtx;
             R        = ClusR->at(j);
             theta    = std::atan2(R, dZ);
             if (dZ >= 0)    eta = -std::log(std::tan(theta/2));
             if (dZ <  0)    eta = std::log(std::tan((M_PI - theta)/2));
+            // h_Eta_Z -> Fill(eta, z_vtx);
             if (ClusLayer->at(j) == 3 || ClusLayer->at(j) == 4) {
                 Eta0.push_back(eta);
             }
@@ -48,9 +53,9 @@ void dEtaNoMix (int id, int chunck_size, std::vector<int> index, std::vector<dou
         for (int k = 0; k < Eta0.size(); k++) {
             for (int l = 0; l < Eta1.size(); l++) {
                 dEta = Eta0[k] - Eta1[l];
-                h_dEta_nomix -> Fill(dEta);
-                // h_dPhi_Z       -> Fill(dPhi, fz);
-                // h_dPhi_cen     -> Fill(dPhi, cen);
+                // h_dEta_nomix -> Fill(dEta);
+                h_dEta_Z     -> Fill(dEta, z_vtx);
+                h_dEta_cen   -> Fill(dEta, cen);
             }
         }
         Eta0.clear();   Eta1.clear();
@@ -167,16 +172,22 @@ int main(int argc, char* argv[]) {
     branch31->SetAddress(&MBD_z_vtx);
 
     target = target > event.size() ? event.size() : target;
-    std::cout << target << "," << cen_low << "," << cen_high << "," << z_low << "," << z_high << std::endl;
+    std::cout << "Num of events: " << target << ", centrality greater than " << cen_low << ", smaller than " << cen_high << ", z vtx greater than " << z_low << ", smaller than " << z_high << std::endl;
     ROOT::EnableThreadSafety();
     if (method[0] == "nomix") {
         std::thread thsafe[8];
-        std::cout<<"multi-thready safe:"<<std::endl;
-        for(int i = 0; i < 8; ++i)     thsafe[i]= std::thread(dEtaNoMix,i,target/8,std::cref(index),std::cref(MBD_true_z),branch11,branch14,branch15,ClusLayer,ClusZ,ClusR);
+        std::cout<<"dEta without mixing:"<<std::endl;
+        for(int i = 0; i < 8; ++i)     thsafe[i]= std::thread(dEtaNoMix,i,target/8,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch14,branch15,ClusLayer,ClusZ,ClusR);
         for(int i = 0; i < 8; ++i)     thsafe[i].join();
 
-        save_histo_toRootFile(h_dEta_nomix, method, "dEta");
-        angularPlot1D(h_dEta_nomix, method, "dEta of unmixed");   
+        // save_histo_toRootFile(h_dEta_nomix, method, "dEta");
+        // h_dEta_nomix->SetTitle(Form("dEta of %d no mixing events", target));
+        // angularPlot1D(h_dEta_nomix, method, "dEta of unmixed");
+        // angularPlot2D(h_Eta_Z, method, "Eta v.s. Z distribution");
+        h_dEta_Z->SetTitle(Form("dEta v.s. MBD Z of %d no mixing events", target));
+        angularPlot2D(h_dEta_Z, method, "dEta v.s. Z distribution");
+        h_dEta_cen->SetTitle(Form("dEta v.s. MBD centrality of %d no mixing events", target));
+        angularPlot2D(h_dEta_cen, method, "dEta v.s. Centrality distribution");
     }
 
     // Stop the stopwatch and print the runtime:
