@@ -16,11 +16,34 @@ double range_min = -2*M_PI;
 double range_max = 2*M_PI;
 
 double bin_width = (range_max - range_min) / N;
+TH1D *h_Eta_diff = new TH1D("", "", N, range_min*1e9, range_max*1e9);
 TH1D *h_dEta_nomix = new TH1D("dEta of no-mixing events", ";dEta;# of counts", N, range_min, range_max);
 TH2D *h_Eta_Z = new TH2D("Eta v.s. Z", "Eta distributions of all events;Eta Value;MBD Z VTX [cm]", N, range_min, range_max, 20, -25., -5.);
 TH2D *h_dEta_Z = new TH2D("dEta v.s. Z", ";dEta Value;MBD Z VTX [cm]", N, range_min, range_max, 20, -25., -5.);
 TH2D *h_dEta_cen = new TH2D("dEta v.s. centrality", ";dEta Value;Centrality", N, range_min, range_max, 14, .0, .7);
 TH1D *h_Background_dEta = new TH1D("", "", N, range_min, range_max);
+
+void Eta_diff_gathering (int id, int chunck_size, std::vector<int> index, TBranch *branch11, TBranch* branch14,TBranch* branch15, TBranch* branch17, std::vector<int>* ClusLayer, std::vector<float>* ClusZ, std::vector<float>* ClusR, std::vector<float>* ClusEta) {
+    double z_vtx, cen, dZ, R, theta, eta, dEta;
+    int local_index;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    for (int i = 0; i < chunck_size; i++) {
+        local_index = i + chunck_size*id;
+        branch11->GetEntry(index[local_index]);   // ClusLayer;
+        branch14->GetEntry(index[local_index]);   // ClusZ;
+        branch15->GetEntry(index[local_index]);   // ClusR;
+        branch17->GetEntry(index[local_index]);   // ClusEta;
+        for (int j = 0; j < ClusZ->size(); j++) {
+            dZ       = ClusZ->at(j);
+            R        = ClusR->at(j);
+            theta    = std::atan2(R, dZ);
+            if (dZ >= 0)    eta = -std::log(std::tan(theta/2));
+            if (dZ <  0)    eta = std::log(std::tan((M_PI - theta)/2));
+            h_Eta_diff -> Fill(eta - ClusEta->at(j));
+        }
+    }
+    lock.unlock();
+}
 
 void dEtaNoMix (int id, int chunck_size, std::vector<int> index, std::vector<double> MBD_true_z, std::vector<double> MBD_cen, TBranch *branch11, TBranch* branch14,TBranch* branch15, std::vector<int>* ClusLayer, std::vector<float>* ClusZ, std::vector<float>* ClusR) {
     double z_vtx, cen, dZ, R, theta, eta, dEta;
@@ -188,6 +211,35 @@ int main(int argc, char* argv[]) {
         angularPlot2D(h_dEta_Z, method, "dEta v.s. Z distribution");
         h_dEta_cen->SetTitle(Form("dEta v.s. MBD centrality of %d no mixing events", target));
         angularPlot2D(h_dEta_cen, method, "dEta v.s. Centrality distribution");
+    }
+    else if (method[0] == "san") {
+        std::thread thsafe[8];
+        std::cout<<"Sanity Check:"<<std::endl;
+        for(int i = 0; i < 8; ++i)     thsafe[i]= std::thread(Eta_diff_gathering,i,target/8,std::cref(index),branch11,branch14,branch15,branch17,ClusLayer,ClusZ,ClusR,ClusEta);
+        for(int i = 0; i < 8; ++i)     thsafe[i].join();
+
+        h_Eta_diff->SetTitle(Form("Eta sanity check of %d no mixing events", target));
+        angularPlot1D(h_Eta_diff, method, "Eta sanity check");
+        int underflowBin = 0;
+int overflowBin = h_Eta_diff->GetNbinsX() + 1;
+
+// Check underflow bin
+double underflow = h_Eta_diff->GetBinContent(underflowBin);
+
+// Check overflow bin
+double overflow = h_Eta_diff->GetBinContent(overflowBin);
+
+if (underflow > 0) {
+    std::cout << "There are " << underflow << " entries in the underflow bin." << std::endl;
+}
+
+if (overflow > 0) {
+    std::cout << "There are " << overflow << " entries in the overflow bin." << std::endl;
+}
+
+if (underflow == 0 && overflow == 0) {
+    std::cout << "No entries outside the range." << std::endl;
+}
     }
 
     // Stop the stopwatch and print the runtime:
