@@ -742,3 +742,45 @@ void ArrayPlot1D_Rescale_ver2 (const std::vector<TH1D*>& h, std::vector<std::str
 
     can1 -> SaveAs(Form("../../External/zFindingPlots/%s.png", fileTitle.c_str()));
 }
+
+void ArrayPlot_dEta_1D_Logy (
+    const std::vector<TH1D*> &h,
+    const std::vector<std::string> &method,
+    const std::string &fileName
+) {
+    TCanvas *c1 = new TCanvas("c1dEta", "dPhi Histogram", 1920, 1056);
+    // h[0]->Draw("same");
+    // h[1]->Draw("same");   h[1]->SetLineColor(kGreen+2);
+    // h[2]->Draw("same");
+    // h[3]->Draw("same");
+    // h[4]->Draw("same");   h[4]->SetLineColor(2);
+    // h[5]->Draw("same");
+    // h[6]->Draw("same");
+    // h[7]->Draw("same");
+    // h[8]->Draw("same");
+    // h[9]->Draw("same");
+    // h[10]->Draw("same");  h[10]->SetLineColor(2);
+    // h[11]->Draw("same");
+    // h[12]->Draw("same");  h[12]->SetLineColor(kMagenta);
+    // h[13]->Draw("same");
+
+    int maxEntry = 0;
+    for (int i = 0; i < h.size(); i++) {
+            h[i]->Draw("same");
+            h[i]->GetXaxis()->CenterTitle(true);    h[i]->GetYaxis()->CenterTitle(true);
+            h[i]->SetLineWidth(3);
+            h[i]->SetLineColor(20+i);
+            int temp = h[i]->GetBinContent(h[i]->GetMaximumBin());
+            if (temp >= maxEntry)   maxEntry = temp;
+    }
+    for (int i = 0; i < h.size(); i++)
+        h[i]->GetYaxis()->SetRangeUser(1, maxEntry*1.2);
+    TLine *l = new TLine(0, 0, 0, maxEntry);
+	l -> Draw("same"); 
+    l -> SetLineColor(kRed);
+    l -> SetLineWidth(3);
+    gPad->SetLogy();
+    c1->Update();    c1->Modified();
+
+    c1 -> SaveAs(Form("../../External/zFindingPlots/%s.png", fileName.c_str()));
+}

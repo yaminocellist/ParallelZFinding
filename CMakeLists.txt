@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(Para_Project)
 
-find_package(nlohmann_json 3.11.3 REQUIRED)
+find_package(nlohmann_json 3.11.3 QUIET REQUIRED)
 find_package(ROOT REQUIRED)
 
 add_executable(Para_dPhi para_dPhi.cpp)

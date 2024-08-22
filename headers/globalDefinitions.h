@@ -115,4 +115,32 @@ bool isInteger(const std::string& s) {
     return (iss >> x) && (iss.eof());
 }
 
+void current_PC_time () {
+    auto now   = std::chrono::system_clock::now();
+    auto now_c = std::chrono::system_clock::to_time_t(now);
+    std::cout << "Run started at: " << std::put_time(std::localtime(&now_c), "%Y-%m-%d %H:%M:%S") << std::endl;
+}
+
+std::vector<int> readCsvToVector(const std::string& filename) {
+    std::vector<int> result;
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return result;
+    }
+    
+    std::string line;
+    if (std::getline(file, line)) {
+        std::stringstream ss(line);
+        std::string value;
+        
+        while (std::getline(ss, value, ',')) {
+            result.push_back(std::stoi(value));
+        }
+    }
+    
+    file.close();
+    return result;
+}
+
 #endif
