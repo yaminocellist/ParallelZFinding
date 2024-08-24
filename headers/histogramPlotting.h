@@ -662,7 +662,7 @@ void ArrayPlot1D_Rescale (const std::vector<TH1D*>& h, std::vector<std::string> 
     for (int i = 0; i < h.size(); i++) {
         max_entries.push_back(h[i]->GetBinContent(h[i]->GetMaximumBin()));
         h[i] -> Add(h[i], 1/(max_entries[i]+1) - 1);
-        h[i] -> GetYaxis() -> SetRangeUser(0.6, 1.1);
+        // h[i] -> GetYaxis() -> SetRangeUser(0.6, 1.1);
     }
 
     TCanvas *can1 = new TCanvas("c1d","c1d",0,50,2100,1200);
@@ -739,6 +739,38 @@ void ArrayPlot1D_Rescale_ver2 (const std::vector<TH1D*>& h, std::vector<std::str
     // Update histogram to refresh the axis
     // h[0]->Draw("HIST");
     h[16]->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+
+    can1 -> SaveAs(Form("../../External/zFindingPlots/%s.png", fileTitle.c_str()));
+}
+
+void ArrayPlot1D_Rescale_dEta (const std::vector<TH1D*>& h, std::vector<std::string> method, const std::string &fileTitle) {
+    double minRange = h[0]->GetXaxis()->GetXmin();
+    double maxRange = h[0]->GetXaxis()->GetXmax();
+    TCanvas *can1 = new TCanvas("c1d","c1d",0,50,2100,1200);
+    for (int i = 0; i < h.size(); i++) {
+        double N = h[i] -> Integral(h[i]->FindFixBin(minRange), h[i]->FindFixBin(maxRange), "");
+        h[i] -> Add(h[i], 1/(N/1000+1) - 1);
+        h[i] -> GetXaxis() -> SetRangeUser(minRange*5/8, maxRange*5/8);
+        // h[i] -> SetLineColor(30+i);
+        h[i] -> SetLineWidth(3);
+        h[i] -> Draw("SAME");
+    }
+
+    h[0] -> SetLineColor(2);
+    h[1] -> SetLineColor(4);
+    h[2] -> SetLineColor(6);
+    h[3] -> SetLineColor(8);
+    h[4] -> SetLineColor(9);
+    h[5] -> SetLineColor(12);
+    h[6] -> SetLineColor(28);
+    h[7] -> SetLineColor(30);
+    h[8] -> SetLineColor(31);
+    h[9] -> SetLineColor(32);
+    h[10] -> SetLineColor(38);
+    h[11] -> SetLineColor(40);
+    h[12] -> SetLineColor(42);
+    h[13] -> SetLineColor(46);
+    h[0] -> GetXaxis() -> CenterTitle(true);    h[0] -> GetYaxis() -> CenterTitle(true);
 
     can1 -> SaveAs(Form("../../External/zFindingPlots/%s.png", fileTitle.c_str()));
 }

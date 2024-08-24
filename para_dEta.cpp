@@ -358,12 +358,14 @@ int main(int argc, char* argv[]) {
     else if (method[0] == "perCen") {
         std::thread thsafe[14];
         std::cout << "dEta of different centralities:" << std::endl;
+        std::cout << target << std::endl;
         for(int i = 0; i < 14; i++)     thsafe[i] = std::thread(dEta_per_centrality,i,target,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch14,branch15,ClusLayer,ClusZ,ClusR);
         for(int i = 0; i < 14; i++)     thsafe[i].join();
         
         h_dEta_cenOnOne[0]->SetTitle(Form("dEta of %d events in different centrality ranges", target));
         std::vector<TH1D*> h(h_dEta_cenOnOne, h_dEta_cenOnOne + 14);
         ArrayPlot_dEta_1D_Logy(h, method, "dEta per centralities");
+        // ArrayPlot1D_Rescale_dEta(h, method, "dEta per centralities Rescaled");
     }
     else if (method[0] == "perZ") {
         std::thread thsafe[20];
@@ -376,7 +378,8 @@ int main(int argc, char* argv[]) {
         std::vector<TH1D*> h;
         for (int i = 0; i < 20; i++)
             h.push_back(h_dEta_ZOnOne[i]);
-        ArrayPlot_dEta_1D_Logy(h, method, "dEta per Z");
+        // ArrayPlot_dEta_1D_Logy(h, method, "dEta per Z");
+        ArrayPlot1D_Rescale_dEta(h, method, "dEta per Z Rescaled");
         // TCanvas *c1 = new TCanvas("c1dEta", "dPhi Histogram", 1920, 1056);
         // c1->Update();    c1->Modified();
     }
@@ -436,13 +439,13 @@ int main(int argc, char* argv[]) {
         // }
         // double N = max_mixed/max_unmixed;
 
-        double N1 = h_dEta_Background -> Integral(h_dEta_Background->FindFixBin(-2*M_PI), h_dEta_Background->FindFixBin(-2.6), "") + 
-                    h_dEta_Background -> Integral(h_dEta_Background->FindFixBin(1.2), h_dEta_Background->FindFixBin(2*M_PI), "");
-        double N2 = h_dEta_Signal -> Integral(h_dEta_Signal->FindFixBin(-2*M_PI), h_dEta_Signal->FindFixBin(-2.6), "") + 
-                    h_dEta_Signal -> Integral(h_dEta_Signal->FindFixBin(1.2), h_dEta_Signal->FindFixBin(2*M_PI), "");
+        double N1 = h_dEta_Background -> Integral(h_dEta_Background->FindFixBin(-2*M_PI), h_dEta_Background->FindFixBin(-2.2), "") + 
+                    h_dEta_Background -> Integral(h_dEta_Background->FindFixBin(2.5), h_dEta_Background->FindFixBin(2*M_PI), "");
+        double N2 = h_dEta_Signal -> Integral(h_dEta_Signal->FindFixBin(-2*M_PI), h_dEta_Signal->FindFixBin(-2.2), "") + 
+                    h_dEta_Signal -> Integral(h_dEta_Signal->FindFixBin(2.5), h_dEta_Signal->FindFixBin(2*M_PI), "");
         double N  = N1/N2;
 
-        h_dEta_Signal -> Add(h_dEta_Signal, N - 1);
+        h_dEta_Signal -> Add(h_dEta_Signal, N-1);
         h_dEta_Signal -> SetLineColor(2);   h_dEta_Signal -> SetLineWidth(3);
         h_dEta_Signal -> Draw("SAME");
         h_dEta_Signal -> SetTitle(Form("dEta of %d mixing events, %2.2f < centrality < %2.2f, %2.2fcm < MBD Z VTX < %2.2fcm", target, cen_low, cen_high, -z_low, -z_high));
