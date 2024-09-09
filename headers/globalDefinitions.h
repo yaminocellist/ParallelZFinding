@@ -25,6 +25,7 @@ double zmin = -45;
 double zmax = 5;        // From sPHENIX paper, the stave's length is aroung 27.12 cm;
 double scanstep = 0.2;  // unit: cm; 
 int bins = (zmax - zmin)/scanstep + 1;
+double dPhi_cut       = 0.01;
 double DCA_cut        = 0.2;    // unit: cm;
 double DCA_cutSQUARED = 0.04;   // unit: cm;
 double MBD_lower = 0., MBD_upper = 10.;
@@ -67,6 +68,14 @@ struct myTrackletMember {
 
 struct myTrackletMemberExtended : myTrackletMember {
     Int_t trackID;
+};
+
+struct EtaWithPhi {
+    double eta_value;
+    double phi_value;
+
+    // You can add constructors, methods, etc., to enhance functionality
+    EtaWithPhi(double e, double p) : eta_value(e), phi_value(p) {}
 };
 
 std::pair<double, double> nearestZ (const myPoint3D &p1, const myPoint3D &p2) {

@@ -151,7 +151,19 @@ void dEta_per_Z (
     lock.unlock();
 }
 
-void dEtaNoMix (int id, int chunck_size, std::vector<int> index, std::vector<double> MBD_true_z, std::vector<double> MBD_cen, TBranch *branch11, TBranch* branch14,TBranch* branch15, std::vector<int>* ClusLayer, std::vector<float>* ClusZ, std::vector<float>* ClusR) {
+void dEtaNoMix (
+    const int &id,
+    const int &chunck_size,
+    const std::vector<int> &index,
+    const std::vector<double> &MBD_true_z,
+    const std::vector<double> &MBD_cen,
+    TBranch* branch11,
+    TBranch* branch14,
+    TBranch* branch15,
+    const std::vector<int>*   const ClusLayer, 
+    const std::vector<float>* const ClusZ,
+    const std::vector<float>* const ClusR
+) {
     double z_vtx, cen, dZ, R, theta, eta, dEta;
     std::vector<double> Eta0, Eta1;
     int local_index;
@@ -185,6 +197,64 @@ void dEtaNoMix (int id, int chunck_size, std::vector<int> index, std::vector<dou
                 // h_dEta_nomix -> Fill(dEta);
                 h_dEta_Z     -> Fill(dEta, z_vtx);
                 h_dEta_cen   -> Fill(dEta, cen);
+            }
+        }
+        Eta0.clear();   Eta1.clear();
+    }
+    lock.unlock();
+}
+
+void dEtaNoMix2 (
+    const int &id,
+    const int &chunck_size,
+    const std::vector<int> &index,
+    const std::vector<double> &MBD_true_z,
+    const std::vector<double> &MBD_cen,
+    TBranch* branch11,
+    TBranch* branch14,
+    TBranch* branch15,
+    TBranch* branch16,
+    const std::vector<int>*   const ClusLayer, 
+    const std::vector<float>* const ClusZ,
+    const std::vector<float>* const ClusR,
+    const std::vector<float>* const ClusPhi
+) {
+    double z_vtx, cen, dZ, R, theta, eta, dEta, phi, dPhi;
+    std::vector<EtaWithPhi> Eta0, Eta1;
+    int local_index;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    for (int i = 0; i < chunck_size; i++) {
+        local_index = i + chunck_size*id;
+        branch11->GetEntry(index[local_index]);   // ClusLayer;
+        branch14->GetEntry(index[local_index]);   // ClusZ;
+        branch15->GetEntry(index[local_index]);   // ClusR;
+        branch16->GetEntry(index[local_index]);   // ClusPhi;
+        z_vtx = MBD_true_z[local_index];
+        cen = MBD_cen[local_index];
+        for (int j = 0; j < ClusZ->size(); j++) {
+            dZ       = ClusZ->at(j) - z_vtx;
+            R        = ClusR->at(j);
+            theta    = std::atan2(R, dZ);
+            phi      = ClusPhi->at(j);
+            if (dZ >= 0)    eta = -std::log(std::tan(theta/2));
+            if (dZ <  0)    eta = std::log(std::tan((M_PI - theta)/2));
+            // h_Eta_Z -> Fill(eta, z_vtx);
+            if (ClusLayer->at(j) == 3 || ClusLayer->at(j) == 4) {
+                Eta0.emplace_back(eta, phi);
+            }
+            else {
+                Eta1.emplace_back(eta, phi);
+            }
+        }
+        for (int k = 0; k < Eta0.size(); k++) {
+            for (int l = 0; l < Eta1.size(); l++) {
+                dEta = Eta0[k].eta_value - Eta1[l].eta_value;
+                dPhi = Eta0[k].phi_value - Eta1[l].phi_value;
+                if (std::abs(dPhi) < dPhi_cut) {
+                    h_dEta_nomix -> Fill(dEta);
+                }
+                // h_dEta_Z     -> Fill(dEta, z_vtx);
+                // h_dEta_cen   -> Fill(dEta, cen);
             }
         }
         Eta0.clear();   Eta1.clear();
@@ -333,17 +403,18 @@ int main(int argc, char* argv[]) {
     if (method[0] == "nomix") {
         std::thread thsafe[8];
         std::cout<<"dEta without mixing:"<<std::endl;
-        for(int i = 0; i < 8; ++i)     thsafe[i]= std::thread(dEtaNoMix,i,target/8,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch14,branch15,ClusLayer,ClusZ,ClusR);
+        // for(int i = 0; i < 8; ++i)     thsafe[i]= std::thread(dEtaNoMix,i,target/8,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch14,branch15,ClusLayer,ClusZ,ClusR);
+        for(int i = 0; i < 8; ++i)     thsafe[i]= std::thread(dEtaNoMix2,i,target/8,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch14,branch15,branch16,ClusLayer,ClusZ,ClusR,ClusPhi);
         for(int i = 0; i < 8; ++i)     thsafe[i].join();
 
         // save_histo_toRootFile(h_dEta_nomix, method, "dEta");
-        // h_dEta_nomix->SetTitle(Form("dEta of %d no mixing events", target));
-        // angularPlot1D(h_dEta_nomix, method, "dEta of unmixed");
+        h_dEta_nomix->SetTitle(Form("dEta of %d no mixing events", target));
+        angularPlot1D(h_dEta_nomix, method, "dEta of unmixed");
         // angularPlot2D(h_Eta_Z, method, "Eta v.s. Z distribution");
-        h_dEta_Z->SetTitle(Form("dEta v.s. MBD Z of %d no mixing events", target));
-        angularPlot2D(h_dEta_Z, method, "dEta v.s. Z distribution");
-        h_dEta_cen->SetTitle(Form("dEta v.s. MBD centrality of %d no mixing events", target));
-        angularPlot2D(h_dEta_cen, method, "dEta v.s. Centrality distribution");
+        // h_dEta_Z->SetTitle(Form("dEta v.s. MBD Z of %d no mixing events", target));
+        // angularPlot2D(h_dEta_Z, method, "dEta v.s. Z distribution");
+        // h_dEta_cen->SetTitle(Form("dEta v.s. MBD centrality of %d no mixing events", target));
+        // angularPlot2D(h_dEta_cen, method, "dEta v.s. Centrality distribution");
     }
     else if (method[0] == "san") {
         std::thread thsafe[8];
