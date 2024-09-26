@@ -31,5 +31,8 @@ target_compile_options(Para_dEta PUBLIC
     -stdlib=libc++
 )
 
+# Use:
 # root-config --libs
+# or:
 # root-config --cflags
+# to check which flags to use

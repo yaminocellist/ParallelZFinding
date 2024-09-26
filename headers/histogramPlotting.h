@@ -746,16 +746,29 @@ void ArrayPlot1D_Rescale_ver2 (const std::vector<TH1D*>& h, std::vector<std::str
 void ArrayPlot1D_Rescale_dEta (const std::vector<TH1D*>& h, std::vector<std::string> method, const std::string &fileTitle) {
     double minRange = h[0]->GetXaxis()->GetXmin();
     double maxRange = h[0]->GetXaxis()->GetXmax();
+    int index = 0;
+    double max = 0;
     TCanvas *can1 = new TCanvas("c1d","c1d",0,50,2100,1200);
     for (int i = 0; i < h.size(); i++) {
         double N = h[i] -> Integral(h[i]->FindFixBin(minRange), h[i]->FindFixBin(maxRange), "");
         h[i] -> Add(h[i], 1/(N/1000+1) - 1);
         h[i] -> GetXaxis() -> SetRangeUser(minRange*5/8, maxRange*5/8);
+        h[i] -> GetXaxis() -> CenterTitle(true);    h[i] -> GetYaxis() -> CenterTitle(true);
+        int maxEntry = h[i] -> GetBinContent(h[i]->GetMaximumBin());
+        if (maxEntry > max) {
+            max = maxEntry;
+            index = i;
+        } 
         // h[i] -> SetLineColor(30+i);
         h[i] -> SetLineWidth(3);
-        h[i] -> Draw("SAME");
+        // h[i] -> Draw("SAME");
     }
-
+    std::cout << index << ", " << max << std::endl;
+    h[index] -> Draw("SAME");
+    h[index] -> GetYaxis() -> SetRangeUser(0, max*1.05);
+    for (int i = 0; i < h.size(); i++) {
+        if (i != index)     h[i] -> Draw("SAME");
+    }
     h[0] -> SetLineColor(2);
     h[1] -> SetLineColor(4);
     h[2] -> SetLineColor(6);
@@ -770,7 +783,6 @@ void ArrayPlot1D_Rescale_dEta (const std::vector<TH1D*>& h, std::vector<std::str
     h[11] -> SetLineColor(40);
     h[12] -> SetLineColor(42);
     h[13] -> SetLineColor(46);
-    h[0] -> GetXaxis() -> CenterTitle(true);    h[0] -> GetYaxis() -> CenterTitle(true);
 
     can1 -> SaveAs(Form("../../External/zFindingPlots/%s.png", fileTitle.c_str()));
 }
