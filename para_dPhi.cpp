@@ -139,7 +139,7 @@ void dPhi_in_bins_of_Centrality (
     const std::vector<float>* const ClusPhi,
     const std::vector<int>*   const ClusLayer
 ) {
-    h_CenonOne[id] = new TH1D(Form("dPhi of %f to %f", static_cast<double>(id)*0.05, static_cast<double>(id + 1)*0.05), Form("dPhi of %f to %f;dPhi;# of counts", static_cast<double>(id)*0.05, static_cast<double>(id + 1)*0.05), N, range_min, range_max);
+    h_CenonOne[id] = new TH1D(Form("dPhi of %.2f to %.2f", static_cast<double>(id)*0.05, static_cast<double>(id + 1)*0.05), Form("dPhi of %.2f to %.2f;dPhi;# of counts", static_cast<double>(id)*0.05, static_cast<double>(id + 1)*0.05), N, range_min, range_max);
     double phi, dPhi;
     std::vector<double> Phi0, Phi1;
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -192,7 +192,7 @@ void dPhi_in_bins_of_Centrality_with_dEta_cut (
     const std::vector<float>* const ClusR,
     const std::vector<float>* const ClusPhi
 ) {
-    h_CenonOne[id] = new TH1D(Form("dPhi of %f to %f", static_cast<double>(id)*0.05, static_cast<double>(id + 1)*0.05), Form("dPhi of %f to %f;dPhi;# of counts", static_cast<double>(id)*0.05, static_cast<double>(id + 1)*0.05), N, range_min, range_max);
+    h_CenonOne[id] = new TH1D(Form("dPhi of %.2f to %.2f", static_cast<double>(id)*0.05, static_cast<double>(id + 1)*0.05), Form("dPhi of %.2f to %.2f;dPhi;# of counts", static_cast<double>(id)*0.05, static_cast<double>(id + 1)*0.05), N, range_min, range_max);
     double phi, dPhi, eta, dEta;
     double z_vtx, dZ, R, theta;
     std::vector<EtaWithPhi> Phi0, Phi1;
@@ -243,9 +243,19 @@ void dPhi_in_bins_of_Centrality_with_dEta_cut (
     lock.unlock();
 }
 
-void dPhi_in_bins_of_Z_vtx_ver1 (int id, int target, std::vector<int> index, std::vector<double> MBD_true_z, std::vector<double> MBD_cen, TBranch *branch11, TBranch* branch16, std::vector<float>* ClusPhi, std::vector<int>* ClusLayer) {
-    h_ZonOne[id] = new TH1D(Form("dPhi of %f to %f", static_cast<double>(id)*0.05, static_cast<double>(id + 1)*0.05), Form("dPhi of %f to %f;dPhi;# of counts", static_cast<double>(id)*0.05, static_cast<double>(id + 1)*0.05), N, range_min, range_max);
-    double phi, dPhi, phi_0, phi_1;
+void dPhi_in_bins_of_Z_vtx (
+    const int &id,
+    const int &target,
+    const std::vector<int> &index,
+    const std::vector<double> &MBD_true_z,
+    const std::vector<double> &MBD_cen,
+    TBranch *branch11,
+    TBranch* branch16,
+    const std::vector<float>* const ClusPhi,
+    const std::vector<int>* const ClusLayer
+) {
+    // h_ZonOne[id] = new TH1D(Form("dPhi of %.2f to %.2f", static_cast<double>(id)*0.05, static_cast<double>(id + 1)*0.05), Form("dPhi of %.2f to %.2f;dPhi;# of counts", static_cast<double>(id)*0.05, static_cast<double>(id + 1)*0.05), N, range_min, range_max);
+    double phi, dPhi;
     std::vector<double> Phi0, Phi1;
     std::unique_lock<std::mutex> lock(m_mutex);
     double z_lower_range  = -6 - static_cast<double>(id);
@@ -272,6 +282,68 @@ void dPhi_in_bins_of_Z_vtx_ver1 (int id, int target, std::vector<int> index, std
                     if (dPhi > M_PI)    dPhi = dPhi - 2*M_PI;
                     if (dPhi < -M_PI)   dPhi = dPhi + 2*M_PI;
                     h_ZonOne[id] -> Fill(dPhi);
+                }
+            }
+
+            Phi0.clear();   Phi1.clear();
+        }
+    }
+    lock.unlock();
+}
+
+void dPhi_in_bins_of_Z_vtx_with_dEta_cut (
+    const int &id,
+    const int &target,
+    const std::vector<int> &index,
+    const std::vector<double> &MBD_true_z,
+    const std::vector<double> &MBD_cen,
+    TBranch *branch11,
+    TBranch *branch14,
+    TBranch *branch15,
+    TBranch* branch16,
+    const std::vector<int>*   const ClusLayer,
+    const std::vector<float>* const ClusZ,
+    const std::vector<float>* const ClusR,
+    const std::vector<float>* const ClusPhi
+) {
+    double phi, dPhi, eta, dEta;
+    double z_vtx, dZ, R, theta;
+    std::vector<EtaWithPhi> Phi0, Phi1;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    double z_lower_range  = -6 - static_cast<double>(id);
+    double z_higher_range = -5 - static_cast<double>(id);
+    h_ZonOne[id] = new TH1D(Form("dPhi of %1.0f to %1.0f", z_lower_range, z_higher_range), Form("dPhi of %1.0f to %1.0f;dPhi;# of counts", z_lower_range, z_higher_range), N, range_min, range_max);
+    for (int i = 0; i < target; i++) {
+        z_vtx = MBD_true_z[i];
+        if (z_vtx >= z_lower_range && z_vtx <= z_higher_range) {
+            branch11->GetEntry(index[i]);   // ClusLayer;
+            branch14->GetEntry(index[i]);   // ClusZ;
+            branch15->GetEntry(index[i]);   // ClusR;
+            branch16->GetEntry(index[i]);   // ClusPhi;
+            for (int j = 0; j < ClusPhi->size(); j++) {
+                dZ       = ClusZ->at(j) - z_vtx;
+                R        = ClusR->at(j);
+                theta    = std::atan2(R, dZ);
+                phi      = ClusPhi->at(j);
+                if (dZ >= 0)    eta = -std::log(std::tan(theta/2));
+                if (dZ <  0)    eta = std::log(std::tan((M_PI - theta)/2));
+                if (ClusLayer->at(j) == 3 || ClusLayer->at(j) == 4) {
+                    Phi0.emplace_back(eta, phi);
+                }
+                else {
+                    Phi1.emplace_back(eta, phi);
+                }
+            }
+
+            for (int k = 0; k < Phi0.size(); k++) {
+                for (int l = 0; l < Phi1.size(); l++) {
+                    dEta = Phi0[k].eta_value - Phi1[l].eta_value;
+                    dPhi = Phi0[k].phi_value - Phi1[l].phi_value;
+                    if (dPhi > M_PI)    dPhi -= 2 * M_PI;
+                    if (dPhi < -M_PI)   dPhi += 2 * M_PI;
+                    if (std::abs(dEta) < dEta_cut) {
+                        h_ZonOne[id] -> Fill(dPhi);
+                    }
                 }
             }
 
@@ -471,20 +543,21 @@ int main(int argc, char* argv[]) {
         std::thread thsafe[14];
         std::cout << "safe dPhi of different centralities" << std::endl;
         for (int i = 0; i < 14; i++)
-            // thsafe[i] = std::thread(dPhi_in_bins_of_Centrality_with_dEta_cut,i,target,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch14,branch15,branch16,branch31,std::ref(MBD_z_vtx),ClusLayer,ClusZ,ClusR,ClusPhi);
-            thsafe[i] = std::thread(dPhi_in_bins_of_Centrality,i,target,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch16,ClusPhi,ClusLayer);
+            thsafe[i] = std::thread(dPhi_in_bins_of_Centrality_with_dEta_cut,i,target,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch14,branch15,branch16,branch31,std::ref(MBD_z_vtx),ClusLayer,ClusZ,ClusR,ClusPhi);
+            // thsafe[i] = std::thread(dPhi_in_bins_of_Centrality,i,target,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch16,ClusPhi,ClusLayer);
 
         for (int i = 0; i < 14; i++)
             thsafe[i].join();
 
         std::vector<TH1D*> h(h_CenonOne, h_CenonOne + 14);
-        ArrayPlot1D_Rescale(h, method, "dPhi_per_centralities_rescale");
+        // ArrayPlot1D_Rescale(h, method, "dPhi_per_centralities_rescale");
+        ArrayPlot1D_Rescale(h, method, "dPhi_per_centralities_rescale_with_dEta_cut");
     }
     else if (method[0] == "perZ") {
         std::thread thsafe[20];
         std::cout << "safe dPhi of different Z vertices" << std::endl;
         for (int i = 0; i < 20; i++)
-            thsafe[i] = std::thread(dPhi_in_bins_of_Z_vtx_ver1,i,target,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch16,ClusPhi,ClusLayer);
+            thsafe[i] = std::thread(dPhi_in_bins_of_Z_vtx,i,target,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch16,ClusPhi,ClusLayer);
 
         for (int i = 0; i < 20; i++)
             thsafe[i].join();
@@ -535,73 +608,73 @@ int main(int argc, char* argv[]) {
 
         TCanvas *c1 = new TCanvas("c1", "dPhi Histogram", 1920, 1056);
         double phi_range_low = -2.4, phi_range_high = -1.8;
-    int bin_range_low = h_Background_dPhi->FindBin(phi_range_low), bin_range_high = h_Background_dPhi->FindBin(phi_range_high);
-    double max_unmixed = -1, max_mixed = -1, current_binContent;
-    for (int bin = bin_range_low; bin <= bin_range_high; bin++) {
-        current_binContent = h_Signal_dPhi->GetBinContent(bin);
-        if (max_unmixed < current_binContent)  max_unmixed = current_binContent;
-        current_binContent = h_Background_dPhi->GetBinContent(bin);
-        if (max_mixed < current_binContent)  max_mixed = current_binContent;
-    }
-    h_Signal_dPhi -> Add(h_Signal_dPhi, max_mixed/max_unmixed - 1);
-    h_Signal_dPhi -> Draw("SAME");
+        int bin_range_low = h_Background_dPhi->FindBin(phi_range_low), bin_range_high = h_Background_dPhi->FindBin(phi_range_high);
+        double max_unmixed = -1, max_mixed = -1, current_binContent;
+        for (int bin = bin_range_low; bin <= bin_range_high; bin++) {
+            current_binContent = h_Signal_dPhi->GetBinContent(bin);
+            if (max_unmixed < current_binContent)  max_unmixed = current_binContent;
+            current_binContent = h_Background_dPhi->GetBinContent(bin);
+            if (max_mixed < current_binContent)  max_mixed = current_binContent;
+        }
+        h_Signal_dPhi -> Add(h_Signal_dPhi, max_mixed/max_unmixed - 1);
+        h_Signal_dPhi -> Draw("SAME");
 
-    max_mixed   = h_Background_dPhi->GetBinContent(h_Background_dPhi->GetMaximumBin());
-    max_unmixed = h_Signal_dPhi->GetBinContent(h_Signal_dPhi->GetMaximumBin());
-    std::cout << h_Signal_dPhi->GetBinContent(h_Signal_dPhi->GetMaximumBin()) << ", " << h_Background_dPhi->GetBinContent(h_Background_dPhi->GetMaximumBin())  << std::endl;
-    if (max_unmixed > max_mixed) {
-        h_Signal_dPhi -> GetYaxis() -> SetRangeUser(1e7, max_unmixed*1.2);
-        h_Background_dPhi -> GetYaxis() -> SetRangeUser(1e7, max_unmixed*1.2);
-    }   
-    else {
-        h_Signal_dPhi -> GetYaxis() -> SetRangeUser(1e7, max_mixed*1.2);
-        h_Background_dPhi -> GetYaxis() -> SetRangeUser(1e7, max_mixed*1.2);
-    }                      
-    h_Background_dPhi -> Draw("SAME");
-    h_Background_dPhi -> SetLineColor(2);
+        max_mixed   = h_Background_dPhi->GetBinContent(h_Background_dPhi->GetMaximumBin());
+        max_unmixed = h_Signal_dPhi->GetBinContent(h_Signal_dPhi->GetMaximumBin());
+        std::cout << h_Signal_dPhi->GetBinContent(h_Signal_dPhi->GetMaximumBin()) << ", " << h_Background_dPhi->GetBinContent(h_Background_dPhi->GetMaximumBin())  << std::endl;
+        if (max_unmixed > max_mixed) {
+            h_Signal_dPhi -> GetYaxis() -> SetRangeUser(1e7, max_unmixed*1.2);
+            h_Background_dPhi -> GetYaxis() -> SetRangeUser(1e7, max_unmixed*1.2);
+        }   
+        else {
+            h_Signal_dPhi -> GetYaxis() -> SetRangeUser(1e7, max_mixed*1.2);
+            h_Background_dPhi -> GetYaxis() -> SetRangeUser(1e7, max_mixed*1.2);
+        }                      
+        h_Background_dPhi -> Draw("SAME");
+        h_Background_dPhi -> SetLineColor(2);
 
-    double pi = TMath::Pi();
-    int bin_min  = 1;  // The first bin
-    int bin_max  = h_Signal_dPhi->GetNbinsX();  // The last bin
-    // Calculate bin positions for each label
-    int bin_pi   = bin_max;
-    int bin_0    = bin_min + (bin_max - bin_min)/2;
-    int binPi_2  = bin_min + 3*(bin_max - bin_min)/4;
-    int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
-    // Set the labels at the calculated positions
-    h_Background_dPhi->GetXaxis()->SetBinLabel(bin_0, "0");
-    h_Background_dPhi->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
-    h_Background_dPhi->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
-    h_Background_dPhi->GetXaxis()->SetBinLabel(bin_pi, "#pi");
-    h_Background_dPhi->GetXaxis()->SetBinLabel(bin_min, "-#pi");
-    // Ensure the custom labels are displayed by setting the number of divisions
-    h_Background_dPhi->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
-    h_Background_dPhi->GetXaxis()->SetLabelSize(0.04);
-    // Update histogram to refresh the axis
-    // h[0]->Draw("HIST");
-    h_Background_dPhi->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+        double pi = TMath::Pi();
+        int bin_min  = 1;  // The first bin
+        int bin_max  = h_Signal_dPhi->GetNbinsX();  // The last bin
+        // Calculate bin positions for each label
+        int bin_pi   = bin_max;
+        int bin_0    = bin_min + (bin_max - bin_min)/2;
+        int binPi_2  = bin_min + 3*(bin_max - bin_min)/4;
+        int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
+        // Set the labels at the calculated positions
+        h_Background_dPhi->GetXaxis()->SetBinLabel(bin_0, "0");
+        h_Background_dPhi->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
+        h_Background_dPhi->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
+        h_Background_dPhi->GetXaxis()->SetBinLabel(bin_pi, "#pi");
+        h_Background_dPhi->GetXaxis()->SetBinLabel(bin_min, "-#pi");
+        // Ensure the custom labels are displayed by setting the number of divisions
+        h_Background_dPhi->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
+        h_Background_dPhi->GetXaxis()->SetLabelSize(0.04);
+        // Update histogram to refresh the axis
+        // h[0]->Draw("HIST");
+        h_Background_dPhi->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
 
-    h_Signal_dPhi->GetXaxis()->SetBinLabel(bin_0, "0");
-    h_Signal_dPhi->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
-    h_Signal_dPhi->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
-    h_Signal_dPhi->GetXaxis()->SetBinLabel(bin_pi, "#pi");
-    h_Signal_dPhi->GetXaxis()->SetBinLabel(bin_min, "-#pi");
-    // Ensure the custom labels are displayed by setting the number of divisions
-    h_Signal_dPhi->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
-    h_Signal_dPhi->GetXaxis()->SetLabelSize(0.04);
-    // Update histogram to refresh the axis
-    // h[0]->Draw("HIST");
-    h_Signal_dPhi->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+        h_Signal_dPhi->GetXaxis()->SetBinLabel(bin_0, "0");
+        h_Signal_dPhi->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
+        h_Signal_dPhi->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
+        h_Signal_dPhi->GetXaxis()->SetBinLabel(bin_pi, "#pi");
+        h_Signal_dPhi->GetXaxis()->SetBinLabel(bin_min, "-#pi");
+        // Ensure the custom labels are displayed by setting the number of divisions
+        h_Signal_dPhi->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
+        h_Signal_dPhi->GetXaxis()->SetLabelSize(0.04);
+        // Update histogram to refresh the axis
+        // h[0]->Draw("HIST");
+        h_Signal_dPhi->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
 
-    h_Signal_dPhi -> GetXaxis() -> CenterTitle(true);
-    h_Signal_dPhi -> GetYaxis() -> CenterTitle(true);
-    h_Background_dPhi -> GetXaxis() -> CenterTitle(true);
-    h_Background_dPhi -> GetYaxis() -> CenterTitle(true);
+        h_Signal_dPhi -> GetXaxis() -> CenterTitle(true);
+        h_Signal_dPhi -> GetYaxis() -> CenterTitle(true);
+        h_Background_dPhi -> GetXaxis() -> CenterTitle(true);
+        h_Background_dPhi -> GetYaxis() -> CenterTitle(true);
 
-    // TLegend *lg = new TLegend(0.12, 0.8, 0.33, 0.9);
-    // lg -> AddEntry(h_Background_dPhi, Form("z_vtx between %2.2f and %2.2f", z_lower_range, z_upper_range), "l");
-    // gStyle -> SetLegendTextSize(.023);
-    // lg->Draw("same");
+        // TLegend *lg = new TLegend(0.12, 0.8, 0.33, 0.9);
+        // lg -> AddEntry(h_Background_dPhi, Form("z_vtx between %2.2f and %2.2f", z_lower_range, z_upper_range), "l");
+        // gStyle -> SetLegendTextSize(.023);
+        // lg->Draw("same");
     
         c1 -> SaveAs("../../External/zFindingPlots/dPhi_mixed.png");
         backgroundCancelling_dPhi(h_Background_dPhi, h_Signal_dPhi, method, target);

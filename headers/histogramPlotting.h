@@ -673,11 +673,15 @@ void ArrayPlot1D_Rescale (const std::vector<TH1D*>& h, std::vector<std::string> 
         }
         // h[i] -> GetYaxis() -> SetRangeUser(0.6, 1.1);
     }
-    std::cout << min_y << std::endl;
+    TLegend *lg = new TLegend(0.12, 0.73, 0.25, 0.9);
+    gStyle -> SetLegendTextSize(.015);
     for (int i = 0; i < h.size(); i++) {
         h[i] -> GetYaxis() -> SetRangeUser(min_y*0.9, 1.1);
+        h[i] -> SetLineColor(32 + i);
+        lg -> AddEntry(h[i], Form("Centrality between %.2f and %.2f", static_cast<double>(i)*0.05, static_cast<double>(i + 1)*0.05), "l");
+        h[i] -> SetTitle(fileTitle.c_str());
     }
-    TCanvas *can1 = new TCanvas("c1d","c1d",0,50,2100,1200);
+    TCanvas *can1 = new TCanvas("c1d","c1d",0,50,2560,1600);
     h[0] -> SetLineWidth(2);
     h[0] -> SetLineColor(2);
     h[0] -> Draw();
@@ -713,6 +717,9 @@ void ArrayPlot1D_Rescale (const std::vector<TH1D*>& h, std::vector<std::string> 
     // Update histogram to refresh the axis
     // h[0]->Draw("HIST");
     h[0]->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+
+    lg->Draw("same");
+    can1 -> Update();
 
     can1 -> SaveAs(Form("../../External/zFindingPlots/%s.png", fileTitle.c_str()));
 }
