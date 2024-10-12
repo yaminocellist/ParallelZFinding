@@ -152,4 +152,8 @@ std::vector<int> readCsvToVector(const std::string& filename) {
     return result;
 }
 
+void printRed(const std::string &text) {
+    std::cout << "\033[31m" << text << "\033[0m" << std::endl;
+}
+
 #endif

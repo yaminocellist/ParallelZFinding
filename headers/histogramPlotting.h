@@ -659,12 +659,24 @@ void ArrayPlot1D_Logy_ver2 (const std::vector<TH1D*>& h, std::vector<std::string
 
 void ArrayPlot1D_Rescale (const std::vector<TH1D*>& h, std::vector<std::string> method, const std::string &fileTitle) {
     std::vector<double> max_entries;
+    double min_y = std::numeric_limits<double>::max();
     for (int i = 0; i < h.size(); i++) {
         max_entries.push_back(h[i]->GetBinContent(h[i]->GetMaximumBin()));
         h[i] -> Add(h[i], 1/(max_entries[i]+1) - 1);
+
+        // Find minimum bin content across all histograms
+        for (int bin = 1; bin <= h[i]->GetNbinsX(); ++bin) {
+            double bin_content = h[i]->GetBinContent(bin);
+            if (bin_content > 0 && bin_content < min_y) {
+                min_y = bin_content;
+            }
+        }
         // h[i] -> GetYaxis() -> SetRangeUser(0.6, 1.1);
     }
-
+    std::cout << min_y << std::endl;
+    for (int i = 0; i < h.size(); i++) {
+        h[i] -> GetYaxis() -> SetRangeUser(min_y*0.9, 1.1);
+    }
     TCanvas *can1 = new TCanvas("c1d","c1d",0,50,2100,1200);
     h[0] -> SetLineWidth(2);
     h[0] -> SetLineColor(2);
