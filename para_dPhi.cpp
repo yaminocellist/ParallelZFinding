@@ -557,6 +557,7 @@ int main(int argc, char* argv[]) {
         std::thread thsafe[20];
         std::cout << "safe dPhi of different Z vertices" << std::endl;
         for (int i = 0; i < 20; i++)
+            // thsafe[i] = std::thread(dPhi_in_bins_of_Z_vtx_with_dEta_cut,i,target,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch14,branch15,branch16,ClusLayer,ClusZ,ClusR,ClusPhi);
             thsafe[i] = std::thread(dPhi_in_bins_of_Z_vtx,i,target,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch16,ClusPhi,ClusLayer);
 
         for (int i = 0; i < 20; i++)
@@ -564,6 +565,7 @@ int main(int argc, char* argv[]) {
 
         std::vector<TH1D*> h(h_ZonOne, h_ZonOne + 20);
         ArrayPlot1D_Rescale_ver2(h, method, "dPhi_per_Z_vtx_rescale");
+        // ArrayPlot1D_Rescale_ver2(h, method, "dPhi_per_Z_vtx_rescale_with_dEta_cut");
     }
     else if (method[0] == "mix") {
         double phi, dPhi, phi_0, phi_1; int clus_layer;

@@ -727,14 +727,33 @@ void ArrayPlot1D_Rescale (const std::vector<TH1D*>& h, std::vector<std::string> 
 void ArrayPlot1D_Rescale_ver2 (const std::vector<TH1D*>& h, std::vector<std::string> method, const std::string &fileTitle) {
     TCanvas *can1 = new TCanvas("c1d","c1d",0,50,2100,1200);
     std::vector<double> max_entries;
-    h[16] -> Draw();
+    double min_y = std::numeric_limits<double>::max();
     for (int i = 0; i < h.size(); i++) {
         max_entries.push_back(h[i]->GetBinContent(h[i]->GetMaximumBin()));
         h[i] -> Add(h[i], 1/(max_entries[i]+1) - 1);
-        h[i] -> GetYaxis() -> SetRangeUser(0.8, 1.05);
+        for (int bin = 1; bin <= h[i]->GetNbinsX(); ++bin) {
+            double bin_content = h[i]->GetBinContent(bin);
+            if (bin_content > 0 && bin_content < min_y) {
+                min_y = bin_content;
+            }
+        }
+    }
+    h[16] -> Draw();
+    TLegend *lg = new TLegend(0.12, 0.73, 0.28, 0.9);
+    TLegend *lg2 = new TLegend(0.28 , 0.73, 0.44, 0.9);
+    gStyle -> SetLegendTextSize(.015);
+    for (int i = 0; i < h.size(); i++) {
+        if (i < 10) {
+            lg -> AddEntry(h[i], Form("Z VTX between %1.2f and %1.2f", -6 - static_cast<double>(i), -5 - static_cast<double>(i)), "l");
+        } else {
+            lg2 -> AddEntry(h[i], Form("Z VTX between %.2f and %.2f", -6 - static_cast<double>(i), -5 - static_cast<double>(i)), "l");
+        }
+        h[i] -> GetYaxis() -> SetRangeUser(min_y*0.95, 1.05);
         h[i] -> GetXaxis() -> CenterTitle(true);    h[i] -> GetYaxis() -> CenterTitle(true);
         h[i] -> SetLineWidth(2);
+        h[i] -> SetLineColor(29 + i);
         h[i] -> Draw("SAME");
+        h[i] -> SetTitle(fileTitle.c_str());
     }
 
     h[16] -> SetLineColor(2);
@@ -758,6 +777,9 @@ void ArrayPlot1D_Rescale_ver2 (const std::vector<TH1D*>& h, std::vector<std::str
     // Update histogram to refresh the axis
     // h[0]->Draw("HIST");
     h[16]->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+
+    lg->Draw("same");   lg2->Draw("same");
+    can1 -> Update();
 
     can1 -> SaveAs(Form("../../External/zFindingPlots/%s.png", fileTitle.c_str()));
 }
