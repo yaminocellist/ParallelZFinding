@@ -353,7 +353,12 @@ void dPhi_in_bins_of_Z_vtx_with_dEta_cut (
     lock.unlock();
 }
 
-void dPhi_mixing (int id, int chunck_size, const std::vector<std::vector<double>>& event_Phi0, const std::vector<std::vector<double>>& event_Phi1) {
+void dPhi_mixing (
+    const int &id,
+    const int &chunck_size,
+    const std::vector<std::vector<double>> &event_Phi0,
+    const std::vector<std::vector<double>> &event_Phi1
+) {
     int local_index;
     double dPhi;
     std::unique_lock<std::mutex> lock(m_mutex);
@@ -364,7 +369,7 @@ void dPhi_mixing (int id, int chunck_size, const std::vector<std::vector<double>
             for (double phi0 : event_Phi0[local_index]) {
                 for (double phi1 : event_Phi1[j]) {
                     dPhi = phi0 - phi1;
-                    if (dPhi > M_PI) dPhi -= 2 * M_PI;
+                    if (dPhi > M_PI)  dPhi -= 2 * M_PI;
                     if (dPhi < -M_PI) dPhi += 2 * M_PI;
                     h_Background_dPhi->Fill(dPhi);
                 }
@@ -373,7 +378,7 @@ void dPhi_mixing (int id, int chunck_size, const std::vector<std::vector<double>
             for (double phi0 : event_Phi0[j]) {
                 for (double phi1 : event_Phi1[local_index]) {
                     dPhi = phi0 - phi1;
-                    if (dPhi > M_PI) dPhi -= 2 * M_PI;
+                    if (dPhi > M_PI)  dPhi -= 2 * M_PI;
                     if (dPhi < -M_PI) dPhi += 2 * M_PI;
                     h_Background_dPhi->Fill(dPhi);
                 }
@@ -383,21 +388,42 @@ void dPhi_mixing (int id, int chunck_size, const std::vector<std::vector<double>
     lock.unlock();
 }
 
-// void testFitter_ver2 (int id) {
-//     auto func = (TF1*)gROOT->GetFunction("gaus");
-//     std::unique_lock<std::mutex> lock(m_mutex); // lock the mutex;
-//     for (int i = 0; i < 5; i++) {
-//         func -> SetParameters(1000, 0, 1);
-//         double zeros[] = {0, 0, 0};
-//         func -> SetParErrors(zeros);
-
-//         h[i + id*5] -> Fit(func, (i==0?"N":"NQ"), "", -3, 3);
-//         auto x = func -> GetParameter(1);
-//         auto y = func -> GetParameter(2);
-//         printf("Now: %d, %d, #%d of histograms, %.18le, %.18le\n", id, i, i + id*5, x, y);
-//     }
-//     lock.unlock();
-// }
+void dPhi_mixing_with_dEta_cut (
+    const int &id,
+    const int &chunck_size,
+    const std::vector<std::vector<EtaWithPhi>> &event_Phi0,
+    const std::vector<std::vector<EtaWithPhi>> &event_Phi1
+) {
+    int local_index;
+    double dPhi, dEta;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    for (int i = 0; i < chunck_size; i++) {
+        local_index = i + chunck_size*id;
+        for (int j = local_index; j < event_Phi1.size(); j++) {
+            // Process pairs from event_Phi0[i] and event_Phi1[j]
+            for (const EtaWithPhi& phi0 : event_Phi0[local_index]) {
+                for (const EtaWithPhi& phi1 : event_Phi1[j]) {
+                    dPhi = phi0.phi_value - phi1.phi_value;
+                    dEta = phi0.eta_value - phi1.eta_value;
+                    if (dPhi > M_PI)  dPhi -= 2 * M_PI;
+                    if (dPhi < -M_PI) dPhi += 2 * M_PI;
+                    if (std::abs(dEta)) h_Background_dPhi->Fill(dPhi);
+                }
+            }
+            // Process pairs from event_Phi0[j] and event_Phi1[i] to ensure symmetry
+            for (const EtaWithPhi& phi0 : event_Phi0[j]) {
+                for (const EtaWithPhi& phi1 : event_Phi1[local_index]) {
+                    dPhi = phi0.phi_value - phi1.phi_value;
+                    dEta = phi0.eta_value - phi1.eta_value;
+                    if (dPhi > M_PI)  dPhi -= 2 * M_PI;
+                    if (dPhi < -M_PI) dPhi += 2 * M_PI;
+                    if (std::abs(dEta)) h_Background_dPhi->Fill(dPhi);
+                }
+            }
+        }
+    }
+    lock.unlock();
+}
 
 int main(int argc, char* argv[]) {
     // Start the stopwatch:
@@ -427,9 +453,7 @@ int main(int argc, char* argv[]) {
             method.push_back(substring);
         }
     }
-    // for (const auto& option : method) {
-    //     std::cout << "Option: " << option << std::endl;
-    // }
+    std::vector<std::string> cmds = splitString(method[0], '_');
 
     TFile *file = TFile::Open("../../External/Data_CombinedNtuple_Run20869_HotDead_BCO_ADC_Survey.root");
     if (!file || file->IsZombie()) {
@@ -464,7 +488,7 @@ int main(int argc, char* argv[]) {
         getline(data, value, ',');  double Mz = std::stod(value);
         getline(data, value, ',');  double Mc = std::stod(value);
 
-        if (method[0] == "mix") {
+        if (cmds[0] == "mix") {
             if (Mz >= -z_low && Mz <= -z_high && Mc >= cen_low && Mc <= cen_high) {
                 index.push_back(i);     event.push_back(e);         NHits.push_back(N);
                 foundZ.push_back(f);    MBD_true_z.push_back(Mz);   MBD_cen.push_back(Mc);
@@ -684,6 +708,107 @@ int main(int argc, char* argv[]) {
     // TCanvas *c1 = new TCanvas("c1", "dPhi Histogram", 1920, 1056);
     // h_dPhi_nomix -> Draw();
     // c1->Update();    c1->Modified();
+    
+    if (cmds[0] == "mix") {
+        if (cmds[1] == "wo") {
+            double phi, dPhi; 
+            int clus_layer;
+            std::vector<double> Phi0, Phi1;
+            std::vector<std::vector <double>> event_Phi0, event_Phi1;
+            // Signal dPhi is unmixed events' dPhi:
+            TH1D *h_Signal_dPhi = new TH1D("dPhi of unmixed", Form("dPhi of unmixed %d events;dPhi value;# of counts", target), N, range_min, range_max);
+            for (int i = 0; i < target; i++) {  // Loop over events;
+                branch11->GetEntry(index[i]);   // ClusLayer;
+                branch16->GetEntry(index[i]);   // ClusPhi;
+                event_Phi0.push_back(std::vector <double>());   
+                event_Phi1.push_back(std::vector <double>());
+                for (int j = 0; j < ClusPhi->size(); j++) { // Loop inside one event, over all hits;
+                    phi        = ClusPhi->at(j);
+                    clus_layer = ClusLayer->at(j);
+                    if (clus_layer == 3 || clus_layer == 4) {
+                        Phi0.push_back(phi);
+                        event_Phi0[i].push_back(phi);
+                    }
+                    else {
+                        Phi1.push_back(phi);
+                        event_Phi1[i].push_back(phi);
+                    }
+                }
+
+                for (int k = 0; k < Phi0.size(); k++) {
+                    for (int l = 0; l < Phi1.size(); l++) {
+                        dPhi = Phi0[k] - Phi1[l];
+                        if (dPhi > M_PI)    dPhi -= 2*M_PI;
+                        if (dPhi < -M_PI)   dPhi += 2*M_PI;
+                        h_Signal_dPhi -> Fill(dPhi);
+                    }
+                }
+                Phi0.clear();   Phi1.clear();
+            }
+            std::thread thsafe[8];
+            std::cout << "Mixing events without dEta cut: \n" << std::endl;
+            for (int i = 0; i < 8; i++)
+                thsafe[i] = std::thread(dPhi_mixing,i,target/8,event_Phi0,event_Phi1);
+            for (int i = 0; i < 8; i++)
+                thsafe[i].join();
+
+            backgroundCancelling_dPhi(h_Background_dPhi, h_Signal_dPhi, method, target);
+        } else if (cmds[1] == "w") {
+            double phi, dPhi, eta, dEta;
+            double z_vtx, dZ, R, theta;
+            int clus_layer;
+            std::vector<EtaWithPhi> Phi0, Phi1;
+            std::vector<std::vector <EtaWithPhi>> event_Phi0, event_Phi1;
+            // Signal dPhi is unmixed events' dPhi:
+            TH1D *h_Signal_dPhi = new TH1D("dPhi of unmixed", Form("dPhi of unmixed %d events;dPhi value;# of counts", target), N, range_min, range_max);
+            for (int i = 0; i < target; i++) {  // Loop over events;
+                branch11->GetEntry(index[i]);   // ClusLayer;
+                branch14->GetEntry(index[i]);   // ClusZ;
+                branch15->GetEntry(index[i]);   // ClusR;
+                branch16->GetEntry(index[i]);   // ClusPhi;
+                event_Phi0.emplace_back(std::vector <EtaWithPhi>());   
+                event_Phi1.emplace_back(std::vector <EtaWithPhi>());
+                z_vtx = MBD_true_z[i];
+                for (int j = 0; j < ClusPhi->size(); j++) { // Loop inside one event, over all hits;
+                    dZ         = ClusZ->at(j) - z_vtx;
+                    R          = ClusR->at(j);
+                    theta      = std::atan2(R, dZ);
+                    phi        = ClusPhi->at(j);
+                    clus_layer = ClusLayer->at(j);
+                    if (dZ >= 0)    eta = -std::log(std::tan(theta/2));
+                    if (dZ <  0)    eta = std::log(std::tan((M_PI - theta)/2));
+                    if (clus_layer == 3 || clus_layer == 4) {
+                        Phi0.emplace_back(eta, phi);
+                        event_Phi0[i].emplace_back(eta, phi);
+                    }
+                    else {
+                        Phi1.emplace_back(eta, phi);
+                        event_Phi1[i].emplace_back(eta, phi);
+                    }
+                }
+
+                for (int k = 0; k < Phi0.size(); k++) {
+                    for (int l = 0; l < Phi1.size(); l++) {
+                        dEta = Phi0[k].eta_value - Phi1[l].eta_value;
+                        dPhi = Phi0[k].phi_value - Phi1[l].phi_value;
+                        if (dPhi > M_PI)    dPhi -= 2*M_PI;
+                        if (dPhi < -M_PI)   dPhi += 2*M_PI;
+                        if (std::abs(dEta) < dEta_cut)  h_Signal_dPhi -> Fill(dPhi);
+                    }
+                }
+                Phi0.clear();   Phi1.clear();
+            }
+
+            std::thread thsafe[8];
+            std::cout << "Mixing events with dEta cut: \n" << std::endl;
+            for (int i = 0; i < 8; i++)
+                thsafe[i] = std::thread(dPhi_mixing_with_dEta_cut,i,target/8,event_Phi0,event_Phi1);
+            for (int i = 0; i < 8; i++)
+                thsafe[i].join();
+
+            backgroundCancelling_dPhi(h_Background_dPhi, h_Signal_dPhi, method, target);
+        }
+    }
 
     // Stop the stopwatch and print the runtime:
     timer.Stop();   timer.Print();

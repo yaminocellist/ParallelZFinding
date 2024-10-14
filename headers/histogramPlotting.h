@@ -475,37 +475,87 @@ void backgroundCancelling (TH1D* const hBackground, TH1D* const hSignal, std::ve
 }
 
 void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, std::vector<std::string> method, Int_t const & target) {
+    double pi = TMath::Pi();
+    int bin_min  = 1;  // The first bin
+    int bin_max  = hSignal->GetNbinsX();  // The last bin
+        // Calculate bin positions for each label
+    int bin_pi   = bin_max;
+    int bin_0    = bin_min + (bin_max - bin_min)/2;
+    int binPi_2  = bin_min + 3*(bin_max - bin_min)/4;
+    int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
+        // Set the labels at the calculated positions
+    hBackground->GetXaxis()->SetBinLabel(bin_0, "0");
+    hBackground->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
+    hBackground->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
+    hBackground->GetXaxis()->SetBinLabel(bin_pi, "#pi");
+    hBackground->GetXaxis()->SetBinLabel(bin_min, "-#pi");
+        // Ensure the custom labels are displayed by setting the number of divisions
+    hBackground->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
+        // Update histogram to refresh the axis
+        // h[0]->Draw("HIST");
+    hBackground->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+
+    hSignal->GetXaxis()->SetBinLabel(bin_0, "0");
+    hSignal->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
+    hSignal->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
+    hSignal->GetXaxis()->SetBinLabel(bin_pi, "#pi");
+    hSignal->GetXaxis()->SetBinLabel(bin_min, "-#pi");
+        // Ensure the custom labels are displayed by setting the number of divisions
+    hSignal->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
+        // Update histogram to refresh the axis
+        // h[0]->Draw("HIST");
+    hSignal->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+    
     // TCanvas *can1 = new TCanvas("csub","csub",0,50,1920,1056);
     TCanvas *can1 = new TCanvas("csub","csub",0,50,2560,1440);
     can1 -> Divide(1, 2);
     can1 -> cd(1);
     double phi_range_low = -2.4, phi_range_high = -1.8;
     int bin_range_low = hBackground->FindBin(phi_range_low), bin_range_high = hBackground->FindBin(phi_range_high);
-    double max_unmixed = -1, max_mixed = -1, current_binContent;
+    double max_unmixed = -1, max_mixed = -1, min_unmixed = std::numeric_limits<double>::max(), min_mixed = std::numeric_limits<double>::max(), current_binContent;
     for (int bin = bin_range_low; bin <= bin_range_high; bin++) {
         current_binContent = hSignal->GetBinContent(bin);
-        if (max_unmixed < current_binContent)  max_unmixed = current_binContent;
+        if (max_unmixed < current_binContent)   max_unmixed = current_binContent;
         current_binContent = hBackground->GetBinContent(bin);
-        if (max_mixed < current_binContent)  max_mixed = current_binContent;
+        if (max_mixed < current_binContent)     max_mixed = current_binContent;
     }
     hSignal -> Add(hSignal, max_mixed/max_unmixed - 1);
+
+    // max_mixed   = hBackground->GetBinContent(hBackground->GetMaximumBin());
+    // max_unmixed = hSignal->GetBinContent(hSignal->GetMaximumBin());
+
+    // Loop it again for y-axis plotting range:
+    phi_range_low = -M_PI;
+    phi_range_high = M_PI;
+    bin_range_low = hBackground->FindBin(phi_range_low);
+    bin_range_high = hBackground->FindBin(phi_range_high);
+    for (int bin = bin_range_low; bin <= bin_range_high; bin++) {
+        current_binContent = hSignal->GetBinContent(bin);
+        if (max_unmixed < current_binContent)   max_unmixed = current_binContent;
+        if (min_unmixed > current_binContent)   min_unmixed = current_binContent;
+        current_binContent = hBackground->GetBinContent(bin);
+        if (max_mixed < current_binContent)     max_mixed = current_binContent;
+        if (min_mixed > current_binContent)     min_mixed = current_binContent;
+    }
+
+    double max_y_range = max_unmixed, min_y_range = min_mixed;
+    if (max_unmixed < max_mixed)    max_y_range = max_mixed;
+    if (min_unmixed < min_mixed)    min_y_range = min_unmixed;
+    hSignal -> GetYaxis() -> SetRangeUser(min_y_range*.85, max_y_range*1.1);
+    hBackground -> GetYaxis() -> SetRangeUser(min_y_range*.85, max_y_range*1.1);
+
     hSignal -> Draw("SAME");
     hSignal -> GetXaxis()->SetLabelSize(0.06);
+    hSignal -> GetXaxis()->SetTitleSize(0.05);
     hSignal -> SetTitle(Form("%d events, -%2.2fcm < z vtx < -%2.2fcm, %1.2f < centrality < %1.2f", target, std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
-
-    max_mixed   = hBackground->GetBinContent(hBackground->GetMaximumBin());
-    max_unmixed = hSignal->GetBinContent(hSignal->GetMaximumBin());
-
-    if (max_unmixed > max_mixed) {
-        hSignal -> GetYaxis() -> SetRangeUser(max_unmixed*0.8, max_unmixed*1.1);
-        hBackground -> GetYaxis() -> SetRangeUser(max_unmixed*0.8, max_unmixed*1.1);
-    }   
-    else {
-        hSignal -> GetYaxis() -> SetRangeUser(max_mixed*0.8, max_mixed*1.1);
-        hBackground -> GetYaxis() -> SetRangeUser(max_mixed*0.8, max_mixed*1.1);
-    }                      
+    hSignal -> GetXaxis() -> CenterTitle(true);
+    hSignal -> GetXaxis() -> SetTitleOffset(.9);
+    hSignal -> GetYaxis() -> CenterTitle(true);
+    hSignal -> GetYaxis() -> SetTitleSize(0.05);
     hBackground -> Draw("SAME");
     hBackground -> SetLineColor(2);
+    hBackground -> GetXaxis() -> CenterTitle(true);
+    hBackground -> GetYaxis() -> CenterTitle(true);
 
     TLegend *lg = new TLegend(0.12, 0.8, 0.33, 0.9);
     lg -> AddEntry(hSignal, "Unmixed Events' dPhi", "l");
@@ -527,10 +577,12 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     hDiff -> Sumw2();
     hDiff -> Draw("HIST SAME");
     hDiff -> Draw("e1psame");
-    hDiff -> GetXaxis() -> SetTitle("dPhi");
+    hDiff -> GetXaxis() -> SetTitle("dPhi value");
     hDiff -> GetXaxis() -> CenterTitle(true);
     hDiff -> GetXaxis() -> SetTitleSize(.05);
-    hDiff->GetXaxis()->SetLabelSize(0.06);
+    hDiff -> GetXaxis() -> SetLabelSize(0.06);
+    hDiff -> GetXaxis() -> SetTitleOffset(.9);
+    hDiff -> GetYaxis() -> SetTitleSize(.05);
     hDiff -> SetFillColor(kYellow - 7);
     hDiff -> SetFillStyle(1001);
     //hDiff -> GetXaxis() -> SetRange(hDiff -> FindFixBin(-0.5),hDiff -> FindFixBin(0.5));
