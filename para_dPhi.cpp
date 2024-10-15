@@ -425,6 +425,41 @@ void dPhi_mixing_with_dEta_cut (
     lock.unlock();
 }
 
+void dPhi_mixing_with_dEta_cut_ver2 (
+    const int &starter,
+    const int &ender,
+    const std::vector<std::vector<EtaWithPhi>> &event_Phi0,
+    const std::vector<std::vector<EtaWithPhi>> &event_Phi1
+) {
+    double dPhi, dEta;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    for (int i = starter; i <= ender; i++) {
+        for (int j = i; j < event_Phi1.size(); j++) {
+            // Process pairs from event_Phi0[i] and event_Phi1[j]
+            for (const EtaWithPhi& phi0 : event_Phi0[i]) {
+                for (const EtaWithPhi& phi1 : event_Phi1[j]) {
+                    dPhi = phi0.phi_value - phi1.phi_value;
+                    dEta = phi0.eta_value - phi1.eta_value;
+                    if (dPhi > M_PI)  dPhi -= 2 * M_PI;
+                    if (dPhi < -M_PI) dPhi += 2 * M_PI;
+                    if (std::abs(dEta)) h_Background_dPhi->Fill(dPhi);
+                }
+            }
+            // Process pairs from event_Phi0[j] and event_Phi1[i] to ensure symmetry
+            for (const EtaWithPhi& phi0 : event_Phi0[j]) {
+                for (const EtaWithPhi& phi1 : event_Phi1[i]) {
+                    dPhi = phi0.phi_value - phi1.phi_value;
+                    dEta = phi0.eta_value - phi1.eta_value;
+                    if (dPhi > M_PI)  dPhi -= 2 * M_PI;
+                    if (dPhi < -M_PI) dPhi += 2 * M_PI;
+                    if (std::abs(dEta)) h_Background_dPhi->Fill(dPhi);
+                }
+            }
+        }
+    }
+    lock.unlock();
+}
+
 int main(int argc, char* argv[]) {
     // Start the stopwatch:
     TStopwatch timer;   timer.Start();
@@ -799,10 +834,12 @@ int main(int argc, char* argv[]) {
                 Phi0.clear();   Phi1.clear();
             }
 
+            std::vector<int> boundaries = readCsvToVector("../../codeGarage/boundaries.csv");
             std::thread thsafe[8];
             std::cout << "Mixing events with dEta cut: \n" << std::endl;
             for (int i = 0; i < 8; i++)
                 thsafe[i] = std::thread(dPhi_mixing_with_dEta_cut,i,target/8,event_Phi0,event_Phi1);
+                // thsafe[i] = std::thread(dPhi_mixing_with_dEta_cut_ver2,boundaries[2*i],boundaries[2*i+1],event_Phi0,event_Phi1);
             for (int i = 0; i < 8; i++)
                 thsafe[i].join();
 

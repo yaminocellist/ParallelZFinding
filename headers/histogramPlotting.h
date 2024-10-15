@@ -532,17 +532,19 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     for (int bin = bin_range_low; bin <= bin_range_high; bin++) {
         current_binContent = hSignal->GetBinContent(bin);
         if (max_unmixed < current_binContent)   max_unmixed = current_binContent;
-        if (min_unmixed > current_binContent)   min_unmixed = current_binContent;
+        if (min_unmixed > current_binContent && current_binContent > 0)   min_unmixed = current_binContent;
         current_binContent = hBackground->GetBinContent(bin);
         if (max_mixed < current_binContent)     max_mixed = current_binContent;
-        if (min_mixed > current_binContent)     min_mixed = current_binContent;
+        if (min_mixed > current_binContent && current_binContent > 0)     min_mixed = current_binContent;
     }
 
     double max_y_range = max_unmixed, min_y_range = min_mixed;
     if (max_unmixed < max_mixed)    max_y_range = max_mixed;
     if (min_unmixed < min_mixed)    min_y_range = min_unmixed;
-    hSignal -> GetYaxis() -> SetRangeUser(min_y_range*.85, max_y_range*1.1);
-    hBackground -> GetYaxis() -> SetRangeUser(min_y_range*.85, max_y_range*1.1);
+
+    // std::cout << max_mixed << ", " << min_mixed << ", " << max_unmixed << ", " << min_unmixed << std::endl;
+    hSignal -> GetYaxis() -> SetRangeUser(min_y_range*0.9, max_y_range*1.1);
+    hBackground -> GetYaxis() -> SetRangeUser(min_y_range*0.9, max_y_range*1.1);
 
     hSignal -> Draw("SAME");
     hSignal -> GetXaxis()->SetLabelSize(0.06);
@@ -602,7 +604,13 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
 	l -> Draw("same"); 
     l -> SetLineColor(kGreen);
 
-    can1 -> SaveAs(Form("../../External/zFindingPlots/dPhi_mixedsubtract_%2.2f_%2.2f_%1.2f_%1.2f.png", std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
+    std::vector<std::string> options = splitString(method[0], '_');
+    if (options[1] == "wo") {
+        can1 -> SaveAs(Form("../../External/zFindingPlots/dPhi_mixedsubtract_%2.2f_%2.2f_%1.2f_%1.2f.png", std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
+    } else {
+        can1 -> SaveAs(Form("../../External/zFindingPlots/dPhi_mixedsubtract_with_dEta_cut_%2.2f_%2.2f_%1.2f_%1.2f.png", std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
+    }
+    
 }
 
 void ArrayPlot1D_Logy (const std::vector<TH1D*>& h, std::vector<std::string> method, const std::string &fileTitle) {
