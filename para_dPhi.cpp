@@ -19,7 +19,6 @@ TH1D *h_ZonOne[20];
 TH1D *h_CenonOne[14];
 std::mutex m_mutex;
 int batch_number = 1250;   // 28147*8 = 225176
-double dEta_cut = 0.2;
 int N = 1000;
 double range_min = -M_PI;
 double range_max = M_PI;
@@ -834,7 +833,9 @@ int main(int argc, char* argv[]) {
                 Phi0.clear();   Phi1.clear();
             }
 
-            std::vector<int> boundaries = readCsvToVector("../../codeGarage/boundaries.csv");
+            // std::vector<int> boundaries = readCsvToVector("../../codeGarage/boundaries.csv");
+            std::vector<int> boundaries = readCsvToVector("/Users/yaminocellist/codeGarage/boundaries.csv");
+
             std::thread thsafe[8];
             std::cout << "Mixing events with dEta cut: \n" << std::endl;
             for (int i = 0; i < 8; i++)

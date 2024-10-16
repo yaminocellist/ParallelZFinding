@@ -506,6 +506,7 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
         // h[0]->Draw("HIST");
     hSignal->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
     
+    std::vector<std::string> options = splitString(method[0], '_');
     // TCanvas *can1 = new TCanvas("csub","csub",0,50,1920,1056);
     TCanvas *can1 = new TCanvas("csub","csub",0,50,2560,1440);
     can1 -> Divide(1, 2);
@@ -549,7 +550,10 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     hSignal -> Draw("SAME");
     hSignal -> GetXaxis()->SetLabelSize(0.06);
     hSignal -> GetXaxis()->SetTitleSize(0.05);
-    hSignal -> SetTitle(Form("%d events, -%2.2fcm < z vtx < -%2.2fcm, %1.2f < centrality < %1.2f", target, std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
+    if (options[1] == "w")
+        hSignal -> SetTitle(Form("%d events with |dEta| < %.2f, -%2.2fcm < z vtx < -%2.2fcm, %1.2f < centrality < %1.2f", target, dEta_cut, std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
+    else
+        hSignal -> SetTitle(Form("%d events, -%2.2fcm < z vtx < -%2.2fcm, %1.2f < centrality < %1.2f", target, std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
     hSignal -> GetXaxis() -> CenterTitle(true);
     hSignal -> GetXaxis() -> SetTitleOffset(.9);
     hSignal -> GetYaxis() -> CenterTitle(true);
@@ -591,8 +595,11 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     double peak  = hDiff -> Integral(hDiff->FindFixBin(-centralPeak), hDiff->FindFixBin(centralPeak), "");
     // double Ratio = peak/events;
     
-    // hDiff -> SetTitle(Form("Subtracted Signal for %5.0f Events", events));
-    hDiff -> SetTitle("Background Subtracted dPhi");
+    if (options[1] == "w")
+        hDiff -> SetTitle(Form("Subtracted Signal for %d Events, with |dEta| < %.2f", target, dEta_cut));
+    else
+        hDiff -> SetTitle(Form("Subtracted Signal for %d Events", target));
+    // hDiff -> SetTitle("Background Subtracted dPhi");
     gStyle->SetEndErrorSize(6);
     gStyle->SetErrorX(0.5);
     
@@ -604,7 +611,6 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
 	l -> Draw("same"); 
     l -> SetLineColor(kGreen);
 
-    std::vector<std::string> options = splitString(method[0], '_');
     if (options[1] == "wo") {
         can1 -> SaveAs(Form("../../External/zFindingPlots/dPhi_mixedsubtract_%2.2f_%2.2f_%1.2f_%1.2f.png", std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
     } else {
