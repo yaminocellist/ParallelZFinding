@@ -616,7 +616,17 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     } else {
         can1 -> SaveAs(Form("../../External/zFindingPlots/dPhi_mixedsubtract_with_dEta_cut_%2.2f_%2.2f_%1.2f_%1.2f.png", std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
     }
-    
+
+    if (options[2] == "f") {
+        // Open a TFile for writing
+        TFile *outputFile = new TFile("../../External/zFindingPlots/hDiff_output.root", "RECREATE");
+
+        // Save the histogram to the file
+        hDiff->Write();
+
+        // Close the file
+        outputFile->Close();
+    }    
 }
 
 void ArrayPlot1D_Logy (const std::vector<TH1D*>& h, std::vector<std::string> method, const std::string &fileTitle) {
