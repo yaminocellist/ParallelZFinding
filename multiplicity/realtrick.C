@@ -16,9 +16,9 @@ using namespace std;
 // 1V1MIT\Week3
 
 void realtrick () {
-    ifstream linelabel("../week5/LayerCounts.txt");
-    ifstream etaRaw("../week3/etaRaw.txt");
-    ifstream phiRaw("../week3/phiRaw.txt");
+    ifstream linelabel("../../1ST_SEMESTER/week5/LayerCounts.txt");
+    ifstream etaRaw("../../1ST_SEMESTER/week3/etaRaw.txt");
+    ifstream phiRaw("../../1ST_SEMESTER/week3/phiRaw.txt");
         
     if (!linelabel.is_open()){
 		  cout << "Unable to open linelabel" << endl;
@@ -73,7 +73,7 @@ void realtrick () {
     	binEdges[l + 290] = binEdges[290] + l*dx_1;
     }
 
-    TCanvas *c1 = new TCanvas();
+    TCanvas *c1 = new TCanvas("", "", 0, 50, 3840, 2160);
 
     c1 -> Divide(1,2);
 
@@ -215,9 +215,7 @@ void realtrick () {
     //hDiff -> GetXaxis() -> SetRange(hDiff -> FindFixBin(-0.5),hDiff -> FindFixBin(0.5));
     double peak = hDiff -> Integral(hDiff->FindFixBin(-0.1), hDiff->FindFixBin(0.1), "");
     double Ratio = peak/events;
-   
-   
-    
+
     //hDiff -> Add(HBackground, -N);
     //hDiff -> Draw();
     
