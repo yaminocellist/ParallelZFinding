@@ -4,6 +4,8 @@
 #include <TLegend.h>
 #include <TStyle.h>
 #include <TLine.h>
+#include <TStopwatch.h>
+
 #include <iostream>
 
 double ChiTwo (const TH1D * const hDiff, const double &p1, const double &p2, const double &low_range) {
@@ -55,8 +57,7 @@ void fit_the_hist (TH1D *hDiff, TCanvas *can) {
     double rst;
     double min_rst = std::numeric_limits<double>::max();
     double par1 = 800, par2 = -40e3;
-    int counter = 0;
-    for (double p_1 = 600.0; p_1 < 1000.0; p_1++) {
+    for (double p_1 = 800.0; p_1 < 1500.0; p_1++) {
         for (double p_2 = -400000.0; p_2 < 400000.0; p_2 += 200.0) {
             rst = ChiTwo_ver2(hDiff, p_1, p_2, left_subrange_max, right_subrange_min);
             if (min_rst > rst) {
@@ -66,14 +67,14 @@ void fit_the_hist (TH1D *hDiff, TCanvas *can) {
             }
         }
     }
-    std::cout << counter << ", " << min_rst << ", " << par1 << ", " << par2 << std::endl;
+    std::cout << min_rst << ", " << par1 << ", " << par2 << std::endl;
 
-    bottom_noise -> SetLineColor(7);
+    bottom_noise -> SetLineColor(kTeal - 7);
     bottom_noise -> SetLineWidth(10);
     bottom_noise -> SetParameter(0, par1);
     bottom_noise -> SetParameter(1, par2);
     bottom_noise -> Draw("same");
-    bottom_noise_2 -> SetLineColor(8);
+    bottom_noise_2 -> SetLineColor(kTeal - 7);
     bottom_noise_2 -> SetLineWidth(10);
     bottom_noise_2 -> SetParameter(0, par1);
     bottom_noise_2 -> SetParameter(1, par2);
@@ -86,20 +87,31 @@ void fit_the_hist (TH1D *hDiff, TCanvas *can) {
     bottomNoise->SetParameters(par1, par2);
     // Loop over each bin
     for (int i = 1; i <= nBins; ++i) {
-        // Get the bin center
         double binCenter = hDiff->GetBinCenter(i);
-
-        // Evaluate the fitted function at the bin center
         double fitValue = bottom_noise->Eval(binCenter);
-
-        // Subtract the function value from the histogram bin content
         double newBinContent = hDiff->GetBinContent(i) - fitValue;
-
-        // Set the new bin content in the subtracted histogram
         hSubtracted->SetBinContent(i, newBinContent);
     }
 
+    for (int i = 1; i <= nBins; ++i) {
+        std::cout << hSubtracted->GetBinCenter(i) << ",  " << hSubtracted->GetBinContent(i) << std::endl;
+    }
+
     hSubtracted->Draw();
+    hSubtracted->SetFillStyle(3003);
+    hSubtracted->SetFillColor(kBlue - 7);
+    hSubtracted->GetXaxis()->SetTitle("dPhi value");
+    hSubtracted->GetXaxis()->CenterTitle(true);
+    hSubtracted->GetXaxis()->SetTitleSize(0.05);
+    hSubtracted->GetXaxis()->SetTitleOffset(.8);
+    hSubtracted->GetYaxis()->SetTitle("# of count");
+    hSubtracted->GetYaxis()->CenterTitle(true);
+    hSubtracted->GetYaxis()->SetTitleSize(0.05);
+    hSubtracted->GetYaxis()->SetTitleOffset(.8);
+
+    TLine *line_horizontal = new TLine(hSubtracted->GetXaxis()->GetXmin(), 0, hSubtracted->GetXaxis()->GetXmax(), 0);
+    line_horizontal->SetLineColor(kRed);
+    line_horizontal->Draw("same");
 
     // Show the plot
     can->Update();
@@ -132,6 +144,8 @@ void fit_the_hist_ver2 (TH1D *hDiff, TCanvas *can) {
 }
 
 void dPhi_Fitter() {
+    TStopwatch timer;   timer.Start();
+
     TFile *inputFile = new TFile("../External/zFindingPlots/hDiff_output.root", "READ");
     if (!inputFile || inputFile->IsZombie()) {
         std::cerr << "Error: Cannot open .root file!" << std::endl;
@@ -162,13 +176,16 @@ void dPhi_Fitter() {
     TLine *line_horizontal = new TLine(hDiff->GetXaxis()->GetXmin(), 0, hDiff->GetXaxis()->GetXmax(), 0);
     line_horizontal->SetLineColor(kRed);
     line_horizontal->Draw("same");
-    TLine *line_left = new TLine((hDiff->GetXaxis()->GetXmin())/5., hDiff->GetMinimum(), (hDiff->GetXaxis()->GetXmin())/5., hDiff->GetMaximum());
-    line_left->SetLineColor(kRed);
-    line_left->Draw("same");
+    // TLine *line_left = new TLine((hDiff->GetXaxis()->GetXmin())/5., hDiff->GetMinimum(), (hDiff->GetXaxis()->GetXmin())/5., hDiff->GetMaximum());
+    // line_left->SetLineColor(kRed);
+    // line_left->Draw("same");
     TLegend *legend = new TLegend(0.7, 0.8, 0.9, 0.9);
     legend->AddEntry(hDiff, "Background Subtracted Signal", "l");
     legend->Draw();
 
     fit_the_hist(hDiff, can);
     // fit_the_hist_ver2(hDiff, can);
+
+    // Stop the stopwatch and print the runtime:
+    timer.Stop();   timer.Print();
 }
