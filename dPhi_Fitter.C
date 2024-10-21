@@ -27,6 +27,7 @@ double ChiTwo (const TH1D * const hDiff, const double &p1, const double &p2, con
     return ChiSum;
 }
 
+// Actually this is a Least-Square test:
 double ChiTwo_ver2 (const TH1D * const hDiff, const double &p1, const double &p2, const double &low_range, const double &high_range) {
     int nbins = hDiff->GetNbinsX();
     double x_value, y_value;
@@ -38,6 +39,23 @@ double ChiTwo_ver2 (const TH1D * const hDiff, const double &p1, const double &p2
         if (x_value <= low_range || x_value >= high_range) {
             double calculated = p1*p1*cos(2*x_value)+p2 - y_value;
             ChiSum += calculated*calculated;
+        }
+    }
+    return ChiSum;
+}
+
+// "Standard" Chi-Squared test:
+double ChiTwo_ver3 (const TH1D * const hDiff, const double &p1, const double &p2, const double &low_range, const double &high_range) {
+    int nbins = hDiff->GetNbinsX();
+    double x_value, y_value;
+    double ChiSum = 0.;
+    for (int i = 1; i < nbins; i++) {
+        x_value = hDiff->GetBinCenter(i);
+        y_value = hDiff->GetBinContent(i);
+        // if (x_value <= (hDiff->GetXaxis()->GetXmin())/5. || x_value >= (hDiff->GetXaxis()->GetXmax())/5.) {
+        if (x_value <= low_range || x_value >= high_range) {
+            double calculated = p1*p1*cos(2*x_value)+p2 - y_value;
+            ChiSum += (calculated*calculated)/y_value;
         }
     }
     return ChiSum;
@@ -88,7 +106,7 @@ void fit_the_hist (TH1D *hDiff, TCanvas *can) {
     // Loop over each bin
     for (int i = 1; i <= nBins; ++i) {
         double binCenter = hDiff->GetBinCenter(i);
-        double fitValue = bottom_noise->Eval(binCenter);
+        double fitValue = bottomNoise->Eval(binCenter);
         double newBinContent = hDiff->GetBinContent(i) - fitValue;
         hSubtracted->SetBinContent(i, newBinContent);
     }

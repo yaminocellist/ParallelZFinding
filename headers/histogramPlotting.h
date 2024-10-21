@@ -478,21 +478,21 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     double pi = TMath::Pi();
     int bin_min  = 1;  // The first bin
     int bin_max  = hSignal->GetNbinsX();  // The last bin
-        // Calculate bin positions for each label
+    // Calculate bin positions for each label
     int bin_pi   = bin_max;
     int bin_0    = bin_min + (bin_max - bin_min)/2;
     int binPi_2  = bin_min + 3*(bin_max - bin_min)/4;
     int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
-        // Set the labels at the calculated positions
+    // Set the labels at the calculated positions
     hBackground->GetXaxis()->SetBinLabel(bin_0, "0");
     hBackground->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
     hBackground->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
     hBackground->GetXaxis()->SetBinLabel(bin_pi, "#pi");
     hBackground->GetXaxis()->SetBinLabel(bin_min, "-#pi");
-        // Ensure the custom labels are displayed by setting the number of divisions
+    // Ensure the custom labels are displayed by setting the number of divisions
     hBackground->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
-        // Update histogram to refresh the axis
-        // h[0]->Draw("HIST");
+    // Update histogram to refresh the axis
+    // h[0]->Draw("HIST");
     hBackground->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
 
     hSignal->GetXaxis()->SetBinLabel(bin_0, "0");
@@ -618,13 +618,8 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     }
 
     if (options[2] == "f") {
-        // Open a TFile for writing
-        TFile *outputFile = new TFile("../../External/zFindingPlots/hDiff_output.root", "RECREATE");
-
-        // Save the histogram to the file
+        TFile *outputFile = new TFile(Form("../../External/zFindingPlots/hDiff_%2.2f_%2.2f_%1.2f_%1.2f.root", std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])), "RECREATE");
         hDiff->Write();
-
-        // Close the file
         outputFile->Close();
     }    
 }
