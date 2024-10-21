@@ -74,7 +74,6 @@ void angularPlot1D (TH1D* const histo, std::vector<std::string> method, const st
         histo->GetXaxis()->SetLabelSize(0.04);
     }
     
-
     TLine *l = new TLine(0, 0, 0, maxEntry);
 	l -> Draw("same"); 
     l -> SetLineColor(kRed);

@@ -157,4 +157,29 @@ void printRed(const std::string &text) {
     std::cout << "\033[31m" << text << "\033[0m" << std::endl;
 }
 
+std::string findRootFile (const std::string &directory, const std::string &prefix) {
+    for (const auto &entry : std::filesystem::directory_iterator(directory)) {
+        if (entry.is_regular_file()) {
+            std::string fileName = entry.path().filename().string();
+            if (fileName.find(prefix) == 0 && fileName.find(".root") != std::string::npos) {
+                return entry.path().string();
+            }
+        }
+    }
+    return "";
+}
+
+std::vector<std::string> findRootFiles (const std::string &directory, const std::string &prefix) {
+    std::vector<std::string> matchingFiles;
+    for (const auto &entry : std::filesystem::directory_iterator(directory)) {
+        if (entry.is_regular_file()) {
+            std::string fileName = entry.path().filename().string();
+            if (fileName.find(prefix) == 0 && fileName.find(".root") != std::string::npos) {
+                matchingFiles.push_back(entry.path().string());
+            }
+        }
+    }
+    return matchingFiles;
+}
+
 #endif
