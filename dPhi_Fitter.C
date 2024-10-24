@@ -109,9 +109,9 @@ void fit_the_hist (const std::string &rootFilePath) {
 
     double rst;
     double min_rst = std::numeric_limits<double>::max();
-    double par1 = 0., par2 = -40e3;
-    for (double p_1 = 0.0; p_1 < 2000.0; p_1++) {
-        for (double p_2 = -400000.0; p_2 < 400000.0; p_2 += 200.0) {
+    double par1 = 100., par2 = -30e3;
+    for (double p_1 = 100.0; p_1 < 2000.0; p_1++) {
+        for (double p_2 = -300000.0; p_2 < 300000.0; p_2 += 200.0) {
             rst = ChiTwo(hDiff, p_1, p_2, left_subrange_max, right_subrange_min);
             if (min_rst > rst) {
                 min_rst = rst;
@@ -219,7 +219,7 @@ void fit_hists_all (const std::vector<std::string>& rootFilePaths) {
 
         double rst;
         double min_rst = std::numeric_limits<double>::max();
-        double par1 = 200., par2 = -40e3;
+        double par1 = 200., par2 = -30e3;
         for (double p_1 = 200.0; p_1 < 1800.0; p_1++) {
             for (double p_2 = -300000.0; p_2 < 300000.0; p_2 += 200.0) {
                 rst = ChiTwo_ver2(hDiff, p_1, p_2, left_subrange_max, right_subrange_min);
