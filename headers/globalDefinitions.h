@@ -6,6 +6,9 @@
 #include <memory>
 #include <iostream>
 #include <fstream>
+#include <functional>
+#include <chrono>
+
 #include <TH1.h>
 #include <TH2F.h>
 #include <TF1.h>
@@ -16,7 +19,7 @@
 #include <TFile.h>
 #include <TTree.h>
 #include <TMultiGraph.h>
-#include <chrono>
+
 
 /*********************************************************************
  *                      GLOBAL VARIABLES;
@@ -30,10 +33,16 @@ double dEta_cut       = 0.2;
 double DCA_cut        = 0.2;    // unit: cm;
 double DCA_cutSQUARED = 0.04;   // unit: cm;
 double MBD_lower = 0., MBD_upper = 10.;
+double abs_fit_range = 0.2;
 
  // ANSI escape code for red text
-const std::string red = "\033[31m";
-const std::string color_reset = "\033[0m";
+const std::string COLOR_GREEN="\033[0;32m";
+const std::string COLOR_RED="\033[0;31m";
+const std::string COLOR_YELLOW="\033[0;33m";
+const std::string COLOR_OCHRE="\033[38;5;95m";
+const std::string COLOR_BLUE="\033[0;34m";
+const std::string COLOR_WHITE="\033[0;37m";
+const std::string COLOR_RESET="\033[0m";
 
 /*  Genearting unequal bin ranges for a historgram  */
 // Double_t binEdges[481];
@@ -153,10 +162,6 @@ std::vector<int> readCsvToVector(const std::string& filename) {
     return result;
 }
 
-void printRed(const std::string &text) {
-    std::cout << "\033[31m" << text << "\033[0m" << std::endl;
-}
-
 std::string findRootFile (const std::string &directory, const std::string &prefix) {
     for (const auto &entry : std::filesystem::directory_iterator(directory)) {
         if (entry.is_regular_file()) {
@@ -179,7 +184,27 @@ std::vector<std::string> findRootFiles (const std::string &directory, const std:
             }
         }
     }
+    std::sort(matchingFiles.begin(), matchingFiles.end());
     return matchingFiles;
+}
+
+template <typename T>
+void printRed(const T &content) {
+    std::cout << COLOR_RED << content << COLOR_RESET << std::endl;
+}
+
+template <typename T>
+void printWhite(const T &content) {
+    std::cout << COLOR_WHITE << content << COLOR_RESET << std::endl;
+}
+
+template <typename T>
+void printBlue(const T &content) {
+    std::cout << COLOR_BLUE << content << COLOR_RESET << std::endl;
+}
+
+void printSeparation () {
+    printBlue("=======================================================================");
 }
 
 #endif
