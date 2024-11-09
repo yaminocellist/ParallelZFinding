@@ -939,3 +939,143 @@ void ArrayPlot_dEta_1D_Logy (
 
     c1 -> SaveAs(Form("../../External/zFindingPlots/%s.png", fileName.c_str()));
 }
+
+/**
+ * @brief 
+ * 
+ */
+
+// void plotMultiCen () {
+//     TCanvas *c1 = new TCanvas("c1","c1",0,50,1920,1056);
+//     TProfile *Prof_Cen_Multi = new TProfile("Centrality v.s. Multiplicity", "Centrality v.s. Multiplicity, Fit with #bf{Least Square};Centrality;Multiplicity Density", 7, 0.0, 0.7, "S");
+//     Prof_Cen_Multi->Fill(.0, 1129837.10);
+//     Prof_Cen_Multi->Fill(.1, 890113.85);
+//     Prof_Cen_Multi->Fill(.2, 554845.81);
+//     Prof_Cen_Multi->Fill(.3, 352526.54);
+//     Prof_Cen_Multi->Fill(.4, 200179.80);
+//     Prof_Cen_Multi->Fill(.5, 111203.69);
+//     Prof_Cen_Multi->Fill(.6, 52319.40);
+//     // TProfile *Prof_Cen_Multi = new TProfile("Centrality v.s. Multiplicity", "Centrality v.s. Multiplicity, Fit with #bf{Total Least Square};Centrality;Multiplicity Density", 7, 0.0, 0.7, "S");
+//     // Prof_Cen_Multi->Fill(.0, 960965.19);
+//     // Prof_Cen_Multi->Fill(.1, 901032.76);
+//     // Prof_Cen_Multi->Fill(.2, 546477.03);
+//     // Prof_Cen_Multi->Fill(.3, 377208.87);
+//     // Prof_Cen_Multi->Fill(.4, 156769.72);
+//     // Prof_Cen_Multi->Fill(.5, 108235.72);
+//     // Prof_Cen_Multi->Fill(.6, 54046.14);
+
+//     Prof_Cen_Multi->SetLineColor(kBlue);
+//     Prof_Cen_Multi->SetLineWidth(2);
+//     Prof_Cen_Multi->SetMarkerSize(kBlue);
+//     Prof_Cen_Multi->SetMarkerStyle(20);
+//     Prof_Cen_Multi->SetMarkerSize(1.2);
+//     Prof_Cen_Multi->GetXaxis()->CenterTitle(true);
+//     Prof_Cen_Multi->GetYaxis()->CenterTitle(true);
+
+//     Prof_Cen_Multi->Draw();
+
+//     double bincontent, bincenter;
+// 	auto graph_CenMulti = new TGraph();
+// 	for (int b=1; b<=Prof_Cen_Multi->GetNbinsX(); b++) {
+// 	   bincontent = Prof_Cen_Multi->GetBinContent(b);
+// 	   if (bincontent) {
+// 	      bincenter = Prof_Cen_Multi->GetBinCenter(b);
+// 	      graph_CenMulti->AddPoint(bincenter,bincontent);
+// 	   }
+// 	}
+
+//     graph_CenMulti->SetLineColor(kRed);
+//     graph_CenMulti->SetLineWidth(2);
+//     graph_CenMulti->SetMarkerColor(kRed);
+//     graph_CenMulti->SetMarkerStyle(21);
+//     graph_CenMulti->SetMarkerSize(1.2);
+// 	graph_CenMulti->Draw("LP");
+
+//     auto legend = new TLegend(0.12, 0.2, 0.35, 0.35); // Adjust coordinates as needed
+//     legend->AddEntry(Prof_Cen_Multi, "INTT Centrality vs. Multiplicity", "lp");
+//     legend->AddEntry(graph_CenMulti, "Least Square Fit", "lp");
+//     // legend->AddEntry(graph_CenMulti, "Total Least Square Fit", "lp");
+//     legend->Draw("same");
+//     legend->SetTextSize(0.03);
+//     legend->SetTextColor(kBlack);
+//     legend->SetLineColor(kWhite);
+//     legend->SetFillColor(kWhite);
+
+//     c1->SaveAs("../External/zFindingPlots/Cen_Multi_LS.png");
+//     // c1->SaveAs("../External/zFindingPlots/Cen_Multi_TLS.png");
+// }
+
+void plotMultiCen() {
+    TCanvas *c1 = new TCanvas("c1", "Centrality vs. Multiplicity Comparison", 0, 50, 1920, 1056);
+    
+    // First dataset: Least Square Fit
+    TProfile *Prof_Cen_Multi_LS = new TProfile("Centrality v.s. Multiplicity LS", "Centrality v.s. Multiplicity, different methods comparison;Centrality;Multiplicity Density", 7, 0.0, 0.7, "S");
+    Prof_Cen_Multi_LS->Fill(.0, 1129837.10);
+    Prof_Cen_Multi_LS->Fill(.1, 890113.85);
+    Prof_Cen_Multi_LS->Fill(.2, 554845.81);
+    Prof_Cen_Multi_LS->Fill(.3, 352526.54);
+    Prof_Cen_Multi_LS->Fill(.4, 200179.80);
+    Prof_Cen_Multi_LS->Fill(.5, 111203.69);
+    Prof_Cen_Multi_LS->Fill(.6, 52319.40);
+    Prof_Cen_Multi_LS->Draw();
+    Prof_Cen_Multi_LS->GetXaxis()->CenterTitle(true);
+    Prof_Cen_Multi_LS->GetYaxis()->CenterTitle(true);
+
+    // Create a TGraph from the TProfile data for Least Square Fit
+    auto graph_LS = new TGraph();
+    for (int b = 1; b <= Prof_Cen_Multi_LS->GetNbinsX(); b++) {
+        double bincontent = Prof_Cen_Multi_LS->GetBinContent(b);
+        double bincenter = Prof_Cen_Multi_LS->GetBinCenter(b);
+        graph_LS->AddPoint(bincenter, bincontent);
+    }
+    graph_LS->SetLineColor(6);
+    graph_LS->SetLineWidth(2);
+    graph_LS->SetMarkerColor(6);
+    graph_LS->SetMarkerStyle(20);
+    graph_LS->SetMarkerSize(1.2);
+
+    // Second dataset: Total Least Square Fit
+    TProfile *Prof_Cen_Multi_TLS = new TProfile("Centrality v.s. Multiplicity TLS", "Centrality v.s. Multiplicity, Fit with #bf{Total Least Square};Centrality;Multiplicity Density", 7, 0.0, 0.7, "S");
+    Prof_Cen_Multi_TLS->Fill(.0, 960965.19);
+    Prof_Cen_Multi_TLS->Fill(.1, 901032.76);
+    Prof_Cen_Multi_TLS->Fill(.2, 546477.03);
+    Prof_Cen_Multi_TLS->Fill(.3, 377208.87);
+    Prof_Cen_Multi_TLS->Fill(.4, 156769.72);
+    Prof_Cen_Multi_TLS->Fill(.5, 108235.72);
+    Prof_Cen_Multi_TLS->Fill(.6, 54046.14);
+    Prof_Cen_Multi_TLS->Draw("same");
+
+    // Create a TGraph from the TProfile data for Total Least Square Fit
+    auto graph_TLS = new TGraph();
+    for (int b = 1; b <= Prof_Cen_Multi_TLS->GetNbinsX(); b++) {
+        double bincontent = Prof_Cen_Multi_TLS->GetBinContent(b);
+        double bincenter = Prof_Cen_Multi_TLS->GetBinCenter(b);
+        graph_TLS->AddPoint(bincenter, bincontent);
+    }
+    graph_TLS->SetLineColor(7);
+    graph_TLS->SetLineWidth(2);
+    graph_TLS->SetMarkerColor(7);
+    graph_TLS->SetMarkerStyle(21);
+    graph_TLS->SetMarkerSize(1.2);
+
+    // Draw the first graph (Least Square) and set axis titles
+    graph_LS->Draw("LP SAME");
+    graph_LS->GetXaxis()->SetTitle("Centrality");
+    graph_LS->GetYaxis()->SetTitle("Multiplicity Density");
+
+    // Draw the second graph (Total Least Square) on the same canvas
+    graph_TLS->Draw("LP SAME");
+
+    // Create and customize the legend
+    auto legend = new TLegend(0.12, 0.2, 0.35, 0.35); // Adjust coordinates as needed
+    legend->AddEntry(graph_LS, "Least Square Fit", "lp");
+    legend->AddEntry(graph_TLS, "Total Least Square Fit", "lp");
+    legend->SetTextSize(0.03);
+    legend->SetTextColor(kBlack);
+    legend->SetLineColor(kWhite);
+    legend->SetFillColor(kWhite);
+    legend->Draw();
+
+    // Save the canvas with both profiles
+    c1->SaveAs("../External/zFindingPlots/Cen_Multi_LS_TLS_Comparison.png");
+}

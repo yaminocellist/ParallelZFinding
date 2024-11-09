@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include "./headers/globalDefinitions.h"
+#include "./headers/histogramPlotting.h"
 
 double rootFit_ChiTwo (const TH1D * const hDiff, const double &p1, const double &p2, const double &low_range, const double &high_range) {
     int nbins = hDiff->GetNbinsX();
@@ -51,8 +52,9 @@ double ChiSquared (const TH1D * const hDiff, const double &p1, const double &p2,
         y_value = hDiff->GetBinContent(i);
         // if (x_value <= (hDiff->GetXaxis()->GetXmin())/5. || x_value >= (hDiff->GetXaxis()->GetXmax())/5.) {
         if (x_value <= low_range || x_value >= high_range) {
-            double calculated = p1*p1*cos(2*x_value)+p2 - y_value;
-            ChiSum += (calculated*calculated)/y_value;
+            double expected = p1*p1*cos(2*x_value)+p2;
+            double calculated = expected - y_value;
+            ChiSum += (calculated*calculated)/expected;
         }
     }
     return ChiSum;
@@ -95,6 +97,9 @@ void fit_the_hist (
         return;
     }
 
+    std::string hDiff_title = hDiff->GetTitle();
+    std::vector<std::string> splitted = splitString(hDiff_title, ' ');
+    int numberOfEvents = std::stoi(splitted[3]);
     double left_subrange_min = hDiff->GetXaxis()->GetXmin();
     // double left_subrange_max = (hDiff->GetXaxis()->GetXmin())/5.;
     double left_subrange_max = -abs_fit_range;
@@ -190,9 +195,21 @@ void fit_the_hist (
     hFiltered->GetYaxis()->SetTitleSize(0.05);
     hFiltered->GetYaxis()->SetTitleOffset(.8);
 
+    std::cout << left_subrange_min << ", " << left_subrange_max << ", " << right_subrange_min << ", " << right_subrange_max << std::endl;
+    double Signal = hFiltered->Integral(hFiltered->FindFixBin(left_subrange_max),hFiltered->FindFixBin(right_subrange_min));
+    double Background = hFiltered->Integral(hFiltered->FindFixBin(left_subrange_min), hFiltered->FindFixBin(left_subrange_max))
+                      + hFiltered->Integral(hFiltered->FindFixBin(right_subrange_min), hFiltered->FindFixBin(right_subrange_max));
+    double Multiplicity = Signal/numberOfEvents;
+    double SNR = Signal/Background;
+    std::cout << Signal << ", " << Background << ", " << SNR << ", " << Multiplicity << ", " << numberOfEvents << std::endl;
+
     TLine *line_horizon = new TLine(hFiltered->GetXaxis()->GetXmin(), 0, hFiltered->GetXaxis()->GetXmax(), 0);
     line_horizon->SetLineColor(kRed);
     line_horizon->Draw("same");
+    TLegend *legend2 = new TLegend(0.13, 0.75, 0.29, 0.9);
+    legend2->AddEntry(hFiltered, Form("Multiplicity Density: %.2f", Multiplicity), "f");
+    legend2->AddEntry(hFiltered, Form("Signal/Background Ratio: %.2f",SNR), "l");
+    legend2->Draw("same");
 
     // Show the plot
     can->Update();
@@ -306,9 +323,24 @@ void fit_hists_all (
         hFiltered->GetYaxis()->SetTitleSize(0.05);
         hFiltered->GetYaxis()->SetTitleOffset(.8);
 
+        std::string hDiff_title = hDiff->GetTitle();
+        std::vector<std::string> splitted = splitString(hDiff_title, ' ');
+        int numberOfEvents = std::stoi(splitted[3]);
+        std::cout << left_subrange_min << ", " << left_subrange_max << ", " << right_subrange_min << ", " << right_subrange_max << std::endl;
+        double Signal = hFiltered->Integral(hFiltered->FindFixBin(left_subrange_max),hFiltered->FindFixBin(right_subrange_min));
+        double Background = hFiltered->Integral(hFiltered->FindFixBin(left_subrange_min), hFiltered->FindFixBin(left_subrange_max))
+                        + hFiltered->Integral(hFiltered->FindFixBin(right_subrange_min), hFiltered->FindFixBin(right_subrange_max));
+        double Multiplicity = Signal/numberOfEvents;
+        double SNR = Signal/Background;
+        std::cout << Signal << ", " << Background << ", " << SNR << ", " << Multiplicity << ", " << numberOfEvents << std::endl;
+
         TLine *line_horizon = new TLine(hFiltered->GetXaxis()->GetXmin(), 0, hFiltered->GetXaxis()->GetXmax(), 0);
         line_horizon->SetLineColor(kRed);
         line_horizon->Draw("same");
+        TLegend *legend2 = new TLegend(0.13, 0.75, 0.29, 0.9);
+        legend2->AddEntry(hFiltered, Form("Multiplicity Density: %.2f", Multiplicity), "f");
+        legend2->AddEntry(hFiltered, Form("Signal/Background Ratio: %.2f",SNR), "l");
+        legend2->Draw("same");
 
         can->Update();
         std::string fileName = rootFilePath.substr(0, rootFilePath.length()-5);
@@ -354,16 +386,11 @@ void dPhi_Fitter(std::string opt = "") {
         exit(1);
     }
 
+    printRed("Found .root files:");
+    printSeparation();
     for (const std::string &rootFilePath : rootFilePaths) {
         std::cout << rootFilePath << std::endl;
     }
-
-    std::vector<std::string> cutInfos = splitString(rootFilePaths[0], '_');
-    for (const std::string &o : cutInfos) {
-        // std::cout << o << std::endl;
-        printRed(o);
-    }
-
     printSeparation();
     std::cout << opt << std::endl;
     // // TFile *inputFile = new TFile("../External/zFindingPlots/hDiff_output.root", "READ");
@@ -405,8 +432,9 @@ void dPhi_Fitter(std::string opt = "") {
     // legend->Draw();
 
     std::vector<std::string> selections = splitString(opt, '_');
-    if (selections[0] == "single")    fit_the_hist(rootFilePaths[4], selections[1]);
+    if (selections[0] == "single")    fit_the_hist(rootFilePaths[2], selections[1]);
     if (selections[0] == "all")       fit_hists_all(rootFilePaths, selections[1]);
+    if (selections[0] == "A")         plotMultiCen();
     // fit_the_hist_ver2(hDiff, can);
 
     // Stop the stopwatch and print the runtime:

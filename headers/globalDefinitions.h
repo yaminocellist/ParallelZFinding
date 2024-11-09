@@ -88,6 +88,12 @@ struct EtaWithPhi {
     EtaWithPhi(double e, double p) : eta_value(e), phi_value(p) {}
 };
 
+bool isInteger(const std::string& s) {
+    std::istringstream iss(s);
+    int x;
+    return (iss >> x) && (iss.eof());
+}
+
 std::pair<double, double> nearestZ (const myPoint3D &p1, const myPoint3D &p2) {
     double numeratorZ = (p1.y - p2.y)*(p1.y*p2.z - p2.y*p1.z) - (p1.x - p2.x)*(p2.x*p1.z - p1.x*p2.z);
     double denominatorZ = (p1.x - p2.x)*(p1.x - p2.x) + (p1.y - p2.y)*(p1.y - p2.y);
@@ -128,11 +134,11 @@ std::vector<std::string> splitString(const std::string &str, char delim) {
     return tokens;
 }
 
-bool isInteger(const std::string& s) {
-    std::istringstream iss(s);
-    int x;
-    return (iss >> x) && (iss.eof());
-}
+/**
+ * @brief 
+ * 
+ * @return ** void 
+ */
 
 void current_PC_time () {
     auto now   = std::chrono::system_clock::now();
@@ -204,7 +210,7 @@ void printBlue(const T &content) {
 }
 
 void printSeparation () {
-    printBlue("=======================================================================");
+    printBlue("=================================================================================================================");
 }
 
 #endif
