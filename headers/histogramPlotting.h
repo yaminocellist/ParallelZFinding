@@ -466,7 +466,7 @@ void backgroundCancelling (TH1D* const hBackground, TH1D* const hSignal, std::ve
     gStyle -> SetTitleSize(0.065,"t");
 
     //gPad -> SetLogy(1);
-    TLine *l = new TLine(-2,0,2,0);
+    TLine *l = new TLine(-M_PI,0,M_PI,0);
 	l -> Draw("same"); 
     l -> SetLineColor(kGreen);
 
@@ -606,21 +606,29 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     gStyle -> SetTitleSize(0.065,"t");
 
     //gPad -> SetLogy(1);
-    TLine *l = new TLine(-2,0,2,0);
+    TLine *l = new TLine(-M_PI,0,M_PI,0);
 	l -> Draw("same"); 
     l -> SetLineColor(kGreen);
 
     if (options[1] == "wo") {
-        can1 -> SaveAs(Form("../../External/zFindingPlots/dPhi_mixedsubtract_%2.2f_%2.2f_%1.2f_%1.2f.png", std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
+        can1 -> SaveAs(Form("../../External/zFindingPlots/dPhi_mixedsubtract_%devents_%2.2f_%2.2f_%1.2f_%1.2f.png", std::stoi(method[1]), std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
+
+        if (options[2] == "f") {
+            TFile *outputFile = new TFile(Form("../../External/zFindingPlots/hDiff_%devents_%2.2f_%2.2f_%1.2f_%1.2f.root", std::stoi(method[1]), std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])), "RECREATE");
+            hDiff->Write();
+            outputFile->Close();
+        }
     } else {
-        can1 -> SaveAs(Form("../../External/zFindingPlots/dPhi_mixedsubtract_with_dEta_cut_%2.2f_%2.2f_%1.2f_%1.2f.png", std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
+        can1 -> SaveAs(Form("../../External/zFindingPlots/dPhi_mixedsubtract_with_dEta_cut_%.2f_%devents_%2.2f_%2.2f_%1.2f_%1.2f.png", dEta_cut, std::stoi(method[1]), std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
+
+        if (options[2] == "f") {
+            TFile *outputFile = new TFile(Form("../../External/zFindingPlots/hDiff_with_dEta_cut_%.2f_%devents_%2.2f_%2.2f_%1.2f_%1.2f.root", dEta_cut, std::stoi(method[1]), std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])), "RECREATE");
+            hDiff->Write();
+            outputFile->Close();
+        }
     }
 
-    if (options[2] == "f") {
-        TFile *outputFile = new TFile(Form("../../External/zFindingPlots/hDiff_%2.2f_%2.2f_%1.2f_%1.2f.root", std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])), "RECREATE");
-        hDiff->Write();
-        outputFile->Close();
-    }    
+        
 }
 
 void ArrayPlot1D_Logy (const std::vector<TH1D*>& h, std::vector<std::string> method, const std::string &fileTitle) {

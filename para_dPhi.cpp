@@ -118,7 +118,7 @@ void dPhiNoMixWithEta (
                 dPhi = Phi0[k].phi_value - Phi1[l].phi_value;
                 if (dPhi > M_PI)    dPhi -= 2 * M_PI;
                 if (dPhi < -M_PI)   dPhi += 2 * M_PI;
-                if (std::abs(dEta) < 0.2)
+                if (std::abs(dEta) < dEta_cut)
                     h_dPhi_nomix->Fill(dPhi);
             }
         }
@@ -386,7 +386,7 @@ void dPhi_mixing (
     }
     lock.unlock();
 }
-
+// Using an averaged load for each thread:
 void dPhi_mixing_with_dEta_cut (
     const int &id,
     const int &chunck_size,
@@ -406,7 +406,7 @@ void dPhi_mixing_with_dEta_cut (
                     dEta = phi0.eta_value - phi1.eta_value;
                     if (dPhi > M_PI)  dPhi -= 2 * M_PI;
                     if (dPhi < -M_PI) dPhi += 2 * M_PI;
-                    if (std::abs(dEta)) h_Background_dPhi->Fill(dPhi);
+                    if (std::abs(dEta) < dEta_cut) h_Background_dPhi->Fill(dPhi);
                 }
             }
             // Process pairs from event_Phi0[j] and event_Phi1[i] to ensure symmetry
@@ -416,7 +416,7 @@ void dPhi_mixing_with_dEta_cut (
                     dEta = phi0.eta_value - phi1.eta_value;
                     if (dPhi > M_PI)  dPhi -= 2 * M_PI;
                     if (dPhi < -M_PI) dPhi += 2 * M_PI;
-                    if (std::abs(dEta)) h_Background_dPhi->Fill(dPhi);
+                    if (std::abs(dEta) < dEta_cut) h_Background_dPhi->Fill(dPhi);
                 }
             }
         }
@@ -424,6 +424,7 @@ void dPhi_mixing_with_dEta_cut (
     lock.unlock();
 }
 
+// Using a calculated, balanced (thought to be) load for each thread:
 void dPhi_mixing_with_dEta_cut_ver2 (
     const int &starter,
     const int &ender,
@@ -441,7 +442,7 @@ void dPhi_mixing_with_dEta_cut_ver2 (
                     dEta = phi0.eta_value - phi1.eta_value;
                     if (dPhi > M_PI)  dPhi -= 2 * M_PI;
                     if (dPhi < -M_PI) dPhi += 2 * M_PI;
-                    if (std::abs(dEta)) h_Background_dPhi->Fill(dPhi);
+                    if (std::abs(dEta) < dEta_cut) h_Background_dPhi->Fill(dPhi);
                 }
             }
             // Process pairs from event_Phi0[j] and event_Phi1[i] to ensure symmetry
@@ -451,7 +452,7 @@ void dPhi_mixing_with_dEta_cut_ver2 (
                     dEta = phi0.eta_value - phi1.eta_value;
                     if (dPhi > M_PI)  dPhi -= 2 * M_PI;
                     if (dPhi < -M_PI) dPhi += 2 * M_PI;
-                    if (std::abs(dEta)) h_Background_dPhi->Fill(dPhi);
+                    if (std::abs(dEta) < dEta_cut) h_Background_dPhi->Fill(dPhi);
                 }
             }
         }
