@@ -21,7 +21,6 @@
 #include <TMultiGraph.h>
 #include <TProfile.h>
 
-
 /*********************************************************************
  *                      GLOBAL VARIABLES;
  * ******************************************************************/
@@ -29,8 +28,10 @@ double zmin = -45;
 double zmax = 5;        // From sPHENIX paper, the stave's length is aroung 27.12 cm;
 double scanstep = 0.2;  // unit: cm; 
 int bins = (zmax - zmin)/scanstep + 1;
-double dPhi_cut       = 0.01;
-double dEta_cut       = 1;
+const double dPhi_cut  = 0.01;
+const double dEta_cut  = 1;
+const double Eta_range = 1;
+const double TWO_PI    = 2*M_PI;
 double DCA_cut        = 0.2;    // unit: cm;
 double DCA_cutSQUARED = 0.04;   // unit: cm;
 double MBD_lower = 0., MBD_upper = 10.;

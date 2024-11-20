@@ -594,11 +594,12 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     double peak  = hDiff -> Integral(hDiff->FindFixBin(-centralPeak), hDiff->FindFixBin(centralPeak), "");
     // double Ratio = peak/events;
     
-    if (options[1] == "w")
-        hDiff -> SetTitle(Form("Subtracted Signal for %d Events, with |dEta| < %.2f", target, dEta_cut));
-    else
-        hDiff -> SetTitle(Form("Subtracted Signal for %d Events", target));
-    // hDiff -> SetTitle("Background Subtracted dPhi");
+    // if (options[1] == "wdE")
+    //     hDiff -> SetTitle(Form("Subtracted Signal for %d Events, with |dEta| < %.2f", target, dEta_cut));
+    // else if (options[1] == "wE")
+    //     hDiff -> SetTitle(Form("Subtracted Signal for %d Events, with |Eta| < %.2f", target, Eta_range));
+    // else
+    //     hDiff -> SetTitle(Form("Subtracted Signal for %d Events", target));
     gStyle->SetEndErrorSize(6);
     gStyle->SetErrorX(0.5);
     
@@ -610,23 +611,58 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
 	l -> Draw("same"); 
     l -> SetLineColor(kGreen);
 
+    int eventCount = std::stoi(method[1]);
+    double method4 = std::stod(method[4]);
+    double method5 = std::stod(method[5]);
+    double method2 = std::stod(method[2]);
+    double method3 = std::stod(method[3]);
+
+    std::string filePrefix;
     if (options[1] == "wo") {
-        can1 -> SaveAs(Form("../../External/zFindingPlots/dPhi_mixedsubtract_%devents_%2.2f_%2.2f_%1.2f_%1.2f.png", std::stoi(method[1]), std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
-
-        if (options[2] == "f") {
-            TFile *outputFile = new TFile(Form("../../External/zFindingPlots/hDiff_%devents_%2.2f_%2.2f_%1.2f_%1.2f.root", std::stoi(method[1]), std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])), "RECREATE");
-            hDiff->Write();
-            outputFile->Close();
-        }
+        hDiff -> SetTitle(Form("Subtracted Signal for %d Events", target));
+        filePrefix = Form("dPhi_mixedsubtract_%devents_%2.2f_%2.2f_%1.2f_%1.2f", eventCount, method4, method5, method2, method3);
+    } else if (options[1] == "wdE") {
+        hDiff -> SetTitle(Form("Subtracted Signal for %d Events, with |dEta| < %.2f", target, dEta_cut));
+        filePrefix = Form("dPhi_mixedsubtract_with_dEta_cut_%.2f_%devents_%2.2f_%2.2f_%1.2f_%1.2f", dEta_cut, eventCount, method4, method5, method2, method3);
     } else {
-        can1 -> SaveAs(Form("../../External/zFindingPlots/dPhi_mixedsubtract_with_dEta_cut_%.2f_%devents_%2.2f_%2.2f_%1.2f_%1.2f.png", dEta_cut, std::stoi(method[1]), std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
-
-        if (options[2] == "f") {
-            TFile *outputFile = new TFile(Form("../../External/zFindingPlots/hDiff_with_dEta_cut_%.2f_%devents_%2.2f_%2.2f_%1.2f_%1.2f.root", dEta_cut, std::stoi(method[1]), std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])), "RECREATE");
-            hDiff->Write();
-            outputFile->Close();
-        }
+        hDiff -> SetTitle(Form("Subtracted Signal for %d Events, with |Eta| < %.2f", target, Eta_range));
+        filePrefix = Form("dPhi_mixedsubtract_with_Eta_range_%.2f_%devents_%2.2f_%2.2f_%1.2f_%1.2f", Eta_range, eventCount, method4, method5, method2, method3);
     }
+
+    can1->SaveAs(("../../External/zFindingPlots/" + filePrefix + ".png").c_str());
+
+    if (options[2] == "f") {
+        std::string rootFileName = "../../External/zFindingPlots/hDiff_" + filePrefix + ".root";
+        TFile *outputFile = new TFile(rootFileName.c_str(), "RECREATE");
+        hDiff->Write();
+        outputFile->Close();
+    }
+
+    // if (options[1] == "wo") {
+    //     can1 -> SaveAs(Form("../../External/zFindingPlots/dPhi_mixedsubtract_%devents_%2.2f_%2.2f_%1.2f_%1.2f.png", std::stoi(method[1]), std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
+
+    //     if (options[2] == "f") {
+    //         TFile *outputFile = new TFile(Form("../../External/zFindingPlots/hDiff_%devents_%2.2f_%2.2f_%1.2f_%1.2f.root", std::stoi(method[1]), std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])), "RECREATE");
+    //         hDiff->Write();
+    //         outputFile->Close();
+    //     }
+    // } else if (options[1] == "wdE") {
+    //     can1 -> SaveAs(Form("../../External/zFindingPlots/dPhi_mixedsubtract_with_dEta_cut_%.2f_%devents_%2.2f_%2.2f_%1.2f_%1.2f.png", dEta_cut, std::stoi(method[1]), std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
+
+    //     if (options[2] == "f") {
+    //         TFile *outputFile = new TFile(Form("../../External/zFindingPlots/hDiff_with_dEta_cut_%.2f_%devents_%2.2f_%2.2f_%1.2f_%1.2f.root", dEta_cut, std::stoi(method[1]), std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])), "RECREATE");
+    //         hDiff->Write();
+    //         outputFile->Close();
+    //     }
+    // } else {
+    //     can1 -> SaveAs(Form("../../External/zFindingPlots/dPhi_mixedsubtract_with_Eta_range_%.2f_%devents_%2.2f_%2.2f_%1.2f_%1.2f.png", Eta_range, std::stoi(method[1]), std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
+
+    //     if (options[2] == "f") {
+    //         TFile *outputFile = new TFile(Form("../../External/zFindingPlots/hDiff_with_Eta_range_%.2f_%devents_%2.2f_%2.2f_%1.2f_%1.2f.root", Eta_range, std::stoi(method[1]), std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])), "RECREATE");
+    //         hDiff->Write();
+    //         outputFile->Close();
+    //     }
+    // }
 
         
 }

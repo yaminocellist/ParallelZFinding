@@ -19,8 +19,9 @@ part one:
     perZ
     mix
 part two:
-    w   
-    wo  
+    wo:  for mixing events, do without adding any Eta related cuts;   
+    wdE: for mixing events, do with dEta cut;
+    wE:  for mixing events, do with Eta range;
 
 Arguments definition for "dPhi_Fitter.C":
 ```bash
