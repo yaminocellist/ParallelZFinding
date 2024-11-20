@@ -475,12 +475,7 @@ void dPhi_mixing_with_Eta_range (
         for (int j = local_index; j < event_Phi1.size(); j++) {
             // Process pairs from event_Phi0[i] and event_Phi1[j]
             for (const EtaWithPhi& phi0 : event_Phi0[local_index]) {
-                eta1 = phi0.eta_value;
-                if (std::abs(eta1) >= Eta_range)     continue;
                 for (const EtaWithPhi& phi1 : event_Phi1[j]) {
-                    eta2 = phi1.eta_value;
-                    if (std::abs(eta2) >= Eta_range) continue;
-
                     dPhi = phi0.phi_value - phi1.phi_value;
                     if (dPhi > M_PI)  dPhi -= TWO_PI;
                     if (dPhi < -M_PI) dPhi += TWO_PI;
@@ -489,12 +484,7 @@ void dPhi_mixing_with_Eta_range (
             }
             // Process pairs from event_Phi0[j] and event_Phi1[i] to ensure symmetry
             for (const EtaWithPhi& phi0 : event_Phi0[j]) {
-                eta1 = phi0.eta_value;
-                if (std::abs(eta1) >= Eta_range)     continue;
                 for (const EtaWithPhi& phi1 : event_Phi1[local_index]) {
-                    eta2 = phi1.eta_value;
-                    if (std::abs(eta2) >= Eta_range) continue;
-
                     dPhi = phi0.phi_value - phi1.phi_value;
                     if (dPhi > M_PI)  dPhi -= TWO_PI;
                     if (dPhi < -M_PI) dPhi += TWO_PI;
@@ -916,23 +906,20 @@ int main(int argc, char* argv[]) {
                     clus_layer = ClusLayer->at(j);
                     if (dZ >= 0)    eta = -std::log(std::tan(theta/2));
                     if (dZ <  0)    eta = std::log(std::tan((M_PI - theta)/2));
-                    if (clus_layer == 3 || clus_layer == 4) {
-                        Phi0.emplace_back(eta, phi);
-                        event_Phi0[i].emplace_back(eta, phi);
-                    }
-                    else {
-                        Phi1.emplace_back(eta, phi);
-                        event_Phi1[i].emplace_back(eta, phi);
+                    if (std::abs(eta) < Eta_range) {
+                        if (clus_layer == 3 || clus_layer == 4) {
+                            Phi0.emplace_back(eta, phi);
+                            event_Phi0[i].emplace_back(eta, phi);
+                        }
+                        else {
+                            Phi1.emplace_back(eta, phi);
+                            event_Phi1[i].emplace_back(eta, phi);
+                        }
                     }
                 }
 
                 for (int k = 0; k < Phi0.size(); k++) {
-                    eta1 = Phi0[k].eta_value;
-                    if (std::abs(eta1) >= Eta_range)     continue;
                     for (int l = 0; l < Phi1.size(); l++) {
-                        eta2 = Phi1[l].eta_value;
-                        if (std::abs(eta2) >= Eta_range) continue;
-
                         dPhi = Phi0[k].phi_value - Phi1[l].phi_value;
                         if (dPhi > M_PI)    dPhi -= TWO_PI;
                         if (dPhi < -M_PI)   dPhi += TWO_PI;
