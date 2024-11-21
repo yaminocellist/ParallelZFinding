@@ -135,7 +135,7 @@ void fit_the_hist (
 
     double rst;
     double min_rst = std::numeric_limits<double>::max();
-    double par1 = 100., par2 = -30e4;
+    double par1 = 1000., par2 = -40e4;
     double start_p1 = par1, start_p2 = par2;
 
     std::function<double(const TH1D *const, const double &, const double &, const double &, const double &)> myFitFunction;
@@ -144,8 +144,8 @@ void fit_the_hist (
     if (option == "root")   myFitFunction = rootFit_ChiTwo;
     if (option == "Chi2")   myFitFunction = ChiSquared;
 
-    for (double p_1 = start_p1; p_1 < 1800.0; p_1++) {
-            for (double p_2 = start_p2; p_2 < 80.e4; p_2 += 100.0) {
+    for (double p_1 = start_p1; p_1 < 3000.0; p_1++) {
+            for (double p_2 = start_p2; p_2 < 300.e4; p_2 += 500.0) {
             rst = myFitFunction(hDiff, p_1, p_2, left_subrange_max, right_subrange_min);
             if (min_rst > rst) {
                 min_rst = rst;
@@ -383,7 +383,7 @@ void dPhi_Fitter(std::string opt = "") {
     TStopwatch timer;   timer.Start();
 
     std::string dirPath = "../External/zFindingPlots";  // The directory containing the files
-    std::string filePrefix = "hDiff_with_dEta_cut";  // Prefix of the file you are looking for
+    std::string filePrefix = "hDiff_with_Eta_range";  // Prefix of the file you are looking for
     std::vector<std::string> rootFilePaths = findRootFiles(dirPath, filePrefix);
     if (rootFilePaths.empty()) {
         std::cerr << "Error: Cannot find any .root files with the prefix hDiff_.." << filePrefix << "!" << std::endl;

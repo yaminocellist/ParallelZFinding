@@ -620,16 +620,16 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     std::string filePrefix;
     if (options[1] == "wo") {
         hDiff -> SetTitle(Form("Subtracted Signal for %d Events", target));
-        filePrefix = Form("dPhi_mixedsubtract_%devents_%2.2f_%2.2f_%1.2f_%1.2f", eventCount, method4, method5, method2, method3);
+        filePrefix = Form("%devents_%2.2f_%2.2f_%1.2f_%1.2f", eventCount, method4, method5, method2, method3);
     } else if (options[1] == "wdE") {
         hDiff -> SetTitle(Form("Subtracted Signal for %d Events, with |dEta| < %.2f", target, dEta_cut));
-        filePrefix = Form("dPhi_mixedsubtract_with_dEta_cut_%.2f_%devents_%2.2f_%2.2f_%1.2f_%1.2f", dEta_cut, eventCount, method4, method5, method2, method3);
+        filePrefix = Form("with_dEta_cut_%.2f_%devents_%2.2f_%2.2f_%1.2f_%1.2f", dEta_cut, eventCount, method4, method5, method2, method3);
     } else {
         hDiff -> SetTitle(Form("Subtracted Signal for %d Events, with |Eta| < %.2f", target, Eta_range));
-        filePrefix = Form("dPhi_mixedsubtract_with_Eta_range_%.2f_%devents_%2.2f_%2.2f_%1.2f_%1.2f", Eta_range, eventCount, method4, method5, method2, method3);
+        filePrefix = Form("with_Eta_range_%.2f_%devents_%2.2f_%2.2f_%1.2f_%1.2f", Eta_range, eventCount, method4, method5, method2, method3);
     }
 
-    can1->SaveAs(("../../External/zFindingPlots/" + filePrefix + ".png").c_str());
+    can1->SaveAs(("../../External/zFindingPlots/dPhi_mixedsubtract_" + filePrefix + ".png").c_str());
 
     if (options[2] == "f") {
         std::string rootFileName = "../../External/zFindingPlots/hDiff_" + filePrefix + ".root";
