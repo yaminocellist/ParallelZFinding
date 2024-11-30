@@ -20,6 +20,7 @@
 #include <TTree.h>
 #include <TMultiGraph.h>
 #include <TProfile.h>
+#include <TParameter.h>
 
 /*********************************************************************
  *                      GLOBAL VARIABLES;
@@ -35,7 +36,8 @@ const double TWO_PI    = 2*M_PI;
 double DCA_cut        = 0.2;    // unit: cm;
 double DCA_cutSQUARED = 0.04;   // unit: cm;
 double MBD_lower = 0., MBD_upper = 10.;
-double abs_fit_range = 0.2;
+double abs_fit_range = M_PI/60;
+// double abs_fit_range = 0.2;
 
  // ANSI escape code for red text
 const std::string COLOR_GREEN="\033[0;32m";
@@ -148,8 +150,33 @@ void current_PC_time () {
     std::cout << "Run started at: " << std::put_time(std::localtime(&now_c), "%Y-%m-%d %H:%M:%S") << std::endl;
 }
 
-std::vector<int> readCsvToVector(const std::string& filename) {
-    std::vector<int> result;
+// template <typename T>
+// T readCsvToVector(const std::string& filename) {
+//     std::vector<int> result;
+//     std::ifstream file(filename);
+//     if (!file.is_open()) {
+//         std::cerr << "Failed to open file: " << filename << std::endl;
+//         return result;
+//     }
+    
+//     std::string line;
+//     if (std::getline(file, line)) {
+//         std::stringstream ss(line);
+//         std::string value;
+        
+//         while (std::getline(ss, value, ',')) {
+//             result.push_back(std::stoi(value));
+//         }
+//     }
+    
+//     file.close();
+//     return result;
+// }
+
+// Function to read a CSV file and return a vector of vectors containing the data
+template <typename T>
+T readCsvToVector(const std::string& filename) {
+    T result;
     std::ifstream file(filename);
     if (!file.is_open()) {
         std::cerr << "Failed to open file: " << filename << std::endl;
@@ -157,17 +184,40 @@ std::vector<int> readCsvToVector(const std::string& filename) {
     }
     
     std::string line;
-    if (std::getline(file, line)) {
+    bool isHeader = true; // Skip the first row if it contains headers
+    while (std::getline(file, line)) {
+        if (isHeader) {
+            isHeader = false;
+            // If headers need to be processed, you can handle them here
+            continue;
+        }
         std::stringstream ss(line);
         std::string value;
+        std::vector<double> row;
         
         while (std::getline(ss, value, ',')) {
-            result.push_back(std::stoi(value));
+            try {
+                row.push_back(std::stod(value)); // Convert value to double
+            } catch (const std::invalid_argument& e) {
+                std::cerr << "Invalid value: " << value << " in file " << filename << std::endl;
+                row.push_back(0.0); // Optional: Handle invalid values gracefully
+            }
         }
+        result.push_back(row);
     }
     
     file.close();
     return result;
+}
+
+// Helper function to print the read contents of .csv
+void printCsvData(const std::vector<std::vector<double>>& data) {
+    for (const auto& row : data) {
+        for (const auto& value : row) {
+            std::cout << value << " ";
+        }
+        std::cout << std::endl;
+    }
 }
 
 std::string findRootFile (const std::string &directory, const std::string &prefix) {

@@ -6,7 +6,6 @@
 #include <TLine.h>
 #include <TStopwatch.h>
 
-#include <iostream>
 #include "./headers/globalDefinitions.h"
 #include "./headers/histogramPlotting.h"
 
@@ -91,7 +90,21 @@ void fit_the_hist (
         std::cerr << "Error: Cannot open .root file!" << std::endl;
         return;
     }
-
+    TParameter<double>* ratioParam = (TParameter<double>*) inputFile->Get("signal_multiplied_ratio");
+    TParameter<double>* numParam   = (TParameter<double>*) inputFile->Get("number_of_events");
+    TParameter<double>* lCenParam  = (TParameter<double>*) inputFile->Get("lower_centrality");
+    TParameter<double>* hCenParam  = (TParameter<double>*) inputFile->Get("higher_centrality");
+    TParameter<double>* etaParam   = (TParameter<double>*) inputFile->Get("eta_range");
+    double signalRatio = ratioParam->GetVal();
+    double numEvents = numParam->GetVal();
+    double lowerCen = lCenParam->GetVal();
+    double higherCen = hCenParam->GetVal();
+    double etaRange = etaParam->GetVal();
+    printRed(signalRatio);
+    printRed(numEvents);
+    printRed(lowerCen);
+    printRed(higherCen);
+    printRed(etaRange);
     TH1D *hDiff = (TH1D*)inputFile->Get("Background Subtracted Signal");
     if (!hDiff) {
         std::cerr << "Error: Cannot find the target histogram!" << std::endl;
@@ -135,8 +148,9 @@ void fit_the_hist (
 
     double rst;
     double min_rst = std::numeric_limits<double>::max();
-    double par1 = 1000., par2 = -40e4;
+    double par1 = 0., par2 = -1000;
     double start_p1 = par1, start_p2 = par2;
+    double end_p1 = 100., end_p2 = 1000;
 
     std::function<double(const TH1D *const, const double &, const double &, const double &, const double &)> myFitFunction;
     if (option == "TLS")    myFitFunction = TotalLeastSquare;
@@ -144,8 +158,8 @@ void fit_the_hist (
     if (option == "root")   myFitFunction = rootFit_ChiTwo;
     if (option == "Chi2")   myFitFunction = ChiSquared;
 
-    for (double p_1 = start_p1; p_1 < 3000.0; p_1++) {
-            for (double p_2 = start_p2; p_2 < 300.e4; p_2 += 500.0) {
+    for (double p_1 = start_p1; p_1 < end_p1; p_1+= 0.1) {
+            for (double p_2 = start_p2; p_2 < end_p2; p_2 += 1.0) {
             rst = myFitFunction(hDiff, p_1, p_2, left_subrange_max, right_subrange_min);
             if (min_rst > rst) {
                 min_rst = rst;
@@ -173,20 +187,16 @@ void fit_the_hist (
     std::vector<std::string> cutInfos = splitString(rootFilePath, '_');
     std::string cenRange1 = cutInfos[3];
     std::string cenRange2 = cutInfos[4].substr(0, cutInfos[4].length()-5);
-    TH1D *hFiltered = new TH1D("hFiltered", Form("Filtered Histogram of %s < Centrality < %s;dPhi value;# of count", cenRange1.c_str(), cenRange2.c_str()), nBins, hDiff->GetXaxis()->GetXmin(), hDiff->GetXaxis()->GetXmax());
-    TF1 *bottomNoise = new TF1("bottomNoise", "[0]*[0]*cos(2*x) + [1]", hDiff->GetXaxis()->GetXmin(), hDiff->GetXaxis()->GetXmax());
-    bottomNoise->SetParameters(par1, par2);
+    TH1D *hFiltered = new TH1D("hFiltered", Form("Filtered Histogram of %.2f < Centrality < %.2f;dPhi value;# of count", lowerCen, higherCen), nBins, hDiff->GetXaxis()->GetXmin(), hDiff->GetXaxis()->GetXmax());
+    TF1 *bottomNoiseAll = new TF1("bottomNoiseAll", "[0]*[0]*cos(2*x) + [1]", hDiff->GetXaxis()->GetXmin(), hDiff->GetXaxis()->GetXmax());
+    bottomNoiseAll->SetParameters(par1, par2);
     // Loop over each bin
     for (int i = 1; i <= nBins; ++i) {
         double binCenter = hDiff->GetBinCenter(i);
-        double fitValue = bottomNoise->Eval(binCenter);
+        double fitValue = bottomNoiseAll->Eval(binCenter);
         double newBinContent = hDiff->GetBinContent(i) - fitValue;
         hFiltered->SetBinContent(i, newBinContent);
     }
-
-    // for (int i = 1; i <= nBins; ++i) {
-    //     std::cout << hFiltered->GetBinCenter(i) << ",  " << hFiltered->GetBinContent(i) << std::endl;
-    // }
 
     hFiltered->Draw();
     hFiltered->SetFillStyle(3003);
@@ -198,13 +208,14 @@ void fit_the_hist (
     hFiltered->GetYaxis()->SetTitleSize(0.05);
     hFiltered->GetYaxis()->SetTitleOffset(.8);
 
-    std::cout << left_subrange_min << ", " << left_subrange_max << ", " << right_subrange_min << ", " << right_subrange_max << std::endl;
+    // std::cout << left_subrange_min << ", " << left_subrange_max << ", " << right_subrange_min << ", " << right_subrange_max << std::endl;
     double Signal = hFiltered->Integral(hFiltered->FindFixBin(left_subrange_max),hFiltered->FindFixBin(right_subrange_min));
     double Background = hFiltered->Integral(hFiltered->FindFixBin(left_subrange_min), hFiltered->FindFixBin(left_subrange_max))
                       + hFiltered->Integral(hFiltered->FindFixBin(right_subrange_min), hFiltered->FindFixBin(right_subrange_max));
-    double Multiplicity = Signal/numberOfEvents;
+    printRed(numEvents);
+    double Multiplicity = Signal/numEvents;
     double SNR = Signal/Background;
-    std::cout << Signal << ", " << Background << ", " << SNR << ", " << Multiplicity << ", " << numberOfEvents << std::endl;
+    std::cout << Signal << ", " << Background << ", " << SNR << ", " << Multiplicity << ", " << numEvents << std::endl;
 
     TLine *line_horizon = new TLine(hFiltered->GetXaxis()->GetXmin(), 0, hFiltered->GetXaxis()->GetXmax(), 0);
     line_horizon->SetLineColor(kRed);
@@ -222,6 +233,12 @@ void fit_hists_all (
     const std::vector<std::string> &rootFilePaths,
     const TString &option
 ) {
+    std::ofstream records("../External/dNchdEtaNpart.csv", std::ios::app);
+    if (!records.is_open()) {
+        std::cerr << "Error: Could not open the record file!" << std::endl;
+        return 1;
+    }
+
     int i = 0;
     for (const std::string &rootFilePath : rootFilePaths) {
         std::vector<std::string> cutInfos = splitString(rootFilePath, '_');
@@ -232,7 +249,21 @@ void fit_hists_all (
             std::cerr << "Error: Cannot open .root file!" << std::endl;
             return;
         }
-
+        TParameter<double>* ratioParam = (TParameter<double>*) inputFile->Get("signal_multiplied_ratio");
+        TParameter<double>* numParam   = (TParameter<double>*) inputFile->Get("number_of_events");
+        TParameter<double>* lCenParam  = (TParameter<double>*) inputFile->Get("lower_centrality");
+        TParameter<double>* hCenParam  = (TParameter<double>*) inputFile->Get("higher_centrality");
+        TParameter<double>* etaParam   = (TParameter<double>*) inputFile->Get("eta_range");
+        double signalRatio = ratioParam->GetVal();
+        double numEvents = numParam->GetVal();
+        double lowerCen = lCenParam->GetVal();
+        double higherCen = hCenParam->GetVal();
+        double etaRange = etaParam->GetVal();
+        printRed(signalRatio);
+        printRed(numEvents);
+        printRed(lowerCen);
+        printRed(higherCen);
+        printRed(etaRange);
         TH1D *hDiff = (TH1D*)inputFile->Get("Background Subtracted Signal");
         if (!hDiff) {
             std::cerr << "Error: Cannot find the target histogram!" << std::endl;
@@ -245,8 +276,6 @@ void fit_hists_all (
         can -> cd(1);
         hDiff->SetLineColor(kBlue);
         hDiff->SetLineWidth(2);
-        // hDiff->SetMarkerStyle(0);  // Disable markers
-        // hDiff->SetMarkerSize(10);   // Ensure no marker size
         hDiff->Draw("hist");
 
         double left_subrange_min = hDiff->GetXaxis()->GetXmin();
@@ -270,16 +299,17 @@ void fit_hists_all (
 
         double rst;
         double min_rst = std::numeric_limits<double>::max();
-        double par1 = 100., par2 = -40e4;
+        double par1 = 0., par2 = -1000;
         double start_p1 = par1, start_p2 = par2;
+        double end_p1 = 100., end_p2 = 1000;
 
         std::function<double(const TH1D *const, const double &, const double &, const double &, const double &)> myFitFunction;
         if (option == "TLS")    myFitFunction = TotalLeastSquare;
         if (option == "LS")     myFitFunction = LeastSquare;
         if (option == "root")   myFitFunction = rootFit_ChiTwo;
         if (option == "Chi2")   myFitFunction = ChiSquared;
-        for (double p_1 = start_p1; p_1 < 1800.0; p_1++) {
-            for (double p_2 = start_p2; p_2 < 40.e4; p_2 += 100.0) {
+        for (double p_1 = start_p1; p_1 < end_p1; p_1 += 0.1) {
+            for (double p_2 = start_p2; p_2 < end_p2; p_2 += 1.0) {
                 rst = myFitFunction(hDiff, p_1, p_2, left_subrange_max, right_subrange_min);
                 if (min_rst > rst) {
                     min_rst = rst;
@@ -304,13 +334,13 @@ void fit_hists_all (
         can -> cd(2);
         int nBins = hDiff->GetNbinsX();
         // TH1D *hFiltered = new TH1D("hFiltered", "Subtracted Histogram", nBins, hDiff->GetXaxis()->GetXmin(), hDiff->GetXaxis()->GetXmax());
-        TH1D *hFiltered = new TH1D("hFiltered", Form("Filtered Histogram of %s < Centrality < %s;dPhi value;# of count", cenRange1.c_str(), cenRange2.c_str()), nBins, hDiff->GetXaxis()->GetXmin(), hDiff->GetXaxis()->GetXmax());
-        TF1 *bottomNoise = new TF1("bottomNoise", "[0]*[0]*cos(2*x) + [1]", hDiff->GetXaxis()->GetXmin(), hDiff->GetXaxis()->GetXmax());
-        bottomNoise->SetParameters(par1, par2);
+        TH1D *hFiltered = new TH1D("hFiltered", Form("Filtered Histogram of %.2f < Centrality < %.2f;dPhi value;# of count", lowerCen, higherCen), nBins, hDiff->GetXaxis()->GetXmin(), hDiff->GetXaxis()->GetXmax());
+        TF1 *bottomNoiseAll = new TF1("bottomNoiseAll", "[0]*[0]*cos(2*x) + [1]", hDiff->GetXaxis()->GetXmin(), hDiff->GetXaxis()->GetXmax());
+        bottomNoiseAll->SetParameters(par1, par2);
         // Loop over each bin
         for (int i = 1; i <= nBins; ++i) {
             double binCenter = hDiff->GetBinCenter(i);
-            double fitValue = bottomNoise->Eval(binCenter);
+            double fitValue = bottomNoiseAll->Eval(binCenter);
             double newBinContent = hDiff->GetBinContent(i) - fitValue;
             hFiltered->SetBinContent(i, newBinContent);
         }
@@ -329,14 +359,13 @@ void fit_hists_all (
 
         std::string hDiff_title = hDiff->GetTitle();
         std::vector<std::string> splitted = splitString(hDiff_title, ' ');
-        int numberOfEvents = std::stoi(splitted[3]);
-        std::cout << left_subrange_min << ", " << left_subrange_max << ", " << right_subrange_min << ", " << right_subrange_max << std::endl;
+        // std::cout << left_subrange_min << ", " << left_subrange_max << ", " << right_subrange_min << ", " << right_subrange_max << std::endl;
         double Signal = hFiltered->Integral(hFiltered->FindFixBin(left_subrange_max),hFiltered->FindFixBin(right_subrange_min));
         double Background = hFiltered->Integral(hFiltered->FindFixBin(left_subrange_min), hFiltered->FindFixBin(left_subrange_max))
                         + hFiltered->Integral(hFiltered->FindFixBin(right_subrange_min), hFiltered->FindFixBin(right_subrange_max));
-        double Multiplicity = Signal/numberOfEvents;
+        double Multiplicity = Signal/numEvents;
         double SNR = Signal/Background;
-        std::cout << Signal << ", " << Background << ", " << SNR << ", " << Multiplicity << ", " << numberOfEvents << std::endl;
+        std::cout << Signal << ", " << Background << ", " << SNR << ", " << Multiplicity << ", " << numEvents << std::endl;
 
         TLine *line_horizon = new TLine(hFiltered->GetXaxis()->GetXmin(), 0, hFiltered->GetXaxis()->GetXmax(), 0);
         line_horizon->SetLineColor(kRed);
@@ -349,6 +378,8 @@ void fit_hists_all (
         can->Update();
         std::string fileName = rootFilePath.substr(0, rootFilePath.length()-5);
         can -> SaveAs(Form("%s_%s.png", fileName.c_str(), option.Data()));
+
+        records << lowerCen << "," << higherCen << "," << numEvents << "," << abs_fit_range << "," << Multiplicity << std::endl;
         i++;
     }
 }
@@ -383,15 +414,15 @@ void dPhi_Fitter(std::string opt = "") {
     TStopwatch timer;   timer.Start();
 
     std::string dirPath = "../External/zFindingPlots";  // The directory containing the files
-    std::string filePrefix = "hDiff_with_Eta_range";  // Prefix of the file you are looking for
+    std::string filePrefix = "hDiff_with_Eta_range_1.00_1000e";  // Prefix of the file you are looking for
     std::vector<std::string> rootFilePaths = findRootFiles(dirPath, filePrefix);
     if (rootFilePaths.empty()) {
         std::cerr << "Error: Cannot find any .root files with the prefix hDiff_.." << filePrefix << "!" << std::endl;
         exit(1);
     }
 
-    printRed("Found .root files:");
     printSeparation();
+    printRed("Found .root files:");
     for (const std::string &rootFilePath : rootFilePaths) {
         std::cout << rootFilePath << std::endl;
     }
@@ -438,7 +469,8 @@ void dPhi_Fitter(std::string opt = "") {
     std::vector<std::string> selections = splitString(opt, '_');
     if (selections[0] == "single")    fit_the_hist(rootFilePaths, selections[1], std::stoi(selections[2]));
     if (selections[0] == "all")       fit_hists_all(rootFilePaths, selections[1]);
-    if (selections[0] == "A")         plotMultiCen();
+    // if (selections[0] == "A")         plotMultiCen();
+    if (selections[0] == "A")         Npart();
     // fit_the_hist_ver2(hDiff, can);
 
     // Stop the stopwatch and print the runtime:

@@ -519,7 +519,9 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
         current_binContent = hBackground->GetBinContent(bin);
         if (max_mixed < current_binContent)     max_mixed = current_binContent;
     }
-    hSignal -> Add(hSignal, max_mixed/max_unmixed - 1);
+    double signalRatio = max_mixed/max_unmixed;
+    hSignal -> Add(hSignal, signalRatio - 1);
+    printBlue(signalRatio);
 
     // max_mixed   = hBackground->GetBinContent(hBackground->GetMaximumBin());
     // max_unmixed = hSignal->GetBinContent(hSignal->GetMaximumBin());
@@ -542,7 +544,6 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     if (max_unmixed < max_mixed)    max_y_range = max_mixed;
     if (min_unmixed < min_mixed)    min_y_range = min_unmixed;
 
-    // std::cout << max_mixed << ", " << min_mixed << ", " << max_unmixed << ", " << min_unmixed << std::endl;
     hSignal -> GetYaxis() -> SetRangeUser(min_y_range*0.9, max_y_range*1.1);
     hBackground -> GetYaxis() -> SetRangeUser(min_y_range*0.9, max_y_range*1.1);
 
@@ -562,9 +563,9 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     hBackground -> GetXaxis() -> CenterTitle(true);
     hBackground -> GetYaxis() -> CenterTitle(true);
 
-    TLegend *lg = new TLegend(0.12, 0.8, 0.33, 0.9);
+    TLegend *lg = new TLegend(0.12, 0.8, 0.35, 0.9);
     lg -> AddEntry(hSignal, "Unmixed Events' dPhi", "l");
-    lg -> AddEntry(hBackground, "Mixed Events' dPhi", "l");
+    lg -> AddEntry(hBackground, Form("Mixed Events' dPhi, multiplied by %.2f", signalRatio), "l");
     gStyle -> SetLegendTextSize(.043);
     lg->Draw("same");
     can1 -> cd(2);
@@ -579,6 +580,7 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     hNormalized -> Add(hBackground, N-1);
     TH1D* hDiff = (TH1D*) hSignal->Clone("Background Subtracted Signal");
     hDiff -> Add(hNormalized, -1);
+    hDiff -> Add(hDiff, 1./signalRatio - 1);
     hDiff -> Sumw2();
     hDiff -> Draw("HIST SAME");
     hDiff -> Draw("e1psame");
@@ -632,9 +634,19 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     can1->SaveAs(("../../External/zFindingPlots/dPhi_mixedsubtract_" + filePrefix + ".png").c_str());
 
     if (options[2] == "f") {
+        TParameter<double>* ratioParam = new TParameter<double>("signal_multiplied_ratio", signalRatio);
+        TParameter<double>* numParam   = new TParameter<double>("number_of_events", target);
+        TParameter<double>* lCenParam  = new TParameter<double>("lower_centrality", method2);
+        TParameter<double>* hCenParam  = new TParameter<double>("higher_centrality", method3);
+        TParameter<double>* EtaParam   = new TParameter<double>("eta_range", Eta_range);
         std::string rootFileName = "../../External/zFindingPlots/hDiff_" + filePrefix + ".root";
         TFile *outputFile = new TFile(rootFileName.c_str(), "RECREATE");
-        hDiff->Write();
+        hDiff     ->Write();
+        ratioParam->Write();
+        numParam  ->Write();
+        lCenParam ->Write();
+        hCenParam ->Write();
+        EtaParam  ->Write();
         outputFile->Close();
     }
 
@@ -1122,4 +1134,100 @@ void plotMultiCen() {
 
     // Save the canvas with both profiles
     c1->SaveAs("../External/zFindingPlots/Cen_Multi_LS_TLS_Comparison.png");
+}
+
+void Npart () {
+    TCanvas *c1 = new TCanvas("c1", "Npart vs. dN/d#eta/(<Npart>/2)", 0, 50, 1920, 1056);
+
+    std::vector<std::vector<double>> data = readCsvToVector<std::vector<std::vector<double>>>("../External/dNchdEtaNpart.csv");
+    auto graph_paper = new TGraph();
+    graph_paper->AddPoint(353, 3.45);   // 0-3
+    graph_paper->AddPoint(329, 3.34);   // 3-6
+    graph_paper->AddPoint(291, 3.25);   // 6-10
+    graph_paper->AddPoint(252, 3.16);   // 10-15
+    graph_paper->AddPoint(215, 3.12);   // 15-20
+    graph_paper->AddPoint(180, 3.08);   // 20-25
+    graph_paper->AddPoint(149, 3.03);   // 25-30
+    graph_paper->AddPoint(122, 3.00);   // 30-35
+    graph_paper->AddPoint(102, 2.91);   // 35-40
+    graph_paper->AddPoint(83, 2.87);    // 40-45
+
+    graph_paper->SetLineColor(8);
+    graph_paper->SetLineWidth(2);
+    graph_paper->SetMarkerColor(8);
+    graph_paper->SetMarkerStyle(20);
+    graph_paper->SetMarkerSize(1.2);
+    graph_paper->GetXaxis()->SetTitle("N_{part}");
+    graph_paper->GetXaxis()->CenterTitle(true);
+    graph_paper->GetYaxis()->SetTitle("dN_{ch}/d#eta/(N_{part}/2)");
+    graph_paper->GetYaxis()->CenterTitle(true);
+
+    auto graph_0052 = new TGraph();
+    graph_0052->AddPoint(353, 941.965/353);   // 0-3
+    graph_0052->AddPoint(329, 963.663/329);   // 3-6
+    graph_0052->AddPoint(291, 899.042/291);   // 6-10
+    graph_0052->AddPoint(252, 788.956/252);   // 10-15
+    graph_0052->AddPoint(215, 653.359/215);   // 15-20
+    graph_0052->AddPoint(180, 552.067/180);   // 20-25
+    graph_0052->AddPoint(149, 445.922/149);   // 25-30
+    graph_0052->AddPoint(122, 363.475/122);   // 30-35
+    graph_0052->AddPoint(102, 293.811/102);   // 35-40
+    graph_0052->AddPoint(83, 227.804/83);     // 40-45
+
+    graph_0052->SetLineColor(2);
+    graph_0052->SetLineWidth(2);
+    graph_0052->SetMarkerColor(2);
+    graph_0052->SetMarkerStyle(20);
+    graph_0052->SetMarkerSize(1.2);
+    graph_0052->GetXaxis()->SetTitle("N_{part}");
+    graph_0052->GetXaxis()->CenterTitle(true);
+    graph_0052->GetYaxis()->SetTitle("dN_{ch}/d#eta/(N_{part}/2)");  // Set the title of the x-axis
+    graph_0052->GetYaxis()->CenterTitle(true);     // Center the x-axis title
+
+    auto graph_020 = new TGraph();
+    graph_020->AddPoint(353, 1057.54/353);   // 0-3
+    graph_020->AddPoint(329, 1115.79/329);   // 3-6
+    graph_020->AddPoint(291, 1152.22/291);   // 6-10
+    graph_020->AddPoint(252, 1036.31/252);   // 10-15
+    graph_020->AddPoint(215, 849.616/215);   // 15-20
+    graph_020->AddPoint(180, 722.125/180);   // 20-25
+    graph_020->AddPoint(149, 586.997/149);   // 25-30
+    graph_020->AddPoint(122, 495.049/122);   // 30-35
+    graph_020->AddPoint(102, 388.681/102);   // 35-40
+    graph_020->AddPoint(83, 304.816/83);     // 40-45
+    // printCsvData(data);
+
+    // graph_020->SetTitle("Hahahaha");
+    graph_020->SetLineColor(4);
+    graph_020->SetLineWidth(2);
+    graph_020->SetMarkerColor(4);
+    graph_020->SetMarkerStyle(20);
+    graph_020->SetMarkerSize(1.2);
+    graph_020->GetXaxis()->SetTitle("N_{part}");
+    graph_020->GetXaxis()->CenterTitle(true);
+    graph_020->GetYaxis()->SetTitle("dN_{ch}/d#eta/(N_{part}/2)");
+    graph_020->GetYaxis()->CenterTitle(true);
+    graph_020->GetXaxis()->SetRangeUser(80, 360);
+    graph_020->GetYaxis()->SetRangeUser(2.6, 4.2);
+
+    graph_paper->SetTitle("Pseudorapidity Density as a function of Npart");
+    graph_020->SetTitle("Pseudorapidity Density as a function of Npart");
+    graph_0052->SetTitle("Pseudorapidity Density as a function of Npart");
+    graph_020->Draw("");
+    graph_paper->Draw("LP same");
+    graph_0052->Draw("LP same");
+
+    // Create and customize the legend
+    auto legend = new TLegend(0.72, 0.75, 0.88, 0.89); // Adjust coordinates as needed
+    legend->AddEntry(graph_paper, "Data from Paper", "lp");
+    legend->AddEntry(graph_020, "Fit range: dPhi ~ [-0.2, 0.2]", "lp");
+    legend->AddEntry(graph_0052, "Fit range: dPhi ~ [-#pi/6, #pi/6]", "lp");
+    legend->SetTextSize(0.025);
+    legend->SetTextColor(kBlack);
+    legend->SetLineColor(kWhite);
+    legend->SetFillColor(kWhite);
+    legend->Draw();
+
+    // Save the canvas with both profiles
+    c1->SaveAs("../External/zFindingPlots/Pseudo_Npart.png");
 }
