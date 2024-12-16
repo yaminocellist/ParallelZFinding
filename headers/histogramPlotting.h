@@ -475,8 +475,8 @@ void backgroundCancelling (TH1D* const hBackground, TH1D* const hSignal, std::ve
 
 void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, std::vector<std::string> method, Int_t const & target) {
     double pi = TMath::Pi();
-    int bin_min  = 1;  // The first bin
-    int bin_max  = hSignal->GetNbinsX();  // The last bin
+    int bin_min  = 1;                     // The first bin;
+    int bin_max  = hSignal->GetNbinsX();  // The last bin;
     // Calculate bin positions for each label
     int bin_pi   = bin_max;
     int bin_0    = bin_min + (bin_max - bin_min)/2;
@@ -488,22 +488,18 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     hBackground->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
     hBackground->GetXaxis()->SetBinLabel(bin_pi, "#pi");
     hBackground->GetXaxis()->SetBinLabel(bin_min, "-#pi");
-    // Ensure the custom labels are displayed by setting the number of divisions
+    // Ensure the custom labels are displayed by setting the number of divisions:
     hBackground->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
-    // Update histogram to refresh the axis
-    // h[0]->Draw("HIST");
-    hBackground->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+    // Draw the labels vertically:
+    hBackground->GetXaxis()->LabelsOption("h"); 
 
     hSignal->GetXaxis()->SetBinLabel(bin_0, "0");
     hSignal->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
     hSignal->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
     hSignal->GetXaxis()->SetBinLabel(bin_pi, "#pi");
     hSignal->GetXaxis()->SetBinLabel(bin_min, "-#pi");
-        // Ensure the custom labels are displayed by setting the number of divisions
     hSignal->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
-        // Update histogram to refresh the axis
-        // h[0]->Draw("HIST");
-    hSignal->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+    hSignal->GetXaxis()->LabelsOption("h");
     
     std::vector<std::string> options = splitString(method[0], '_');
     // TCanvas *can1 = new TCanvas("csub","csub",0,50,1920,1056);
@@ -511,6 +507,7 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     can1 -> Divide(1, 2);
     can1 -> cd(1);
     double phi_range_low = -2.4, phi_range_high = -1.8;
+    double phi_range_low2 = 1.01, phi_range_high2 = 1.55;
     int bin_range_low = hBackground->FindBin(phi_range_low), bin_range_high = hBackground->FindBin(phi_range_high);
     double max_unmixed = -1, max_mixed = -1, min_unmixed = std::numeric_limits<double>::max(), min_mixed = std::numeric_limits<double>::max(), current_binContent;
     for (int bin = bin_range_low; bin <= bin_range_high; bin++) {
@@ -520,13 +517,17 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
         if (max_mixed < current_binContent)     max_mixed = current_binContent;
     }
     double signalRatio = max_mixed/max_unmixed;
+    std::cout << (hBackground->Integral(hBackground->FindFixBin(phi_range_low),hBackground->FindFixBin(phi_range_high),""))/(hSignal->Integral(hSignal->FindFixBin(phi_range_low),hSignal->FindFixBin(phi_range_high),"")) << std::endl;
+    std::cout << (hBackground->Integral(hBackground->FindFixBin(phi_range_low),hBackground->FindFixBin(phi_range_high),"")+hBackground->Integral(hBackground->FindFixBin(phi_range_low2),hBackground->FindFixBin(phi_range_high2),""))/(hSignal->Integral(hSignal->FindFixBin(phi_range_low),hSignal->FindFixBin(phi_range_high),"")+hSignal->Integral(hSignal->FindFixBin(phi_range_low2),hSignal->FindFixBin(phi_range_high2),"")) << std::endl;
+    std::cout << (hBackground->Integral(hBackground->FindFixBin(-M_PI),hBackground->FindFixBin(phi_range_high),"")+hBackground->Integral(hBackground->FindFixBin(phi_range_low2),hBackground->FindFixBin(M_PI),""))/(hSignal->Integral(hSignal->FindFixBin(-M_PI),hSignal->FindFixBin(phi_range_high),"")+hSignal->Integral(hSignal->FindFixBin(phi_range_low2),hSignal->FindFixBin(M_PI),"")) << std::endl;
+    signalRatio = (hBackground->Integral(hBackground->FindFixBin(-M_PI),hBackground->FindFixBin(phi_range_high),"")+hBackground->Integral(hBackground->FindFixBin(phi_range_low2),hBackground->FindFixBin(M_PI),""))/(hSignal->Integral(hSignal->FindFixBin(-M_PI),hSignal->FindFixBin(phi_range_high),"")+hSignal->Integral(hSignal->FindFixBin(phi_range_low2),hSignal->FindFixBin(M_PI),""));
     hSignal -> Add(hSignal, signalRatio - 1);
-    printBlue(signalRatio);
+    printBlue(max_mixed/max_unmixed); 
+    printWhite("FindBin and FindFixBin:");
+    printRed(hBackground->FindBin(phi_range_low2));
+    printRed(hBackground->FindFixBin(phi_range_low2));
 
-    // max_mixed   = hBackground->GetBinContent(hBackground->GetMaximumBin());
-    // max_unmixed = hSignal->GetBinContent(hSignal->GetMaximumBin());
-
-    // Loop it again for y-axis plotting range:
+    // Loop again for y-axis plotting range:
     phi_range_low = -M_PI;
     phi_range_high = M_PI;
     bin_range_low = hBackground->FindBin(phi_range_low);
@@ -568,6 +569,13 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     lg -> AddEntry(hBackground, Form("Mixed Events' dPhi, multiplied by %.2f", signalRatio), "l");
     gStyle -> SetLegendTextSize(.043);
     lg->Draw("same");
+
+    TLine *l2 = new TLine(phi_range_low2, 0, phi_range_low2, max_y_range);
+	l2 -> Draw("same"); 
+    l2 -> SetLineColor(kRed);
+    TLine *l3 = new TLine(phi_range_high2, 0, phi_range_high2, max_y_range);
+	l3 -> Draw("same"); 
+    l3 -> SetLineColor(kRed);
     can1 -> cd(2);
     double centralPeak = 0.05;
     double N1 = hBackground -> Integral(hBackground->FindFixBin(-M_PI), hBackground->FindFixBin(-centralPeak), "") + 

@@ -33,6 +33,7 @@ const double dPhi_cut  = 0.01;
 const double dEta_cut  = 1;
 const double Eta_range = 1;
 const double TWO_PI    = 2*M_PI;
+const double halfPI    = M_PI/2;
 double DCA_cut        = 0.2;    // unit: cm;
 double DCA_cutSQUARED = 0.04;   // unit: cm;
 double MBD_lower = 0., MBD_upper = 10.;
@@ -91,6 +92,8 @@ struct EtaWithPhi {
     // You can add constructors, methods, etc., to enhance functionality
     EtaWithPhi(double e, double p) : eta_value(e), phi_value(p) {}
 };
+
+// namespace 
 
 bool isInteger(const std::string& s) {
     std::istringstream iss(s);
@@ -263,6 +266,14 @@ void printBlue(const T &content) {
 
 void printSeparation () {
     printBlue("=================================================================================================================");
+}
+
+template <typename T>
+void fileExistenceCheck (const T &file) {
+    if (!file) {
+        std::cerr << "Error: Could not open/find the file " << std::endl;
+        exit(1);
+    }
 }
 
 #endif

@@ -871,7 +871,7 @@ int main(int argc, char* argv[]) {
             }
 
             // std::vector<int> boundaries = readCsvToVector("../../codeGarage/boundaries.csv");
-            std::vector<int> boundaries = readCsvToVector("/Users/yaminocellist/codeGarage/boundaries.csv");
+            // std::vector<int> boundaries = readCsvToVector("/Users/yaminocellist/codeGarage/boundaries.csv");
 
             std::thread thsafe[8];
             std::cout << "Mixing events with dEta cut: \n" << std::endl;
@@ -930,7 +930,7 @@ int main(int argc, char* argv[]) {
             }
 
             std::thread thsafe[8];
-            std::cout << "Mixing events with Eta range: \n" << std::endl;
+            std::cout << "Mixing events with Eta range: " << Eta_range << std::endl;
             for (int i = 0; i < 8; i++)
                 thsafe[i] = std::thread(dPhi_mixing_with_Eta_range,i,target/8,event_Phi0,event_Phi1);
             for (int i = 0; i < 8; i++)

@@ -148,9 +148,9 @@ void fit_the_hist (
 
     double rst;
     double min_rst = std::numeric_limits<double>::max();
-    double par1 = 0., par2 = -1000;
+    double par1 = 0., par2 = -10000;
     double start_p1 = par1, start_p2 = par2;
-    double end_p1 = 100., end_p2 = 1000;
+    double end_p1 = 100., end_p2 = 10000;
 
     std::function<double(const TH1D *const, const double &, const double &, const double &, const double &)> myFitFunction;
     if (option == "TLS")    myFitFunction = TotalLeastSquare;

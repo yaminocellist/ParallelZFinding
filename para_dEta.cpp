@@ -435,6 +435,37 @@ void dEtaMixing2 (
     lock.unlock();
 }
 
+void dEtaMixing_plain (
+    const int &id,
+    const int &chunck_size,
+    const std::vector<std::vector<EtaWithPhi>> &event_Eta0,
+    const std::vector<std::vector<EtaWithPhi>> &event_Eta1
+) {
+    int local_index;
+    double dEta, dPhi;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    for (int i = 0; i < chunck_size; i++) {
+        local_index = i + chunck_size*id;
+        for (int j = local_index; j < event_Eta1.size(); j++) {
+            for (const EtaWithPhi& eta0: event_Eta0[local_index]) {
+                for (const EtaWithPhi& eta1: event_Eta1[j]) {
+                    dEta = eta0.eta_value - eta1.eta_value;
+                    dPhi = eta0.phi_value - eta1.phi_value;
+                    if (std::abs(dPhi) < dPhi_cut)  h_dEta_Background -> Fill(dEta);
+                }
+            }
+            for (const EtaWithPhi& eta1: event_Eta1[local_index]) {
+                for (const EtaWithPhi& eta0: event_Eta0[j]) {
+                    dEta = eta0.eta_value - eta1.eta_value;
+                    dPhi = eta0.phi_value - eta1.phi_value;
+                    if (std::abs(dPhi) < dPhi_cut)  h_dEta_Background -> Fill(dEta);
+                }
+            }
+        }
+    }
+    lock.unlock();
+}
+
 int main(int argc, char* argv[]) {
     // Start the stopwatch:
     TStopwatch timer;   timer.Start();
@@ -645,11 +676,12 @@ int main(int argc, char* argv[]) {
             Eta0.clear();   Eta1.clear();
         }
 
-        std::vector<int> boundaries = readCsvToVector("/Users/yaminocellist/codeGarage/boundaries.csv");
+        // std::vector<int> boundaries = readCsvToVector("/Users/yaminocellist/codeGarage/boundaries.csv");
 
         std::thread thsafe[8];
         // for(int i = 0; i < 8; i++)    thsafe[i] = std::thread(dEtaMixing,boundaries[2*i], boundaries[2*i+1],event_Eta0,event_Eta1);
-        for(int i = 0; i < 8; i++)    thsafe[i] = std::thread(dEtaMixing2,boundaries[2*i], boundaries[2*i+1],event_Eta0,event_Eta1);
+        // for(int i = 0; i < 8; i++)    thsafe[i] = std::thread(dEtaMixing2,boundaries[2*i], boundaries[2*i+1],event_Eta0,event_Eta1);
+        for(int i = 0; i < 8; i++)    thsafe[i] = std::thread(dEtaMixing2,i,target/8,event_Eta0,event_Eta1);
         for(int i = 0; i < 8; i++)    thsafe[i].join();
 
         TCanvas *c1 = new TCanvas("c1", "dPhi Histogram", 1920, 1056);
