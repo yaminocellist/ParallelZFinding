@@ -25,7 +25,7 @@ double rootFit_ChiTwo (const TH1D * const hDiff, const double &p1, const double 
     return ChiSum;
 }
 
-double LeastSquare (const TH1D * const hDiff, const double &p1, const double &p2, const double &low_range, const double &high_range) {
+double LeastSquare_v2 (const TH1D * const hDiff, const double &p1, const double &p2, const double &low_range, const double &high_range) {
     int nbins = hDiff->GetNbinsX();
     double x_value, y_value;
     double ChiSum = 0.;
@@ -36,6 +36,28 @@ double LeastSquare (const TH1D * const hDiff, const double &p1, const double &p2
         if (x_value <= low_range || x_value >= high_range) {
             double calculated = p1*p1*cos(2*x_value)+p2 - y_value;
             ChiSum += calculated*calculated;
+        }
+    }
+    return ChiSum;
+}
+
+double LeastSquare_v23 (
+    const TH1D * const h, 
+    const double &p1, 
+    const double &p2, 
+    const double &p3,
+    const double &low_range, 
+    const double &high_range
+) {
+    int nbins = h->GetNbinsX();
+    double x_observed, y_observed;
+    double ChiSum = 0.;
+    for (int i = 1; i < nbins; i++) {
+        x_observed = h->GetBinCenter(i);
+        y_observed = h->GetBinContent(i);
+        if (x_observed <= low_range || x_observed >= high_range) {
+            // ChiSum += p1*p1*cos(2*x_observed) + p2*p2*cos(3*x_observed) + p3 - y_observed;
+            ChiSum += p1*p1*cos(2*x_observed) + p3 - y_observed;
         }
     }
     return ChiSum;
@@ -77,7 +99,7 @@ double TotalLeastSquare (const TH1D * const hDiff, const double &p1, const doubl
     return ChiSum;
 }
 
-void fit_the_hist (
+void single_fit_v2 (
     // const std::string &rootFilePath,
     const std::vector<std::string> &rootFilePaths,
     const TString &option,
@@ -106,12 +128,15 @@ void fit_the_hist (
     printRed(higherCen);
     printRed(etaRange);
     TH1D *hDiff = (TH1D*)inputFile->Get("Background Subtracted Signal");
-    if (!hDiff) {
-        std::cerr << "Error: Cannot find the target histogram!" << std::endl;
-        inputFile->Close();
-        return;
-    }
+    fileExistenceCheck(hDiff);
+    // if (!hDiff) {
+    //     std::cerr << "Error: Cannot find the target histogram!" << std::endl;
+    //     inputFile->Close();
+    //     return;
+    // }
 
+    // fit_v2(hDiff, option, target);
+    // fit_v3(hDiff, option, target);
     std::string hDiff_title = hDiff->GetTitle();
     std::vector<std::string> splitted = splitString(hDiff_title, ' ');
     int numberOfEvents = std::stoi(splitted[3]);
@@ -154,7 +179,7 @@ void fit_the_hist (
 
     std::function<double(const TH1D *const, const double &, const double &, const double &, const double &)> myFitFunction;
     if (option == "TLS")    myFitFunction = TotalLeastSquare;
-    if (option == "LS")     myFitFunction = LeastSquare;
+    if (option == "LS")     myFitFunction = LeastSquare_v2;
     if (option == "root")   myFitFunction = rootFit_ChiTwo;
     if (option == "Chi2")   myFitFunction = ChiSquared;
 
@@ -229,6 +254,163 @@ void fit_the_hist (
     can->Update();
 }
 
+void single_fit_v23 (
+    const std::vector<std::string> &rootFilePaths,
+    const TString &option,
+    const int &target
+) {
+    std::string rootFilePath = rootFilePaths[target];
+    printBlue(rootFilePath);
+    TFile *inputFile = new TFile(rootFilePath.c_str(), "READ");
+    if (!inputFile || inputFile->IsZombie()) {
+        std::cerr << "Error: Cannot open .root file!" << std::endl;
+        return;
+    }
+    TParameter<double>* ratioParam = (TParameter<double>*) inputFile->Get("signal_multiplied_ratio");
+    TParameter<double>* numParam   = (TParameter<double>*) inputFile->Get("number_of_events");
+    TParameter<double>* lCenParam  = (TParameter<double>*) inputFile->Get("lower_centrality");
+    TParameter<double>* hCenParam  = (TParameter<double>*) inputFile->Get("higher_centrality");
+    TParameter<double>* etaParam   = (TParameter<double>*) inputFile->Get("eta_range");
+    double signalRatio = ratioParam->GetVal();
+    double numEvents = numParam->GetVal();
+    double lowerCen = lCenParam->GetVal();
+    double higherCen = hCenParam->GetVal();
+    double etaRange = etaParam->GetVal();
+    printRed(signalRatio);
+    printRed(numEvents);
+    printRed(lowerCen);
+    printRed(higherCen);
+    printRed(etaRange);
+    TH1D *hDiff = (TH1D*)inputFile->Get("Background Subtracted Signal");
+    fileExistenceCheck(hDiff);
+    // if (!hDiff) {
+    //     std::cerr << "Error: Cannot find the target histogram!" << std::endl;
+    //     inputFile->Close();
+    //     return;
+    // }
+
+    // fit_v2(hDiff, option, target);
+    // fit_v3(hDiff, option, target);
+    std::string hDiff_title = hDiff->GetTitle();
+    std::vector<std::string> splitted = splitString(hDiff_title, ' ');
+    int numberOfEvents = std::stoi(splitted[3]);
+    double left_subrange_min = hDiff->GetXaxis()->GetXmin();
+    // double left_subrange_max = (hDiff->GetXaxis()->GetXmin())/5.;
+    double left_subrange_max = -abs_fit_range;
+    TF1 *away_side_l = new TF1("triangular flow left", "[0]*[0]*cos(2*x)+[1]*[1]*cos(3*x)+[2]", left_subrange_min, left_subrange_max);
+    double right_subrange_max = hDiff->GetXaxis()->GetXmax();
+    // double right_subrange_min = (hDiff->GetXaxis()->GetXmax())/5.;
+    double right_subrange_min = abs_fit_range;
+    TF1 *away_side_r = new TF1("triangular flow right", "[0]*[0]*cos(2*x)+[1]*[1]*cos(3*x) + [2]", right_subrange_min, right_subrange_max);
+    TCanvas *can = new TCanvas("can", "Background Subtracted Signal", 3024, 1964);
+    can -> Divide(1, 2);
+    can -> cd(1);
+    hDiff->SetLineColor(kBlue);
+    hDiff->SetLineWidth(2);
+    // hDiff->SetMarkerStyle(0);  // Disable markers
+    // hDiff->SetMarkerSize(10);   // Ensure no marker size
+    hDiff->Draw("hist");
+    
+    // Cosmetics:
+    TLine *line_horizontal = new TLine(hDiff->GetXaxis()->GetXmin(), 0, hDiff->GetXaxis()->GetXmax(), 0);
+    line_horizontal->SetLineColor(kRed);
+    line_horizontal->Draw("same");
+    // TLine *line_left = new TLine((hDiff->GetXaxis()->GetXmin())/5., hDiff->GetMinimum(), (hDiff->GetXaxis()->GetXmin())/5., hDiff->GetMaximum());
+    // line_left->SetLineColor(kRed);
+    // line_left->Draw("same");
+    TLegend *legend = new TLegend(0.13, 0.75, 0.29, 0.9);
+    legend->AddEntry(hDiff, Form("Fit with %s", option.Data()), "l");
+    legend->AddEntry(away_side_l, Form("Fit range ~ [%.2f, %.2f]",left_subrange_max, right_subrange_min), "l");
+    legend->Draw();
+
+    double rst;
+    double min_rst = std::numeric_limits<double>::max();
+    double par1 = 0., par2 = 0, par3 = -10000.;
+    double start_p1 = par1, start_p2 = par2, start_p3 = par3;
+    double end_p1 = 100., end_p2 = 10., end_p3 = 10000.;
+
+    std::function<double(const TH1D *const, const double &, const double &, const double &, const double &, const double &)> myFitFunction;
+    // if (option == "TLS")    myFitFunction = TotalLeastSquare;
+    if (option == "LS")     myFitFunction = LeastSquare_v23;
+    // if (option == "root")   myFitFunction = rootFit_ChiTwo;
+    // if (option == "Chi2")   myFitFunction = ChiSquared;
+
+    for (double p_1 = start_p1; p_1 < end_p1; p_1+=.1) {
+        for (double p_2 = start_p2; p_2 < end_p2; p_2+=1) {
+            for (double p_3 = start_p3; p_3 < end_p3; p_3 += 1.) {
+                rst = myFitFunction(hDiff, p_1, p_2, p_3, left_subrange_max, right_subrange_min);
+                if (min_rst > rst) {
+                    min_rst = rst;
+                    par1 = p_1;
+                    par2 = p_2;
+                    par3 = p_3;
+                }
+            }
+        }
+    }
+    std::cout << min_rst << ", " << par1 << ", " << par2 << ", " << par3 << std::endl;
+
+    away_side_l -> SetLineColor(kTeal - 7);
+    away_side_l -> SetLineWidth(10);
+    away_side_l -> SetParameter(0, par1);
+    away_side_l -> SetParameter(1, par2);
+    away_side_l -> SetParameter(2, par3);
+    away_side_l -> Draw("same");
+    away_side_r -> SetLineColor(kTeal - 7);
+    away_side_r -> SetLineWidth(10);
+    away_side_r -> SetParameter(0, par1);
+    away_side_r -> SetParameter(1, par2);
+    away_side_r -> SetParameter(2, par3);
+    away_side_r -> Draw("same");
+
+    can -> cd(2);
+    int nBins = hDiff->GetNbinsX();
+
+    std::vector<std::string> cutInfos = splitString(rootFilePath, '_');
+    std::string cenRange1 = cutInfos[3];
+    std::string cenRange2 = cutInfos[4].substr(0, cutInfos[4].length()-5);
+    TH1D *hFiltered = new TH1D("hFiltered", Form("Filtered Histogram of %.2f < Centrality < %.2f;dPhi value;# of count", lowerCen, higherCen), nBins, hDiff->GetXaxis()->GetXmin(), hDiff->GetXaxis()->GetXmax());
+    TF1 *away_side = new TF1("triangular flow", "[0]*[0]*cos(2*x)+[1]*[1]*cos(3*x)+[2]", hDiff->GetXaxis()->GetXmin(), hDiff->GetXaxis()->GetXmax());
+    away_side->SetParameters(par1, par2, par3);
+    // Loop over each bin
+    for (int i = 1; i <= nBins; ++i) {
+        double binCenter = hDiff->GetBinCenter(i);
+        double fitValue = away_side->Eval(binCenter);
+        double newBinContent = hDiff->GetBinContent(i) - fitValue;
+        hFiltered->SetBinContent(i, newBinContent);
+    }
+
+    hFiltered->Draw();
+    hFiltered->SetFillStyle(3003);
+    hFiltered->SetFillColor(kBlue - 7);
+    hFiltered->GetXaxis()->CenterTitle(true);
+    hFiltered->GetXaxis()->SetTitleSize(0.05);
+    hFiltered->GetXaxis()->SetTitleOffset(.8);
+    hFiltered->GetYaxis()->CenterTitle(true);
+    hFiltered->GetYaxis()->SetTitleSize(0.05);
+    hFiltered->GetYaxis()->SetTitleOffset(.8);
+
+    // std::cout << left_subrange_min << ", " << left_subrange_max << ", " << right_subrange_min << ", " << right_subrange_max << std::endl;
+    double Signal = hFiltered->Integral(hFiltered->FindFixBin(left_subrange_max),hFiltered->FindFixBin(right_subrange_min));
+    double Background = hFiltered->Integral(hFiltered->FindFixBin(left_subrange_min), hFiltered->FindFixBin(left_subrange_max))
+                      + hFiltered->Integral(hFiltered->FindFixBin(right_subrange_min), hFiltered->FindFixBin(right_subrange_max));
+    printRed(numEvents);
+    double Multiplicity = Signal/numEvents;
+    double SNR = Signal/Background;
+    std::cout << Signal << ", " << Background << ", " << SNR << ", " << Multiplicity << ", " << numEvents << std::endl;
+
+    TLine *line_horizon = new TLine(hFiltered->GetXaxis()->GetXmin(), 0, hFiltered->GetXaxis()->GetXmax(), 0);
+    line_horizon->SetLineColor(kRed);
+    line_horizon->Draw("same");
+    TLegend *legend2 = new TLegend(0.13, 0.75, 0.29, 0.9);
+    legend2->AddEntry(hFiltered, Form("Multiplicity Density: %.2f", Multiplicity), "f");
+    legend2->AddEntry(hFiltered, Form("Signal/Background Ratio: %.2f",SNR), "l");
+    legend2->Draw("same");
+
+    // Show the plot
+    can->Update();
+}
+
 void fit_hists_all (
     const std::vector<std::string> &rootFilePaths,
     const TString &option
@@ -236,7 +418,7 @@ void fit_hists_all (
     std::ofstream records("../External/dNchdEtaNpart.csv", std::ios::app);
     if (!records.is_open()) {
         std::cerr << "Error: Could not open the record file!" << std::endl;
-        return 1;
+        exit(1);
     }
 
     int i = 0;
@@ -305,7 +487,7 @@ void fit_hists_all (
 
         std::function<double(const TH1D *const, const double &, const double &, const double &, const double &)> myFitFunction;
         if (option == "TLS")    myFitFunction = TotalLeastSquare;
-        if (option == "LS")     myFitFunction = LeastSquare;
+        if (option == "LS")     myFitFunction = LeastSquare_v2;
         if (option == "root")   myFitFunction = rootFit_ChiTwo;
         if (option == "Chi2")   myFitFunction = ChiSquared;
         for (double p_1 = start_p1; p_1 < end_p1; p_1 += 0.1) {
@@ -414,7 +596,7 @@ void dPhi_Fitter(std::string opt = "") {
     TStopwatch timer;   timer.Start();
 
     std::string dirPath = "../External/zFindingPlots";  // The directory containing the files
-    std::string filePrefix = "hDiff_with_Eta_range_1.00_1000e";  // Prefix of the file you are looking for
+    std::string filePrefix = "hDiff_with_Eta_range_1.00_500";  // Prefix of the file you are looking for
     std::vector<std::string> rootFilePaths = findRootFiles(dirPath, filePrefix);
     if (rootFilePaths.empty()) {
         std::cerr << "Error: Cannot find any .root files with the prefix hDiff_.." << filePrefix << "!" << std::endl;
@@ -467,7 +649,7 @@ void dPhi_Fitter(std::string opt = "") {
     // legend->Draw();
 
     std::vector<std::string> selections = splitString(opt, '_');
-    if (selections[0] == "single")    fit_the_hist(rootFilePaths, selections[1], std::stoi(selections[2]));
+    if (selections[0] == "single")    single_fit_v23(rootFilePaths, selections[1], std::stoi(selections[2]));
     if (selections[0] == "all")       fit_hists_all(rootFilePaths, selections[1]);
     // if (selections[0] == "A")         plotMultiCen();
     if (selections[0] == "A")         Npart();

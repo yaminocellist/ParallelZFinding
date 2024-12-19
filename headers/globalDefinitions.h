@@ -93,7 +93,17 @@ struct EtaWithPhi {
     EtaWithPhi(double e, double p) : eta_value(e), phi_value(p) {}
 };
 
-// namespace 
+namespace Globals {
+    inline int event, NClus;
+    inline float MBD_z_vtx, MBD_centrality;
+    inline std::vector<int>   *ClusLayer = nullptr;
+    inline std::vector<float> *ClusX    = nullptr;
+    inline std::vector<float> *ClusY    = nullptr;
+    inline std::vector<float> *ClusZ    = nullptr;
+    inline std::vector<float> *ClusR    = nullptr;
+    inline std::vector<float> *ClusPhi  = nullptr;
+    inline std::vector<float> *ClusEta  = nullptr;
+}
 
 bool isInteger(const std::string& s) {
     std::istringstream iss(s);

@@ -1,7 +1,8 @@
 #include "../headers/globalDefinitions.h"
+
+using namespace Globals;
 // void printTreeInfo(const char* filename, const char* treeName) {
 void rootFileChecker_AI (std::string opt = "") {
-    // Open the ROOT file
     // TFile *file = TFile::Open("../External/Data_CombinedNtuple_Run54280_20241113.root");
     TFile *file = TFile::Open("../External/Sim_Ntuple_HIJING_ana443_20241102.root");
     // TFile* file = TFile::Open(filename);
@@ -28,15 +29,6 @@ void rootFileChecker_AI (std::string opt = "") {
         if (branchName=="ClusPhi")      idx_ClusPhi = i;
         if (branchName=="ClusEta")      idx_ClusEta = i;
     }
-    int event, NClus;
-    float MBD_z_vtx, MBD_centrality;
-    std::vector<int>   *ClusLayer = nullptr;
-    std::vector<float> *ClusX    = nullptr;
-    std::vector<float> *ClusY    = nullptr;
-    std::vector<float> *ClusZ    = nullptr;
-    std::vector<float> *ClusR    = nullptr;
-    std::vector<float> *ClusPhi  = nullptr;
-    std::vector<float> *ClusEta  = nullptr;
 
     if (opt == "print") {
         for (int i = 0; i < branches->GetEntries(); ++i) {
@@ -88,8 +80,11 @@ void rootFileChecker_AI (std::string opt = "") {
             b_ClusEta->GetEntry(i);
             if (NClus!=ClusX->size() || ClusX->size()!=ClusLayer->size() || ClusX->size()!=ClusY->size()
                || ClusX->size()!=ClusZ->size() || NClus!=ClusR->size()
-               || NClus!=ClusPhi->size() || NClus!=ClusEta->size())  exit(1);
-            std::cout <<i<<","<<event<< ","<< MBD_centrality << std::endl;
+               || NClus!=ClusPhi->size() || NClus!=ClusEta->size()) {
+                printRed("Error!\n");
+                exit(1);
+            }
+            // std::cout <<i<<","<<event<< ","<< MBD_centrality << std::endl;
         }
     }
     if (opt == "phi") {
@@ -240,7 +235,7 @@ void rootFileChecker_AI (std::string opt = "") {
             b_ClusR->GetEntry(i);
             b_ClusPhi->GetEntry(i);
             b_ClusEta->GetEntry(i);
-            if (std::abs(MBD_z_vtx)<30) 
+            if (std::abs(MBD_z_vtx)<30 && MBD_centrality <= 0.70) 
                 outputFile << i << "," << event << "," << NClus << "," << std::nan("") << "," << MBD_z_vtx << "," << MBD_centrality << std::endl;
         }
     }

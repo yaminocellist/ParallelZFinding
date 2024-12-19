@@ -78,8 +78,8 @@ void angularPlot1D (TH1D* const histo, std::vector<std::string> method, const st
 	l -> Draw("same"); 
     l -> SetLineColor(kRed);
     TLegend *lg = new TLegend(0.12, 0.82, 0.46, 0.9);
-    lg -> AddEntry(histo, "-250 <= MBD_z_vtx <= -50 mm, MBD_centrality <= 0.70", "f");
-    gStyle -> SetLegendTextSize(.022);
+    lg -> AddEntry(histo, Form("%.2f <= z_vtx <= %.2f cm, centrality <= 0.70", std::stod(method[4]), std::stod(method[5])), "f");
+    gStyle -> SetLegendTextSize(.025);
     lg->Draw("same");
     // gPad -> SetLogy();
     can1 -> SaveAs(Form("../../External/zFindingPlots/%s.png", fileTitle.c_str()));
@@ -551,10 +551,10 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     hSignal -> Draw("SAME");
     hSignal -> GetXaxis()->SetLabelSize(0.06);
     hSignal -> GetXaxis()->SetTitleSize(0.05);
-    if (options[1] == "w")
-        hSignal -> SetTitle(Form("%d events with |dEta| < %.2f, -%2.2fcm < z vtx < -%2.2fcm, %1.2f < centrality < %1.2f", target, dEta_cut, std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
-    else
-        hSignal -> SetTitle(Form("%d events, -%2.2fcm < z vtx < -%2.2fcm, %1.2f < centrality < %1.2f", target, std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
+    if (options[1] == "wdE")
+        hSignal -> SetTitle(Form("%d events with |dEta| < %.2f, %2.2fcm < z vtx < %2.2fcm, %1.2f < centrality < %1.2f", target, dEta_cut, std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
+    else if (options[1] == "wE")
+        hSignal -> SetTitle(Form("%d events with |Eta| < %.2f,  %2.2fcm < z vtx < %2.2fcm, %1.2f < centrality < %1.2f", target, Eta_range, std::stod(method[4]), std::stod(method[5]), std::stod(method[2]), std::stod(method[3])));
     hSignal -> GetXaxis() -> CenterTitle(true);
     hSignal -> GetXaxis() -> SetTitleOffset(.9);
     hSignal -> GetYaxis() -> CenterTitle(true);
@@ -570,12 +570,12 @@ void backgroundCancelling_dPhi (TH1D* const hBackground, TH1D* const hSignal, st
     gStyle -> SetLegendTextSize(.043);
     lg->Draw("same");
 
-    TLine *l2 = new TLine(phi_range_low2, 0, phi_range_low2, max_y_range);
-	l2 -> Draw("same"); 
-    l2 -> SetLineColor(kRed);
-    TLine *l3 = new TLine(phi_range_high2, 0, phi_range_high2, max_y_range);
-	l3 -> Draw("same"); 
-    l3 -> SetLineColor(kRed);
+    // TLine *l2 = new TLine(phi_range_low2, 0, phi_range_low2, max_y_range);
+	// l2 -> Draw("same"); 
+    // l2 -> SetLineColor(kRed);
+    // TLine *l3 = new TLine(phi_range_high2, 0, phi_range_high2, max_y_range);
+	// l3 -> Draw("same"); 
+    // l3 -> SetLineColor(kRed);
     can1 -> cd(2);
     double centralPeak = 0.05;
     double N1 = hBackground -> Integral(hBackground->FindFixBin(-M_PI), hBackground->FindFixBin(-centralPeak), "") + 
@@ -807,12 +807,12 @@ void ArrayPlot1D_Rescale (const std::vector<TH1D*>& h, std::vector<std::string> 
         }
         // h[i] -> GetYaxis() -> SetRangeUser(0.6, 1.1);
     }
-    TLegend *lg = new TLegend(0.12, 0.73, 0.25, 0.9);
-    gStyle -> SetLegendTextSize(.015);
+    TLegend *lg = new TLegend(0.12, 0.7, 0.27, 0.90);
+    gStyle -> SetLegendTextSize(.018);
     for (int i = 0; i < h.size(); i++) {
         h[i] -> GetYaxis() -> SetRangeUser(min_y*0.9, 1.1);
         h[i] -> SetLineColor(32 + i);
-        lg -> AddEntry(h[i], Form("Centrality between %.2f and %.2f", static_cast<double>(i)*0.05, static_cast<double>(i + 1)*0.05), "l");
+        lg -> AddEntry(h[i], Form("Centrality ~ [%.2f, %.2f]", static_cast<double>(i)*0.05, static_cast<double>(i + 1)*0.05), "l");
         h[i] -> SetTitle(fileTitle.c_str());
     }
     TCanvas *can1 = new TCanvas("c1d","c1d",0,50,2560,1600);
@@ -878,9 +878,9 @@ void ArrayPlot1D_Rescale_ver2 (const std::vector<TH1D*>& h, std::vector<std::str
     gStyle -> SetLegendTextSize(.015);
     for (int i = 0; i < h.size(); i++) {
         if (i < 10) {
-            lg -> AddEntry(h[i], Form("Z VTX between %1.2f and %1.2f", -6 - static_cast<double>(i), -5 - static_cast<double>(i)), "l");
+            lg -> AddEntry(h[i], Form("Z VTX between %.2f and %.2f cm", -30 + static_cast<double>(i)*3, -27 + static_cast<double>(i)*3), "l");
         } else {
-            lg2 -> AddEntry(h[i], Form("Z VTX between %.2f and %.2f", -6 - static_cast<double>(i), -5 - static_cast<double>(i)), "l");
+            lg2 -> AddEntry(h[i], Form("Z VTX between %.2f and %.2f cm", -30 + static_cast<double>(i)*3, -27 + static_cast<double>(i)*3), "l");
         }
         h[i] -> GetYaxis() -> SetRangeUser(min_y*0.95, 1.05);
         h[i] -> GetXaxis() -> CenterTitle(true);    h[i] -> GetYaxis() -> CenterTitle(true);

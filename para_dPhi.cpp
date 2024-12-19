@@ -14,6 +14,8 @@
 #include <mutex>
 #include <chrono>
 
+using namespace Globals;
+
 TH1 *h[100];
 TH1D *h_ZonOne[20];
 TH1D *h_CenonOne[14];
@@ -31,8 +33,8 @@ void dPhiAccumulator (
     const int &batch_size,
     const std::vector<int> &index,
     const std::vector<double> &MBD_cen,
-    TBranch *branch11,
-    TBranch* branch16,
+    TBranch *b_ClusLayer,
+    TBranch* b_ClusPhi,
     const std::vector<float>* const ClusPhi,
     const std::vector<int>* const ClusLayer
 ) {
@@ -43,7 +45,7 @@ void dPhiAccumulator (
     std::unique_lock<std::mutex> lock(m_mutex);
     for (int i = 0; i < batch_size; i++) {
         local_index = i + batch_size*id;
-        branch16->GetEntry(index[local_index]);   branch11->GetEntry(index[local_index]);
+        b_ClusPhi->GetEntry(index[local_index]);   b_ClusLayer->GetEntry(index[local_index]);
         // std::cout << MBD_true_z[local_index] << std::endl;
         // std::cout << id << ", " << local_index << std::endl;
         // std::cout << id << ", " << local_index << ", " << index[local_index] << ", " << MBD_true_z[local_index] << ", " << MBD_cen[local_index] << ", " << ClusPhi->size() << ", " << ClusLayer->size() << std::endl;
@@ -76,35 +78,35 @@ void dPhiNoMixWithEta (
     const int &batch_size,
     const std::vector<int> &index,
     const std::vector<double> &MBD_true_z,
-    TBranch *branch11,
-    TBranch *branch14,
-    TBranch *branch15,
-    TBranch* branch16,
+    TBranch *b_ClusLayer,
+    TBranch *b_ClusZ,
+    TBranch *b_ClusR,
+    TBranch* b_ClusPhi,
     const std::vector<float>* const ClusZ,
     const std::vector<float>* const ClusR,
     const std::vector<float>* const ClusPhi,
     const std::vector<int>*   const ClusLayer
 ) {
     double phi, dPhi, eta, dEta;
-    double z_vtx, dZ, R, theta;
+    double z_vtx, dZ, R, halfTheta;
     std::vector<EtaWithPhi> Phi0, Phi1;
     
     int local_index;
     std::unique_lock<std::mutex> lock(m_mutex);
     for (int i = 0; i < batch_size; i++) {
         local_index = i + batch_size*id;
-        branch11->GetEntry(index[local_index]);   // ClusLayer;
-        branch14->GetEntry(index[local_index]);   // ClusZ;
-        branch15->GetEntry(index[local_index]);   // ClusR;
-        branch16->GetEntry(index[local_index]);   // ClusPhi;
+        b_ClusLayer->GetEntry(index[local_index]);   // ClusLayer;
+        b_ClusZ->GetEntry(index[local_index]);   // ClusZ;
+        b_ClusR->GetEntry(index[local_index]);   // ClusR;
+        b_ClusPhi->GetEntry(index[local_index]);   // ClusPhi;
         z_vtx = MBD_true_z[local_index];
         for (int j = 0; j < ClusPhi->size(); j++) {
             dZ       = ClusZ->at(j) - z_vtx;
             R        = ClusR->at(j);
-            theta    = std::atan2(R, dZ);
+            halfTheta    = (std::atan2(R, dZ))/2.;
             phi      = ClusPhi->at(j);
-            if (dZ >= 0)    eta = -std::log(std::tan(theta/2));
-            if (dZ <  0)    eta = std::log(std::tan((M_PI - theta)/2));
+            if (dZ >= 0)    eta = -std::log(std::tan(halfTheta));
+            if (dZ <  0)    eta = std::log(std::tan(halfPI - halfTheta));
             if (ClusLayer->at(j) == 3 || ClusLayer->at(j) == 4) {
                 Phi0.emplace_back(eta, phi);
             }
@@ -133,8 +135,8 @@ void dPhi_in_bins_of_Centrality (
     const std::vector<int>    &index,
     const std::vector<double> &MBD_true_z,
     const std::vector<double> &MBD_cen,
-    TBranch *branch11,
-    TBranch* branch16,
+    TBranch *b_ClusLayer,
+    TBranch* b_ClusPhi,
     const std::vector<float>* const ClusPhi,
     const std::vector<int>*   const ClusLayer
 ) {
@@ -146,8 +148,8 @@ void dPhi_in_bins_of_Centrality (
     double cen_higher_range = static_cast<double>(id+1)*0.05;
     for (int i = 0; i < target; i++) {
         if (MBD_cen[i] >= cen_lower_range && MBD_cen[i] <= cen_higher_range) {
-            branch16->GetEntry(index[i]);   // ClusPhi;
-            branch11->GetEntry(index[i]);   // ClusLayer;
+            b_ClusPhi->GetEntry(index[i]);   // ClusPhi;
+            b_ClusLayer->GetEntry(index[i]);   // ClusLayer;
             Phi0.reserve(ClusPhi->size());  Phi1.reserve(ClusPhi->size());
             for (int j = 0; j < ClusPhi->size(); j++) {
                 double phi = ClusPhi->at(j);
@@ -180,11 +182,11 @@ void dPhi_in_bins_of_Centrality_with_dEta_cut (
     const std::vector<int>    &index,
     const std::vector<double> &MBD_true_z,
     const std::vector<double> &MBD_cen,
-    TBranch *branch11,
-    TBranch *branch14,
-    TBranch *branch15,
-    TBranch *branch16,
-    TBranch *branch31,
+    TBranch *b_ClusLayer,
+    TBranch *b_ClusZ,
+    TBranch *b_ClusR,
+    TBranch *b_ClusPhi,
+    TBranch *b_MBD_z_vtx,
     float &MBD_z_vtx,
     const std::vector<int>*   const ClusLayer,
     const std::vector<float>* const ClusZ,
@@ -193,18 +195,18 @@ void dPhi_in_bins_of_Centrality_with_dEta_cut (
 ) {
     h_CenonOne[id] = new TH1D(Form("dPhi of %.2f to %.2f", static_cast<double>(id)*0.05, static_cast<double>(id + 1)*0.05), Form("dPhi of %.2f to %.2f;dPhi;# of counts", static_cast<double>(id)*0.05, static_cast<double>(id + 1)*0.05), N, range_min, range_max);
     double phi, dPhi, eta, dEta;
-    double z_vtx, dZ, R, theta;
+    double z_vtx, dZ, R, halfTheta;
     std::vector<EtaWithPhi> Phi0, Phi1;
     std::unique_lock<std::mutex> lock(m_mutex);
     double cen_lower_range  = static_cast<double>(id)*0.05;
     double cen_higher_range = static_cast<double>(id+1)*0.05;
     for (int i = 0; i < target; i++) {
         if (MBD_cen[i] >= cen_lower_range && MBD_cen[i] <= cen_higher_range) {
-            branch11->GetEntry(index[i]);   // ClusLayer;
-            branch14->GetEntry(index[i]);   // ClusZ;
-            branch15->GetEntry(index[i]);   // ClusR;
-            branch16->GetEntry(index[i]);   // ClusPhi;
-            branch31->GetEntry(index[i]);   // MBD_z_vtx;
+            b_ClusLayer->GetEntry(index[i]);   // ClusLayer;
+            b_ClusZ->GetEntry(index[i]);   // ClusZ;
+            b_ClusR->GetEntry(index[i]);   // ClusR;
+            b_ClusPhi->GetEntry(index[i]);   // ClusPhi;
+            b_MBD_z_vtx->GetEntry(index[i]);   // MBD_z_vtx;
             z_vtx = MBD_true_z[i];
             // if (std::abs(z_vtx - MBD_z_vtx) > 1e-4) {
             //     printRed("Error!!");
@@ -213,10 +215,10 @@ void dPhi_in_bins_of_Centrality_with_dEta_cut (
             for (int j = 0; j < ClusPhi->size(); j++) {
                 dZ       = ClusZ->at(j) - z_vtx;
                 R        = ClusR->at(j);
-                theta    = std::atan2(R, dZ);
+                halfTheta    = (std::atan2(R, dZ))/2.;
                 phi      = ClusPhi->at(j);
-                if (dZ >= 0)    eta = -std::log(std::tan(theta/2));
-                if (dZ <  0)    eta = std::log(std::tan((M_PI - theta)/2));
+                if (dZ >= 0)    eta = -std::log(std::tan(halfTheta));
+                if (dZ <  0)    eta = std::log(std::tan(halfPI - halfTheta));
                 if (ClusLayer->at(j) == 3 || ClusLayer->at(j) == 4) {
                     Phi0.emplace_back(eta, phi);
                 }
@@ -248,8 +250,8 @@ void dPhi_in_bins_of_Z_vtx (
     const std::vector<int> &index,
     const std::vector<double> &MBD_true_z,
     const std::vector<double> &MBD_cen,
-    TBranch *branch11,
-    TBranch* branch16,
+    TBranch *b_ClusLayer,
+    TBranch* b_ClusPhi,
     const std::vector<float>* const ClusPhi,
     const std::vector<int>* const ClusLayer
 ) {
@@ -262,8 +264,8 @@ void dPhi_in_bins_of_Z_vtx (
     h_ZonOne[id] = new TH1D(Form("dPhi of %1.0f to %1.0f", z_lower_range, z_higher_range), Form("dPhi of %1.0f to %1.0f;dPhi;# of counts", z_lower_range, z_higher_range), N, range_min, range_max);
     for (int i = 0; i < target; i++) {
         if (MBD_true_z[i] >= z_lower_range && MBD_true_z[i] <= z_higher_range) {
-            branch16->GetEntry(index[i]);   // ClusPhi;
-            branch11->GetEntry(index[i]);   // ClusLayer;
+            b_ClusPhi->GetEntry(index[i]);   // ClusPhi;
+            b_ClusLayer->GetEntry(index[i]);   // ClusLayer;
             Phi0.reserve(ClusPhi->size());  Phi1.reserve(ClusPhi->size());
             for (int j = 0; j < ClusPhi->size(); j++) {
                 double phi = ClusPhi->at(j);
@@ -296,36 +298,36 @@ void dPhi_in_bins_of_Z_vtx_with_dEta_cut (
     const std::vector<int> &index,
     const std::vector<double> &MBD_true_z,
     const std::vector<double> &MBD_cen,
-    TBranch *branch11,
-    TBranch *branch14,
-    TBranch *branch15,
-    TBranch* branch16,
+    TBranch *b_ClusLayer,
+    TBranch *b_ClusZ,
+    TBranch *b_ClusR,
+    TBranch* b_ClusPhi,
     const std::vector<int>*   const ClusLayer,
     const std::vector<float>* const ClusZ,
     const std::vector<float>* const ClusR,
     const std::vector<float>* const ClusPhi
 ) {
     double phi, dPhi, eta, dEta;
-    double z_vtx, dZ, R, theta;
+    double z_vtx, dZ, R, halfTheta;
     std::vector<EtaWithPhi> Phi0, Phi1;
     std::unique_lock<std::mutex> lock(m_mutex);
-    double z_lower_range  = -6 - static_cast<double>(id);
-    double z_higher_range = -5 - static_cast<double>(id);
+    double z_lower_range  = -30 + static_cast<double>(id)*3;
+    double z_higher_range = -27 + static_cast<double>(id)*3;
     h_ZonOne[id] = new TH1D(Form("dPhi of %1.0f to %1.0f", z_lower_range, z_higher_range), Form("dPhi of %1.0f to %1.0f;dPhi;# of counts", z_lower_range, z_higher_range), N, range_min, range_max);
     for (int i = 0; i < target; i++) {
         z_vtx = MBD_true_z[i];
         if (z_vtx >= z_lower_range && z_vtx <= z_higher_range) {
-            branch11->GetEntry(index[i]);   // ClusLayer;
-            branch14->GetEntry(index[i]);   // ClusZ;
-            branch15->GetEntry(index[i]);   // ClusR;
-            branch16->GetEntry(index[i]);   // ClusPhi;
+            b_ClusLayer->GetEntry(index[i]);   // ClusLayer;
+            b_ClusZ->GetEntry(index[i]);   // ClusZ;
+            b_ClusR->GetEntry(index[i]);   // ClusR;
+            b_ClusPhi->GetEntry(index[i]);   // ClusPhi;
             for (int j = 0; j < ClusPhi->size(); j++) {
                 dZ       = ClusZ->at(j) - z_vtx;
                 R        = ClusR->at(j);
-                theta    = std::atan2(R, dZ);
+                halfTheta    = (std::atan2(R, dZ))/2.;
                 phi      = ClusPhi->at(j);
-                if (dZ >= 0)    eta = -std::log(std::tan(theta/2));
-                if (dZ <  0)    eta = std::log(std::tan((M_PI - theta)/2));
+                if (dZ >= 0)    eta = -std::log(std::tan(halfTheta));
+                if (dZ <  0)    eta = std::log(std::tan(halfPI - halfTheta));
                 if (ClusLayer->at(j) == 3 || ClusLayer->at(j) == 4) {
                     Phi0.emplace_back(eta, phi);
                 }
@@ -526,7 +528,8 @@ int main(int argc, char* argv[]) {
     }
     std::vector<std::string> cmds = splitString(method[0], '_');
 
-    TFile *file = TFile::Open("../../External/Data_CombinedNtuple_Run20869_HotDead_BCO_ADC_Survey.root");
+    // TFile *file = TFile::Open("../../External/Data_CombinedNtuple_Run20869_HotDead_BCO_ADC_Survey.root");
+    TFile *file = TFile::Open("../../External/Sim_Ntuple_HIJING_ana443_20241102.root");
     if (!file || file->IsZombie()) {
         std::cerr << "Error opening file!" << std::endl;
         exit(1);
@@ -537,7 +540,8 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
 
-    std::string filePath = "../zFindingResults/new_foundZ_DCAfit_0_16_-001_001_step2e-1_z_25_5.txt";
+    // std::string filePath = "../zFindingResults/new_foundZ_DCAfit_0_16_-001_001_step2e-1_z_25_5.txt";
+    std::string filePath = "../zFindingResults/dummy.txt";
     std::ifstream myfile(filePath);
     if (!myfile.is_open()){
 		std::cout << "Unable to open linelabel" << std::endl;
@@ -546,7 +550,7 @@ int main(int argc, char* argv[]) {
  	}
 
     std::string line, value;
-    std::vector<int> index, event, NHits;
+    std::vector<int> index, evt, NHits;
     std::vector<double> foundZ, MBD_true_z, MBD_cen;
 
     getline(myfile, line);
@@ -560,57 +564,99 @@ int main(int argc, char* argv[]) {
         getline(data, value, ',');  double Mc = std::stod(value);
 
         if (cmds[0] == "mix") {
-            if (Mz >= -z_low && Mz <= -z_high && Mc >= cen_low && Mc <= cen_high) {
-                index.push_back(i);     event.push_back(e);         NHits.push_back(N);
+            if (Mz >= z_low && Mz <= z_high && Mc >= cen_low && Mc <= cen_high) {
+                index.push_back(i);     evt.push_back(e);         NHits.push_back(N);
                 foundZ.push_back(f);    MBD_true_z.push_back(Mz);   MBD_cen.push_back(Mc);
             }
         }
         else {
-            if (Mz >= -25. && Mz <= -5. && Mc <= 0.7) {
-                index.push_back(i);     event.push_back(e);         NHits.push_back(N);
+            // if (Mz >= -25. && Mz <= -5. && Mc <= 0.7) {
+            // if (Mz >= -5. && Mz <= 5. && Mc <= 0.7) {
+                index.push_back(i);     evt.push_back(e);         NHits.push_back(N);
                 foundZ.push_back(f);    MBD_true_z.push_back(Mz);   MBD_cen.push_back(Mc);
-            }
+            // }
         }
         
     }
-    std::cout << "Selected size: " << event.size() << std::endl;
     Long64_t nEntries = EventTree -> GetEntries();
-    int event25, NClus;
-    float MBD_centrality, MBD_z_vtx;
-    std::vector<float> *ClusX     = nullptr;
-    std::vector<float> *ClusY     = nullptr;
-    std::vector<float> *ClusZ     = nullptr;
-    std::vector<int>   *ClusLayer = nullptr;
-    std::vector<float> *ClusR     = nullptr;    // FYI only;
-    std::vector<float> *ClusPhi   = nullptr;    // FYI only;
-    std::vector<float> *ClusEta   = nullptr;    // FYI only;
+    // int event25, NClus;
+    // float MBD_centrality, MBD_z_vtx;
+    // std::vector<float> *ClusX     = nullptr;
+    // std::vector<float> *ClusY     = nullptr;
+    // std::vector<float> *ClusZ     = nullptr;
+    // std::vector<int>   *ClusLayer = nullptr;
+    // std::vector<float> *ClusR     = nullptr;    // FYI only;
+    // std::vector<float> *ClusPhi   = nullptr;    // FYI only;
+    // std::vector<float> *ClusEta   = nullptr;    // FYI only;
+    TObjArray* branches = EventTree->GetListOfBranches();
+    std::string branchName;
+    int idx_event, idx_MBD_z_vtx, idx_MBD_centrality, idx_NClus, idx_ClusLayer,
+        idx_ClusX, idx_ClusY, idx_ClusZ, idx_ClusR, idx_ClusPhi, idx_ClusEta;
+    for (int i = 0; i < branches->GetEntries(); ++i) {
+        TBranch* branch = (TBranch*)branches->At(i);
+        branchName = branch->GetName();
+        if (branchName=="event")        idx_event = i;
+        if (branchName=="MBD_z_vtx")    idx_MBD_z_vtx = i;
+        if (branchName=="MBD_centrality")    idx_MBD_centrality = i;
+        if (branchName=="NClus")        idx_NClus = i;
+        if (branchName=="ClusLayer")    idx_ClusLayer = i;
+        if (branchName=="ClusX")        idx_ClusX = i;
+        if (branchName=="ClusY")        idx_ClusY = i;
+        if (branchName=="ClusZ")        idx_ClusZ = i;
+        if (branchName=="ClusR")        idx_ClusR = i;
+        if (branchName=="ClusPhi")      idx_ClusPhi = i;
+        if (branchName=="ClusEta")      idx_ClusEta = i;
+    }
+    TBranch *b_event     = (TBranch*)EventTree->GetListOfBranches()->At(idx_event);
+    TBranch *b_MBD_z_vtx = (TBranch*)EventTree->GetListOfBranches()->At(idx_MBD_z_vtx);
+        TBranch *b_MBD_centrality = (TBranch*)EventTree->GetListOfBranches()->At(idx_MBD_centrality);
+        TBranch *b_NClus     = (TBranch*)EventTree->GetListOfBranches()->At(idx_NClus);
+        TBranch *b_ClusLayer = (TBranch*)EventTree->GetListOfBranches()->At(idx_ClusLayer);
+        TBranch *b_ClusX     = (TBranch*)EventTree->GetListOfBranches()->At(idx_ClusX);
+        TBranch *b_ClusY     = (TBranch*)EventTree->GetListOfBranches()->At(idx_ClusY);
+        TBranch *b_ClusZ     = (TBranch*)EventTree->GetListOfBranches()->At(idx_ClusZ);
+        TBranch *b_ClusR     = (TBranch*)EventTree->GetListOfBranches()->At(idx_ClusR);
+        TBranch *b_ClusPhi   = (TBranch*)EventTree->GetListOfBranches()->At(idx_ClusPhi);
+        TBranch *b_ClusEta   = (TBranch*)EventTree->GetListOfBranches()->At(idx_ClusEta);
+        b_event    ->SetAddress(&event);
+        b_MBD_z_vtx->SetAddress(&MBD_z_vtx);
+        b_MBD_centrality->SetAddress(&MBD_centrality);
+        b_NClus    ->SetAddress(&NClus);
+        b_ClusLayer->SetAddress(&ClusLayer);
+        b_ClusX    ->SetAddress(&ClusX);
+        b_ClusY    ->SetAddress(&ClusY);
+        b_ClusZ    ->SetAddress(&ClusZ);
+        b_ClusR    ->SetAddress(&ClusR);
+        b_ClusPhi  ->SetAddress(&ClusPhi);
+        b_ClusEta  ->SetAddress(&ClusEta);
 
-    TBranch *branch25 = (TBranch*)EventTree->GetListOfBranches()->At(25);    // event25;
-    TBranch *branch10 = (TBranch*)EventTree->GetListOfBranches()->At(10);    // NClus;
-    TBranch *branch11 = (TBranch*)EventTree->GetListOfBranches()->At(11);    // ClusLayer;
-    TBranch *branch12 = (TBranch*)EventTree->GetListOfBranches()->At(12);    // ClusX;
-    TBranch *branch13 = (TBranch*)EventTree->GetListOfBranches()->At(13);    // ClusY;
-    TBranch *branch14 = (TBranch*)EventTree->GetListOfBranches()->At(14);    // ClusZ;
-    TBranch *branch30 = (TBranch*)EventTree->GetListOfBranches()->At(30);    // MBD_centrality;
-    TBranch *branch31 = (TBranch*)EventTree->GetListOfBranches()->At(31);    // MBD_z_vtx;
-    TBranch *branch15 = (TBranch*)EventTree->GetListOfBranches()->At(15);    // ClusR;
-    TBranch *branch16 = (TBranch*)EventTree->GetListOfBranches()->At(16);    // ClusPhi;
-    TBranch *branch17 = (TBranch*)EventTree->GetListOfBranches()->At(17);    // ClusEta;
+    // TBranch *branch25 = (TBranch*)EventTree->GetListOfBranches()->At(25);    // event25;
+    // TBranch *branch10 = (TBranch*)EventTree->GetListOfBranches()->At(10);    // NClus;
+    // TBranch *b_ClusLayer = (TBranch*)EventTree->GetListOfBranches()->At(11);    // ClusLayer;
+    // TBranch *branch12 = (TBranch*)EventTree->GetListOfBranches()->At(12);    // ClusX;
+    // TBranch *branch13 = (TBranch*)EventTree->GetListOfBranches()->At(13);    // ClusY;
+    // TBranch *b_ClusZ = (TBranch*)EventTree->GetListOfBranches()->At(14);    // ClusZ;
+    // TBranch *branch30 = (TBranch*)EventTree->GetListOfBranches()->At(30);    // MBD_centrality;
+    // TBranch *b_MBD_z_vtx = (TBranch*)EventTree->GetListOfBranches()->At(31);    // MBD_z_vtx;
+    // TBranch *b_ClusR = (TBranch*)EventTree->GetListOfBranches()->At(15);    // ClusR;
+    // TBranch *b_ClusPhi = (TBranch*)EventTree->GetListOfBranches()->At(16);    // ClusPhi;
+    // TBranch *branch17 = (TBranch*)EventTree->GetListOfBranches()->At(17);    // ClusEta;
     
-    branch25->SetAddress(&event25);
-    branch10->SetAddress(&NClus);
-    branch11->SetAddress(&ClusLayer);
-    branch12->SetAddress(&ClusX);
-    branch13->SetAddress(&ClusY);
-    branch14->SetAddress(&ClusZ);
-    branch15->SetAddress(&ClusR);
-    branch16->SetAddress(&ClusPhi);
-    branch17->SetAddress(&ClusEta);
-    branch30->SetAddress(&MBD_centrality);
-    branch31->SetAddress(&MBD_z_vtx);
+    // branch25->SetAddress(&event25);
+    // branch10->SetAddress(&NClus);
+    // b_ClusLayer->SetAddress(&ClusLayer);
+    // branch12->SetAddress(&ClusX);
+    // branch13->SetAddress(&ClusY);
+    // b_ClusZ->SetAddress(&ClusZ);
+    // b_ClusR->SetAddress(&ClusR);
+    // b_ClusPhi->SetAddress(&ClusPhi);
+    // branch17->SetAddress(&ClusEta);
+    // branch30->SetAddress(&MBD_centrality);
+    // b_MBD_z_vtx->SetAddress(&MBD_z_vtx);
 
-
-    target = target > event.size() ? event.size() : target;
+    std::cout << "Total size: " << evt.size() << std::endl;
+    target = target > evt.size() ? evt.size() : target;
+    std::cout << "Selected size: " << target << std::endl;
 
     std::cout << target << "," << cen_low << "," << cen_high << "," << z_low << "," << z_high << std::endl;
     
@@ -619,8 +665,8 @@ int main(int argc, char* argv[]) {
     if (method[0] == "nomix") {
         std::thread thsafe[8];
         std::cout<<"multi-thready safe:"<<std::endl;
-        // for(int i = 0; i < 8; ++i)     thsafe[i]= std::thread(dPhiAccumulator,i,target/8,std::cref(index),std::cref(MBD_cen),branch11,branch16,ClusPhi,ClusLayer);
-        for(int i = 0; i < 8; ++i)     thsafe[i]= std::thread(dPhiNoMixWithEta,i,target/8,std::cref(index),std::cref(MBD_true_z),branch11,branch14,branch15,branch16,ClusZ,ClusR,ClusPhi,ClusLayer);
+        // for(int i = 0; i < 8; ++i)     thsafe[i]= std::thread(dPhiAccumulator,i,target/8,std::cref(index),std::cref(MBD_cen),b_ClusLayer,b_ClusPhi,ClusPhi,ClusLayer);
+        for(int i = 0; i < 8; ++i)     thsafe[i]= std::thread(dPhiNoMixWithEta,i,target/8,std::cref(index),std::cref(MBD_true_z),b_ClusLayer,b_ClusZ,b_ClusR,b_ClusPhi,ClusZ,ClusR,ClusPhi,ClusLayer);
         for(int i = 0; i < 8; ++i)     thsafe[i].join();
 
         h_dPhi_nomix -> SetTitle(Form("dPhi of %d un-mixed events, with dEta cut %0.2f", target, dEta_cut));
@@ -638,147 +684,144 @@ int main(int argc, char* argv[]) {
         std::thread thsafe[14];
         std::cout << "safe dPhi of different centralities" << std::endl;
         for (int i = 0; i < 14; i++)
-            thsafe[i] = std::thread(dPhi_in_bins_of_Centrality_with_dEta_cut,i,target,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch14,branch15,branch16,branch31,std::ref(MBD_z_vtx),ClusLayer,ClusZ,ClusR,ClusPhi);
-            // thsafe[i] = std::thread(dPhi_in_bins_of_Centrality,i,target,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch16,ClusPhi,ClusLayer);
+            thsafe[i] = std::thread(dPhi_in_bins_of_Centrality_with_dEta_cut,i,target,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),b_ClusLayer,b_ClusZ,b_ClusR,b_ClusPhi,b_MBD_z_vtx,std::ref(MBD_z_vtx),ClusLayer,ClusZ,ClusR,ClusPhi);
+            // thsafe[i] = std::thread(dPhi_in_bins_of_Centrality,i,target,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),b_ClusLayer,b_ClusPhi,ClusPhi,ClusLayer);
 
         for (int i = 0; i < 14; i++)
             thsafe[i].join();
 
         std::vector<TH1D*> h(h_CenonOne, h_CenonOne + 14);
         // ArrayPlot1D_Rescale(h, method, "dPhi_per_centralities_rescale");
-        ArrayPlot1D_Rescale(h, method, "dPhi_per_centralities_rescale_with_dEta_cut");
+        ArrayPlot1D_Rescale(h, method, Form("dPhi_per_centralities_rescale_with_dEta_cut_%d_events",target));
     }
     else if (method[0] == "perZ") {
         std::thread thsafe[20];
         std::cout << "safe dPhi of different Z vertices" << std::endl;
         for (int i = 0; i < 20; i++)
-            // thsafe[i] = std::thread(dPhi_in_bins_of_Z_vtx_with_dEta_cut,i,target,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch14,branch15,branch16,ClusLayer,ClusZ,ClusR,ClusPhi);
-            thsafe[i] = std::thread(dPhi_in_bins_of_Z_vtx,i,target,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),branch11,branch16,ClusPhi,ClusLayer);
+            thsafe[i] = std::thread(dPhi_in_bins_of_Z_vtx_with_dEta_cut,i,target,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),b_ClusLayer,b_ClusZ,b_ClusR,b_ClusPhi,ClusLayer,ClusZ,ClusR,ClusPhi);
+            // thsafe[i] = std::thread(dPhi_in_bins_of_Z_vtx,i,target,std::cref(index),std::cref(MBD_true_z),std::cref(MBD_cen),b_ClusLayer,b_ClusPhi,ClusPhi,ClusLayer);
 
         for (int i = 0; i < 20; i++)
             thsafe[i].join();
 
         std::vector<TH1D*> h(h_ZonOne, h_ZonOne + 20);
-        ArrayPlot1D_Rescale_ver2(h, method, "dPhi_per_Z_vtx_rescale");
+        ArrayPlot1D_Rescale_ver2(h, method, Form("dPhi_per_Z_vtx_rescale_%d_events", target));
         // ArrayPlot1D_Rescale_ver2(h, method, "dPhi_per_Z_vtx_rescale_with_dEta_cut");
     }
-    else if (method[0] == "mix") {
-        double phi, dPhi, phi_0, phi_1; int clus_layer;
-        std::vector<double> Phi0, Phi1;
-        std::vector<std::vector <double>> event_Phi0, event_Phi1;
-        // Signal dPhi is unmixed events' dPhi:
-        TH1D *h_Signal_dPhi = new TH1D("dPhi of unmixed", Form("dPhi of unmixed %d events;dPhi value;# of counts", target), N, range_min, range_max);
-        // Fill Signals:
-        for (int i = 0; i < target; i++) {
-            branch16->GetEntry(index[i]);   branch11->GetEntry(index[i]);
-            event_Phi0.push_back(std::vector <double>());   event_Phi1.push_back(std::vector <double>());
-            for (int j = 0; j < ClusPhi->size(); j++) {
-                phi        = ClusPhi->at(j);
-                clus_layer = ClusLayer->at(j);
-                if (clus_layer == 3 || clus_layer == 4) {
-                    Phi0.push_back(phi);
-                    event_Phi0[i].push_back(phi);
-                }
-                else {
-                    Phi1.push_back(phi);
-                    event_Phi1[i].push_back(phi);
-                }
-            }
-            for (int k = 0; k < Phi0.size(); k++) {
-                for (int l = 0; l < Phi1.size(); l++) {
-                    dPhi = Phi0[k] - Phi1[l];
-                    if (dPhi > M_PI)    dPhi = dPhi - TWO_PI;
-                    if (dPhi < -M_PI)   dPhi = dPhi + TWO_PI;
-                    h_Signal_dPhi -> Fill(dPhi);
-                }
-            }
-            Phi0.clear();   Phi1.clear();
-        }
+    // else if (method[0] == "mix") {
+    //     double phi, dPhi, phi_0, phi_1; int clus_layer;
+    //     std::vector<double> Phi0, Phi1;
+    //     std::vector<std::vector <double>> event_Phi0, event_Phi1;
+    //     // Signal dPhi is unmixed events' dPhi:
+    //     TH1D *h_Signal_dPhi = new TH1D("dPhi of unmixed", Form("dPhi of unmixed %d events;dPhi value;# of counts", target), N, range_min, range_max);
+    //     // Fill Signals:
+    //     for (int i = 0; i < target; i++) {
+    //         b_ClusPhi->GetEntry(index[i]);   b_ClusLayer->GetEntry(index[i]);
+    //         event_Phi0.push_back(std::vector <double>());   event_Phi1.push_back(std::vector <double>());
+    //         for (int j = 0; j < ClusPhi->size(); j++) {
+    //             phi        = ClusPhi->at(j);
+    //             clus_layer = ClusLayer->at(j);
+    //             if (clus_layer == 3 || clus_layer == 4) {
+    //                 Phi0.push_back(phi);
+    //                 event_Phi0[i].push_back(phi);
+    //             }
+    //             else {
+    //                 Phi1.push_back(phi);
+    //                 event_Phi1[i].push_back(phi);
+    //             }
+    //         }
+    //         for (int k = 0; k < Phi0.size(); k++) {
+    //             for (int l = 0; l < Phi1.size(); l++) {
+    //                 dPhi = Phi0[k] - Phi1[l];
+    //                 if (dPhi > M_PI)    dPhi = dPhi - TWO_PI;
+    //                 if (dPhi < -M_PI)   dPhi = dPhi + TWO_PI;
+    //                 h_Signal_dPhi -> Fill(dPhi);
+    //             }
+    //         }
+    //         Phi0.clear();   Phi1.clear();
+    //     }
 
-        std::thread thsafe[8];
-        std::cout << "Mixing events: \n" << std::endl;
-        for (int i = 0; i < 8; i++)
-            thsafe[i] = std::thread(dPhi_mixing,i,target/8,event_Phi0,event_Phi1);
-        for (int i = 0; i < 8; i++)
-            thsafe[i].join();
+    //     std::thread thsafe[8];
+    //     std::cout << "Mixing events: \n" << std::endl;
+    //     for (int i = 0; i < 8; i++)
+    //         thsafe[i] = std::thread(dPhi_mixing,i,target/8,event_Phi0,event_Phi1);
+    //     for (int i = 0; i < 8; i++)
+    //         thsafe[i].join();
 
 
-        TCanvas *c1 = new TCanvas("c1", "dPhi Histogram", 1920, 1056);
-        double phi_range_low = -2.4, phi_range_high = -1.8;
-        int bin_range_low = h_Background_dPhi->FindBin(phi_range_low), bin_range_high = h_Background_dPhi->FindBin(phi_range_high);
-        double max_unmixed = -1, max_mixed = -1, current_binContent;
-        for (int bin = bin_range_low; bin <= bin_range_high; bin++) {
-            current_binContent = h_Signal_dPhi->GetBinContent(bin);
-            if (max_unmixed < current_binContent)  max_unmixed = current_binContent;
-            current_binContent = h_Background_dPhi->GetBinContent(bin);
-            if (max_mixed < current_binContent)  max_mixed = current_binContent;
-        }
-        h_Signal_dPhi -> Add(h_Signal_dPhi, max_mixed/max_unmixed - 1);
-        h_Signal_dPhi -> Draw("SAME");
+    //     TCanvas *c1 = new TCanvas("c1", "dPhi Histogram", 1920, 1056);
+    //     double phi_range_low = -2.4, phi_range_high = -1.8;
+    //     int bin_range_low = h_Background_dPhi->FindBin(phi_range_low), bin_range_high = h_Background_dPhi->FindBin(phi_range_high);
+    //     double max_unmixed = -1, max_mixed = -1, current_binContent;
+    //     for (int bin = bin_range_low; bin <= bin_range_high; bin++) {
+    //         current_binContent = h_Signal_dPhi->GetBinContent(bin);
+    //         if (max_unmixed < current_binContent)  max_unmixed = current_binContent;
+    //         current_binContent = h_Background_dPhi->GetBinContent(bin);
+    //         if (max_mixed < current_binContent)  max_mixed = current_binContent;
+    //     }
+    //     h_Signal_dPhi -> Add(h_Signal_dPhi, max_mixed/max_unmixed - 1);
+    //     h_Signal_dPhi -> Draw("SAME");
 
-        max_mixed   = h_Background_dPhi->GetBinContent(h_Background_dPhi->GetMaximumBin());
-        max_unmixed = h_Signal_dPhi->GetBinContent(h_Signal_dPhi->GetMaximumBin());
-        std::cout << h_Signal_dPhi->GetBinContent(h_Signal_dPhi->GetMaximumBin()) << ", " << h_Background_dPhi->GetBinContent(h_Background_dPhi->GetMaximumBin())  << std::endl;
-        if (max_unmixed > max_mixed) {
-            h_Signal_dPhi -> GetYaxis() -> SetRangeUser(1e7, max_unmixed*1.2);
-            h_Background_dPhi -> GetYaxis() -> SetRangeUser(1e7, max_unmixed*1.2);
-        }   
-        else {
-            h_Signal_dPhi -> GetYaxis() -> SetRangeUser(1e7, max_mixed*1.2);
-            h_Background_dPhi -> GetYaxis() -> SetRangeUser(1e7, max_mixed*1.2);
-        }                      
-        h_Background_dPhi -> Draw("SAME");
-        h_Background_dPhi -> SetLineColor(2);
+    //     max_mixed   = h_Background_dPhi->GetBinContent(h_Background_dPhi->GetMaximumBin());
+    //     max_unmixed = h_Signal_dPhi->GetBinContent(h_Signal_dPhi->GetMaximumBin());
+    //     std::cout << h_Signal_dPhi->GetBinContent(h_Signal_dPhi->GetMaximumBin()) << ", " << h_Background_dPhi->GetBinContent(h_Background_dPhi->GetMaximumBin())  << std::endl;
+    //     if (max_unmixed > max_mixed) {
+    //         h_Signal_dPhi -> GetYaxis() -> SetRangeUser(1e7, max_unmixed*1.2);
+    //         h_Background_dPhi -> GetYaxis() -> SetRangeUser(1e7, max_unmixed*1.2);
+    //     }   
+    //     else {
+    //         h_Signal_dPhi -> GetYaxis() -> SetRangeUser(1e7, max_mixed*1.2);
+    //         h_Background_dPhi -> GetYaxis() -> SetRangeUser(1e7, max_mixed*1.2);
+    //     }                      
+    //     h_Background_dPhi -> Draw("SAME");
+    //     h_Background_dPhi -> SetLineColor(2);
 
-        double pi = TMath::Pi();
-        int bin_min  = 1;  // The first bin
-        int bin_max  = h_Signal_dPhi->GetNbinsX();  // The last bin
-        // Calculate bin positions for each label
-        int bin_pi   = bin_max;
-        int bin_0    = bin_min + (bin_max - bin_min)/2;
-        int binPi_2  = bin_min + 3*(bin_max - bin_min)/4;
-        int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
-        // Set the labels at the calculated positions
-        h_Background_dPhi->GetXaxis()->SetBinLabel(bin_0, "0");
-        h_Background_dPhi->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
-        h_Background_dPhi->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
-        h_Background_dPhi->GetXaxis()->SetBinLabel(bin_pi, "#pi");
-        h_Background_dPhi->GetXaxis()->SetBinLabel(bin_min, "-#pi");
-        // Ensure the custom labels are displayed by setting the number of divisions
-        h_Background_dPhi->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
-        h_Background_dPhi->GetXaxis()->SetLabelSize(0.04);
-        // Update histogram to refresh the axis
-        // h[0]->Draw("HIST");
-        h_Background_dPhi->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+    //     double pi = TMath::Pi();
+    //     int bin_min  = 1;  // The first bin
+    //     int bin_max  = h_Signal_dPhi->GetNbinsX();  // The last bin
+    //     // Calculate bin positions for each label
+    //     int bin_pi   = bin_max;
+    //     int bin_0    = bin_min + (bin_max - bin_min)/2;
+    //     int binPi_2  = bin_min + 3*(bin_max - bin_min)/4;
+    //     int bin_pi_2 = bin_min + (bin_max - bin_min)/4;
+    //     // Set the labels at the calculated positions
+    //     h_Background_dPhi->GetXaxis()->SetBinLabel(bin_0, "0");
+    //     h_Background_dPhi->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
+    //     h_Background_dPhi->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
+    //     h_Background_dPhi->GetXaxis()->SetBinLabel(bin_pi, "#pi");
+    //     h_Background_dPhi->GetXaxis()->SetBinLabel(bin_min, "-#pi");
+    //     // Ensure the custom labels are displayed by setting the number of divisions
+    //     h_Background_dPhi->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
+    //     h_Background_dPhi->GetXaxis()->SetLabelSize(0.04);
+    //     // Update histogram to refresh the axis
+    //     // h[0]->Draw("HIST");
+    //     h_Background_dPhi->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
 
-        h_Signal_dPhi->GetXaxis()->SetBinLabel(bin_0, "0");
-        h_Signal_dPhi->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
-        h_Signal_dPhi->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
-        h_Signal_dPhi->GetXaxis()->SetBinLabel(bin_pi, "#pi");
-        h_Signal_dPhi->GetXaxis()->SetBinLabel(bin_min, "-#pi");
-        // Ensure the custom labels are displayed by setting the number of divisions
-        h_Signal_dPhi->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
-        h_Signal_dPhi->GetXaxis()->SetLabelSize(0.04);
-        // Update histogram to refresh the axis
-        // h[0]->Draw("HIST");
-        h_Signal_dPhi->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
+    //     h_Signal_dPhi->GetXaxis()->SetBinLabel(bin_0, "0");
+    //     h_Signal_dPhi->GetXaxis()->SetBinLabel(bin_pi_2, "#frac{-#pi}{2}");
+    //     h_Signal_dPhi->GetXaxis()->SetBinLabel(binPi_2, "#frac{#pi}{2}");
+    //     h_Signal_dPhi->GetXaxis()->SetBinLabel(bin_pi, "#pi");
+    //     h_Signal_dPhi->GetXaxis()->SetBinLabel(bin_min, "-#pi");
+    //     // Ensure the custom labels are displayed by setting the number of divisions
+    //     h_Signal_dPhi->GetXaxis()->SetNdivisions(9, 0, 0, kFALSE);
+    //     h_Signal_dPhi->GetXaxis()->SetLabelSize(0.04);
+    //     // Update histogram to refresh the axis
+    //     // h[0]->Draw("HIST");
+    //     h_Signal_dPhi->GetXaxis()->LabelsOption("h"); // Draw the labels vertically
 
-        h_Signal_dPhi -> GetXaxis() -> CenterTitle(true);
-        h_Signal_dPhi -> GetYaxis() -> CenterTitle(true);
-        h_Background_dPhi -> GetXaxis() -> CenterTitle(true);
-        h_Background_dPhi -> GetYaxis() -> CenterTitle(true);
+    //     h_Signal_dPhi -> GetXaxis() -> CenterTitle(true);
+    //     h_Signal_dPhi -> GetYaxis() -> CenterTitle(true);
+    //     h_Background_dPhi -> GetXaxis() -> CenterTitle(true);
+    //     h_Background_dPhi -> GetYaxis() -> CenterTitle(true);
 
-        // TLegend *lg = new TLegend(0.12, 0.8, 0.33, 0.9);
-        // lg -> AddEntry(h_Background_dPhi, Form("z_vtx between %2.2f and %2.2f", z_lower_range, z_upper_range), "l");
-        // gStyle -> SetLegendTextSize(.023);
-        // lg->Draw("same");
+    //     // TLegend *lg = new TLegend(0.12, 0.8, 0.33, 0.9);
+    //     // lg -> AddEntry(h_Background_dPhi, Form("z_vtx between %2.2f and %2.2f", z_lower_range, z_upper_range), "l");
+    //     // gStyle -> SetLegendTextSize(.023);
+    //     // lg->Draw("same");
     
-        c1 -> SaveAs("../../External/zFindingPlots/dPhi_mixed.png");
-        backgroundCancelling_dPhi(h_Background_dPhi, h_Signal_dPhi, method, target);
-    }
-    // TCanvas *c1 = new TCanvas("c1", "dPhi Histogram", 1920, 1056);
-    // h_dPhi_nomix -> Draw();
-    // c1->Update();    c1->Modified();
+    //     c1 -> SaveAs("../../External/zFindingPlots/dPhi_mixed.png");
+    //     backgroundCancelling_dPhi(h_Background_dPhi, h_Signal_dPhi, method, target);
+    // }
     
     if (cmds[0] == "mix") {
         if (cmds[1] == "wo") {
@@ -789,8 +832,8 @@ int main(int argc, char* argv[]) {
             // Signal dPhi is unmixed events' dPhi:
             TH1D *h_Signal_dPhi = new TH1D("dPhi of unmixed", Form("dPhi of unmixed %d events;dPhi value;# of counts", target), N, range_min, range_max);
             for (int i = 0; i < target; i++) {  // Loop over events;
-                branch11->GetEntry(index[i]);   // ClusLayer;
-                branch16->GetEntry(index[i]);   // ClusPhi;
+                b_ClusLayer->GetEntry(index[i]);   // ClusLayer;
+                b_ClusPhi->GetEntry(index[i]);   // ClusPhi;
                 event_Phi0.push_back(std::vector <double>());   
                 event_Phi1.push_back(std::vector <double>());
                 for (int j = 0; j < ClusPhi->size(); j++) { // Loop inside one event, over all hits;
@@ -833,10 +876,10 @@ int main(int argc, char* argv[]) {
             // Signal dPhi is unmixed events' dPhi:
             TH1D *h_Signal_dPhi = new TH1D("dPhi of unmixed", Form("dPhi of unmixed %d events;dPhi value;# of counts", target), N, range_min, range_max);
             for (int i = 0; i < target; i++) {  // Loop over events;
-                branch11->GetEntry(index[i]);   // ClusLayer;
-                branch14->GetEntry(index[i]);   // ClusZ;
-                branch15->GetEntry(index[i]);   // ClusR;
-                branch16->GetEntry(index[i]);   // ClusPhi;
+                b_ClusLayer->GetEntry(index[i]);   // ClusLayer;
+                b_ClusZ->GetEntry(index[i]);   // ClusZ;
+                b_ClusR->GetEntry(index[i]);   // ClusR;
+                b_ClusPhi->GetEntry(index[i]);   // ClusPhi;
                 event_Phi0.emplace_back(std::vector <EtaWithPhi>());   
                 event_Phi1.emplace_back(std::vector <EtaWithPhi>());
                 z_vtx = MBD_true_z[i];
@@ -883,30 +926,31 @@ int main(int argc, char* argv[]) {
 
             backgroundCancelling_dPhi(h_Background_dPhi, h_Signal_dPhi, method, target);
         } else if (cmds[1] == "wE") {
-            double phi, dPhi, eta, dEta, eta1, eta2;
-            double z_vtx, dZ, R, theta;
+            double phi, dPhi, eta, abs_eta, dEta, eta1, eta2;
+            double z_vtx, dZ, R, halfTheta;
             int clus_layer;
             std::vector<EtaWithPhi> Phi0, Phi1;
             std::vector<std::vector <EtaWithPhi>> event_Phi0, event_Phi1;
             // Signal dPhi is unmixed events' dPhi:
             TH1D *h_Signal_dPhi = new TH1D("dPhi of unmixed", Form("dPhi of unmixed %d events;dPhi value;# of counts", target), N, range_min, range_max);
             for (int i = 0; i < target; i++) {  // Loop over events;
-                branch11->GetEntry(index[i]);   // ClusLayer;
-                branch14->GetEntry(index[i]);   // ClusZ;
-                branch15->GetEntry(index[i]);   // ClusR;
-                branch16->GetEntry(index[i]);   // ClusPhi;
+                b_ClusLayer->GetEntry(index[i]);   // ClusLayer;
+                b_ClusZ->GetEntry(index[i]);   // ClusZ;
+                b_ClusR->GetEntry(index[i]);   // ClusR;
+                b_ClusPhi->GetEntry(index[i]);   // ClusPhi;
                 event_Phi0.emplace_back(std::vector <EtaWithPhi>());   
                 event_Phi1.emplace_back(std::vector <EtaWithPhi>());
                 z_vtx = MBD_true_z[i];
                 for (int j = 0; j < ClusPhi->size(); j++) { // Loop inside one event, over all hits;
                     dZ         = ClusZ->at(j) - z_vtx;
                     R          = ClusR->at(j);
-                    theta      = std::atan2(R, dZ);
+                    halfTheta      = (std::atan2(R, dZ))/2.;
                     phi        = ClusPhi->at(j);
                     clus_layer = ClusLayer->at(j);
-                    if (dZ >= 0)    eta = -std::log(std::tan(theta/2));
-                    if (dZ <  0)    eta = std::log(std::tan((M_PI - theta)/2));
-                    if (std::abs(eta) < Eta_range) {
+                    if (dZ >= 0)    eta = -std::log(std::tan(halfTheta));
+                    if (dZ <  0)    eta = std::log(std::tan(halfPI - halfTheta));
+                    abs_eta = std::abs(eta);
+                    if (abs_eta < Eta_range) {
                         if (clus_layer == 3 || clus_layer == 4) {
                             Phi0.emplace_back(eta, phi);
                             event_Phi0[i].emplace_back(eta, phi);
